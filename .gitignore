@@ -36,6 +36,14 @@ yarn-error.*
 # Cle API / secrets (ne JAMAIS commiter)
 secrets.js
 
+# Le projet est dans un dossier OneDrive. Quand deux machines editent le meme
+# fichier, OneDrive ne fusionne pas : il cree une copie suffixee du nom de
+# l'ordinateur (secrets-ordiraph.js). Ces copies contiennent la vraie cle API
+# et echappaient a la regle ci-dessus — d'ou ce filet de securite, qui couvre
+# toute variante de fichier "secrets".
+secrets*.js
+!secrets.example.js
+
 # typescript
 *.tsbuildinfo
 
