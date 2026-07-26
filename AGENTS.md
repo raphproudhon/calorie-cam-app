@@ -29,11 +29,32 @@ explicitement.
 
 | Fichier | Rôle |
 |---|---|
-| `App.js` | écran unique : affichage, correction manuelle des portions |
+| `App.js` | deux onglets : Photo (analyse + correction) et Objectif (besoin calorique) |
 | `gemini.js` | passe 1 (vision) et passe 2 (choix de la fiche Ciqual) |
 | `ciqual.js` | recherche floue dans la table + calcul nutritionnel |
+| `besoins.js` | BMR/TDEE/objectif calorique, avec garde-fous de sécurité |
+| `health.js` | lecture de la dépense via Apple Santé (HealthKit) |
 | `data/ciqual.json` | table réduite (235 Ko), **versionnée** — ne pas régénérer sans raison |
 | `tools/build-ciqual.js` | conversion des XML officiels de l'ANSES vers ce JSON |
+
+## Invariants à ne pas casser
+
+- **`health.js` doit toujours se dégrader proprement dans Expo Go.** HealthKit
+  est natif et absent d'Expo Go : le module natif est chargé en *lazy require*
+  dans un try/catch, jamais importé en tête de fichier. `estDisponible()` renvoie
+  `false` si le natif manque, et l'UI affiche un message au lieu de planter. Ne
+  jamais transformer ce require en `import` de haut niveau : cela ferait crasher
+  l'app dans Expo Go, où tournent encore la photo et le calcul d'objectif.
+- **`besoins.js` ne doit jamais proposer un objectif sous le plancher de
+  sécurité** (1200 kcal femme / 1500 kcal homme). C'est la garantie « sans
+  mettre la santé en danger ». Les cas limites (TDEE déjà sous le plancher) sont
+  gérés et testés.
+
+## Deux modes d'exécution
+
+- **Expo Go** (`npx expo start`) : tout marche SAUF Apple Santé.
+- **Build de développement** (EAS, voir README) : nécessaire pour HealthKit.
+  Se lance ensuite avec `npx expo start --dev-client`.
 
 ## Pièges rencontrés
 

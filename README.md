@@ -31,6 +31,30 @@ en 1ʳᵉ position dans 84 % des cas, mais elle est dans le top 8 dans 96 % des
 cas — d'où le choix de faire trancher le modèle dans une liste courte plutôt
 que de lui demander de deviner un code parmi 2 298.
 
+### Objectif calorique et bilan du jour
+
+Trois onglets : **Photo**, **Objectif**, **Bilan**.
+
+L'onglet **Objectif** calcule un besoin de base (formule Mifflin-St Jeor) avec
+des garde-fous de sécurité (plancher 1200/1500 kcal, déficit modéré). Choix
+d'architecture important :
+
+> **Le niveau d'activité n'entre pas dans le calcul de l'objectif.** L'objectif
+> de base représente le maintien **au repos** (BMR × 1,2, hors sport). La seule
+> dépense de sport prise en compte est celle lue depuis **Apple Santé** (énergie
+> active), ajoutée dans l'onglet Bilan. Cela évite tout double comptage : le
+> sport n'est jamais estimé, seulement mesuré.
+
+L'onglet **Bilan** applique le modèle « add-back » :
+
+```
+calories restantes = objectif de base + sport (Apple Santé) − déjà consommé
+```
+
+Exemple : objectif 2000 kcal, séance à 300 kcal → budget du jour 2300 kcal.
+Le « consommé » vient de l'onglet Photo (bouton « Ajouter au bilan »). En
+attendant le build de développement, le sport peut être saisi à la main.
+
 ## Stack technique
 
 | Élément | Choix |
@@ -114,6 +138,44 @@ utile que quand l'ANSES publie une nouvelle table.
 
 Données publiées sous **Licence Ouverte (Etalab)**.
 
+## Apple Santé — dépense calorique (build de développement requis)
+
+L'onglet **Objectif** peut lire la dépense énergétique réelle (calories actives
++ de repos) depuis **Apple Santé**, pour la comparer à la TDEE estimée. Le code
+est en place (`health.js`, plugin dans `app.json`), mais :
+
+> ⚠️ **HealthKit ne fonctionne pas dans Expo Go.** C'est du code natif : il faut
+> un **build de développement** (une version compilée sur mesure de l'app). Dans
+> Expo Go, l'app tourne normalement mais la carte Apple Santé affiche
+> « build de développement requis » au lieu de planter.
+
+Les autres fonctions (photo, calcul d'objectif) continuent de marcher dans Expo Go.
+
+### Faire le build
+
+Le build se fait dans le cloud avec **EAS** (pas besoin de Mac). Il faut choisir
+une voie Apple pour l'installer sur l'iPhone :
+
+| Voie | Mac ? | Coût | Contrainte |
+|---|---|---|---|
+| Apple Developer Program | non | 99 €/an | installation fluide, pas de re-signature |
+| Compte Apple gratuit | oui (Xcode) | 0 € | re-signature tous les 7 jours, 3 appareils |
+
+Une fois la voie choisie :
+
+```bash
+npm install -g eas-cli
+eas login
+eas build --platform ios --profile development
+```
+
+EAS guide la configuration de signature. À la fin, un QR code installe le build
+sur l'iPhone. On lance ensuite `npx expo start --dev-client` (au lieu de
+`npx expo start`) et on ouvre l'app installée, pas Expo Go.
+
+La configuration technique (entitlement HealthKit, descriptions d'usage Santé,
+`bundleIdentifier`) est déjà dans `app.json` — EAS l'applique automatiquement.
+
 ## Où on en est / prochaines étapes
 
 - [x] Prototype fonctionnel : photo → détection → calories/macros
@@ -122,6 +184,10 @@ Données publiées sous **Licence Ouverte (Etalab)**.
 - [x] Améliorer les estimations de portions : repères d'échelle et portions
       usuelles dans le prompt, fourchette min/max affichée, et **correction
       manuelle du poids** avec recalcul immédiat
+- [x] **Calculateur de besoin calorique** (onglet Objectif) : BMR Mifflin-St
+      Jeor, TDEE, objectif perte/prise avec garde-fous de sécurité
+- [~] **Apple Santé** : lecture de la dépense réelle — code prêt, nécessite le
+      build de développement ci-dessus pour fonctionner
 - [ ] Valider la précision sur des repas réels **et pesés** (voir ci-dessous)
 - [ ] Ajouter un **journal** (stockage local des plats de la journée + total)
 - [ ] Scan de code-barres pour les produits emballés (via Open Food Facts)

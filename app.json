@@ -7,7 +7,8 @@
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "com.raphproudhon.caloriecam"
     },
     "android": {
       "adaptiveIcon": {
@@ -19,6 +20,16 @@
     },
     "web": {
       "favicon": "./assets/favicon.png"
-    }
+    },
+    "plugins": [
+      [
+        "@kingstinct/react-native-healthkit",
+        {
+          "NSHealthShareUsageDescription": "CalorieCam lit votre dépense énergétique (calories actives et de repos) pour l'ajuster à vos apports et affiner votre objectif quotidien.",
+          "NSHealthUpdateUsageDescription": "CalorieCam n'écrit aucune donnée dans Santé pour le moment.",
+          "background": false
+        }
+      ]
+    ]
   }
 }

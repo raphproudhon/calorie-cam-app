@@ -1,13 +1,16 @@
-// CalorieCam — photo d'un plat -> calories et macros.
+// CalorieCam — deux ecrans :
+//   - "Photo"    : photo d'un plat -> calories et macros (voir gemini.js/ciqual.js)
+//   - "Objectif" : calculateur de besoin calorique selon un but (perte/prise)
 //
 // Repartition des roles (voir README) :
-//   - gemini.js : l'IA identifie les aliments et estime les portions
-//   - ciqual.js : la table officielle de l'ANSES fournit les valeurs nutritionnelles
-//   - ce fichier : l'affichage, et la correction manuelle des portions
+//   - gemini.js  : l'IA identifie les aliments et estime les portions
+//   - ciqual.js  : la table officielle de l'ANSES fournit les valeurs nutritionnelles
+//   - besoins.js : calcul du besoin calorique et de l'objectif, avec garde-fous
+//   - ce fichier : l'affichage
 //
-// La correction manuelle est volontairement au premier plan : l'estimation
-// visuelle d'une masse reste approximative, donc l'IA propose et l'utilisateur
-// ajuste. Un gramme corrige recalcule immediatement tout le reste.
+// La correction manuelle des portions est volontairement au premier plan :
+// l'estimation visuelle d'une masse reste approximative, donc l'IA propose et
+// l'utilisateur ajuste. Un gramme corrige recalcule immediatement tout le reste.
 
 import { useMemo, useState } from "react";
 import {
@@ -25,6 +28,55 @@ import * as ImagePicker from "expo-image-picker";
 
 import { analyserPhoto } from "./gemini";
 import { calculer, totaliser, rechercher, NB_ALIMENTS, SOURCE } from "./ciqual";
+import { ACTIVITES, RYTHMES, calculerObjectif, bilanJournalier } from "./besoins";
+import { estDisponible as santeDisponible, demanderAcces, depenseDuJour } from "./health";
+
+// --- Navigation par onglets ------------------------------------------------
+
+export default function App() {
+  const [onglet, setOnglet] = useState("photo");
+
+  // Etat partage entre les onglets pour le bilan du jour :
+  //   - objectifInfo : l'objectif calorique calcule dans l'onglet Objectif
+  //   - consomme     : cumul des calories envoyees depuis l'onglet Photo
+  const [objectifInfo, setObjectifInfo] = useState(null); // { objectif, cleActivite }
+  const [consomme, setConsomme] = useState(0);
+
+  const ajouterConsomme = (kcal) => setConsomme((c) => c + Math.max(0, Math.round(kcal || 0)));
+
+  return (
+    <View style={styles.ecran}>
+      <View style={styles.tabs}>
+        {[
+          ["photo", "Photo"],
+          ["objectif", "Objectif"],
+          ["bilan", "Bilan"],
+        ].map(([cle, libelle]) => (
+          <Pressable
+            key={cle}
+            style={[styles.tab, onglet === cle && styles.tabActif]}
+            onPress={() => setOnglet(cle)}
+          >
+            <Text style={[styles.tabTexte, onglet === cle && styles.tabTexteActif]}>
+              {libelle}
+            </Text>
+          </Pressable>
+        ))}
+      </View>
+
+      {onglet === "photo" && <EcranPhoto onAjouterConsomme={ajouterConsomme} />}
+      {onglet === "objectif" && <EcranObjectif onObjectif={setObjectifInfo} />}
+      {onglet === "bilan" && (
+        <EcranBilan
+          objectifInfo={objectifInfo}
+          consomme={consomme}
+          onResetConsomme={() => setConsomme(0)}
+          allerObjectif={() => setOnglet("objectif")}
+        />
+      )}
+    </View>
+  );
+}
 
 const COULEURS = {
   fond: "#F4F1EA",
@@ -46,11 +98,12 @@ const LIBELLE_CONFIANCE = {
   D: "donnée indicative",
 };
 
-export default function App() {
+function EcranPhoto({ onAjouterConsomme }) {
   const [etape, setEtape] = useState(null); // texte affiche pendant le chargement
   const [analyse, setAnalyse] = useState(null);
   const [erreur, setErreur] = useState(null);
   const [editionFiche, setEditionFiche] = useState(null); // index de l'aliment en cours de correction
+  const [ajoute, setAjoute] = useState(false); // ce plat a-t-il ete envoye au bilan ?
 
   async function lancer(source) {
     setErreur(null);
@@ -77,6 +130,7 @@ export default function App() {
       // lignes de l'analyse precedente et leurs champs de poids garderaient les
       // valeurs de la photo d'avant.
       setAnalyse({ ...resultat, id: Date.now() });
+      setAjoute(false); // nouveau plat : pas encore envoye au bilan
     } catch (e) {
       setErreur(e.message);
     } finally {
@@ -167,6 +221,20 @@ export default function App() {
             {analyse.remarques ? (
               <Text style={styles.remarques}>{analyse.remarques}</Text>
             ) : null}
+
+            <TouchableOpacity
+              style={[styles.bouton, ajoute && styles.boutonSecondaire, { marginTop: 16 }]}
+              onPress={() => {
+                if (ajoute) return;
+                onAjouterConsomme?.(totaux.kcal);
+                setAjoute(true);
+              }}
+              disabled={ajoute}
+            >
+              <Text style={styles.boutonTexte}>
+                {ajoute ? "✓ Ajouté au bilan" : `Ajouter au bilan (${totaux.kcal} kcal)`}
+              </Text>
+            </TouchableOpacity>
 
             <Text style={styles.source}>{SOURCE}</Text>
           </View>
@@ -315,9 +383,420 @@ function ChoixFiche({ visible, aliment, onChoisir, onFermer }) {
   );
 }
 
+// =========================================================================
+//  ECRAN OBJECTIF — calculateur de besoin calorique
+// =========================================================================
+
+const BUTS = [
+  ["perte", "Perdre du poids"],
+  ["maintien", "Maintenir"],
+  ["prise", "Prendre du muscle"],
+];
+
+function EcranObjectif({ onObjectif }) {
+  const [sexe, setSexe] = useState("homme");
+  const [age, setAge] = useState("");
+  const [poids, setPoids] = useState("");
+  const [taille, setTaille] = useState("");
+  const [activite, setActivite] = useState("modere");
+  const [but, setBut] = useState("perte");
+  const [rythme, setRythme] = useState("standard");
+  const [resultat, setResultat] = useState(null);
+  const [erreurs, setErreurs] = useState([]);
+
+  function calculer() {
+    const profil = {
+      sexe,
+      age: parseInt(age, 10),
+      poids: parseFloat(String(poids).replace(",", ".")),
+      taille: parseFloat(String(taille).replace(",", ".")),
+    };
+    const r = calculerObjectif(profil, but, activite, rythme);
+    if (!r.ok) {
+      setErreurs(r.erreurs);
+      setResultat(null);
+    } else {
+      setErreurs([]);
+      setResultat(r);
+      // Publie l'objectif vers l'onglet Bilan (avec l'activite, pour detecter
+      // un eventuel double comptage du sport).
+      onObjectif?.({ objectif: r.objectif, cleActivite: activite });
+    }
+  }
+
+  // Les rythmes n'ont de sens que pour perte / prise.
+  const rythmesDispo = but === "maintien" ? null : RYTHMES[but];
+
+  return (
+    <ScrollView contentContainerStyle={styles.contenu} keyboardShouldPersistTaps="handled">
+      <Text style={styles.titre}>Mon objectif</Text>
+      <Text style={styles.sousTitre}>
+        Besoin calorique estimé à partir de votre profil, avec des marges de
+        sécurité
+      </Text>
+
+      <View style={styles.carte}>
+        <Text style={styles.champLabel}>Sexe</Text>
+        <Segment
+          options={[["homme", "Homme"], ["femme", "Femme"]]}
+          valeur={sexe}
+          onChange={setSexe}
+        />
+
+        <View style={styles.ligneChamps}>
+          <ChampNombre label="Âge" valeur={age} onChange={setAge} unite="ans" />
+          <ChampNombre label="Poids" valeur={poids} onChange={setPoids} unite="kg" />
+          <ChampNombre label="Taille" valeur={taille} onChange={setTaille} unite="cm" />
+        </View>
+
+        <Text style={styles.champLabel}>Niveau d'activité (indicatif)</Text>
+        <Text style={styles.noteChamp}>
+          N'entre pas dans le calcul : la dépense de sport est comptée à part,
+          via Apple Santé, dans l'onglet Bilan.
+        </Text>
+        {ACTIVITES.map((a) => (
+          <Pressable
+            key={a.cle}
+            style={[styles.optionActivite, activite === a.cle && styles.optionActiviteActive]}
+            onPress={() => setActivite(a.cle)}
+          >
+            <Text style={[styles.optionActiviteTexte, activite === a.cle && styles.optionActiviteTexteActif]}>
+              {a.libelle}
+            </Text>
+          </Pressable>
+        ))}
+
+        <Text style={[styles.champLabel, { marginTop: 18 }]}>Objectif</Text>
+        <Segment options={BUTS} valeur={but} onChange={setBut} colonne />
+
+        {rythmesDispo && (
+          <>
+            <Text style={[styles.champLabel, { marginTop: 18 }]}>Rythme</Text>
+            <Segment
+              options={rythmesDispo.map((r) => [r.cle, `${r.libelle}`])}
+              valeur={rythme}
+              onChange={setRythme}
+            />
+            <Text style={styles.rythmeApercu}>
+              {rythmesDispo.find((r) => r.cle === rythme)?.apercu}
+            </Text>
+          </>
+        )}
+
+        <TouchableOpacity style={[styles.bouton, { marginTop: 20 }]} onPress={calculer}>
+          <Text style={styles.boutonTexte}>Calculer mon besoin</Text>
+        </TouchableOpacity>
+
+        {erreurs.length > 0 && (
+          <View style={styles.blocErreurs}>
+            {erreurs.map((e, i) => (
+              <Text key={i} style={styles.erreurLigne}>• {e}</Text>
+            ))}
+          </View>
+        )}
+      </View>
+
+      {resultat && <ResultatObjectif r={resultat} />}
+    </ScrollView>
+  );
+}
+
+// =========================================================================
+//  ECRAN BILAN — calories restantes du jour (objectif + sport - consomme)
+// =========================================================================
+
+function EcranBilan({ objectifInfo, consomme, onResetConsomme, allerObjectif }) {
+  // Sport du jour : saisi a la main, ou importe depuis Apple Sante (energie
+  // active) quand un build de developpement le permet.
+  const [sport, setSport] = useState("");
+  const [dispoSante] = useState(() => santeDisponible());
+  const [etatSante, setEtatSante] = useState("depart"); // depart | chargement | erreur
+  const [erreurSante, setErreurSante] = useState(null);
+
+  async function importerSante() {
+    setEtatSante("chargement");
+    setErreurSante(null);
+    try {
+      await demanderAcces();
+      const d = await depenseDuJour();
+      // On ajoute l'energie ACTIVE (le sport), pas le metabolisme de repos :
+      // le repos est deja couvert par l'objectif de base.
+      if (d.active != null) setSport(String(d.active));
+      setEtatSante("depart");
+    } catch (e) {
+      setErreurSante(e.message);
+      setEtatSante("depart");
+    }
+  }
+
+  const objectif = objectifInfo?.objectif ?? null;
+  const bilan = objectif
+    ? bilanJournalier({
+        objectif,
+        sport: parseInt(sport || "0", 10),
+        consomme,
+      })
+    : null;
+
+  return (
+    <ScrollView contentContainerStyle={styles.contenu} keyboardShouldPersistTaps="handled">
+      <Text style={styles.titre}>Bilan du jour</Text>
+      <Text style={styles.sousTitre}>
+        Ce qu'il vous reste à manger = objectif + sport − déjà consommé
+      </Text>
+
+      {!objectif ? (
+        <View style={styles.carte}>
+          <Text style={styles.disclaimer}>
+            Calculez d'abord votre objectif calorique dans l'onglet Objectif.
+          </Text>
+          <TouchableOpacity style={[styles.bouton, { marginTop: 12 }]} onPress={allerObjectif}>
+            <Text style={styles.boutonTexte}>Aller à l'onglet Objectif</Text>
+          </TouchableOpacity>
+        </View>
+      ) : (
+        <>
+          <View style={styles.carte}>
+            <Text style={styles.champLabel}>Il vous reste</Text>
+            <Text
+              style={[
+                styles.objectifGros,
+                bilan.restant < 0 && { color: "#B00020" },
+              ]}
+            >
+              {bilan.restant} kcal
+            </Text>
+            <Text style={styles.objectifSous}>
+              {bilan.restant < 0
+                ? `Objectif dépassé de ${bilan.depassement} kcal`
+                : `sur un budget de ${bilan.budget} kcal`}
+            </Text>
+
+            {/* Barre de progression du consomme sur le budget */}
+            <View style={styles.barreFond}>
+              <View
+                style={[
+                  styles.barreRemplie,
+                  { width: `${Math.round(bilan.part * 100)}%` },
+                  bilan.restant < 0 && { backgroundColor: "#B00020" },
+                ]}
+              />
+            </View>
+
+            <View style={styles.gridBesoins}>
+              <View style={styles.besoinCase}>
+                <Text style={styles.besoinValeur}>{objectif}</Text>
+                <Text style={styles.besoinLabel}>objectif{"\n"}de base</Text>
+              </View>
+              <View style={styles.besoinCase}>
+                <Text style={[styles.besoinValeur, { color: "#2E7D32" }]}>
+                  +{parseInt(sport || "0", 10)}
+                </Text>
+                <Text style={styles.besoinLabel}>sport{"\n"}du jour</Text>
+              </View>
+              <View style={styles.besoinCase}>
+                <Text style={[styles.besoinValeur, { color: COULEURS.accent }]}>
+                  −{consomme}
+                </Text>
+                <Text style={styles.besoinLabel}>consommé{"\n"}aujourd'hui</Text>
+              </View>
+            </View>
+
+            {bilan.avertissements.map((a, i) => (
+              <View key={i} style={styles.avertissement}>
+                <Text style={styles.avertissementTexte}>⚠️ {a}</Text>
+              </View>
+            ))}
+          </View>
+
+          <View style={styles.carte}>
+            <Text style={styles.champLabel}>Sport du jour</Text>
+            <View style={styles.champNombreBoite}>
+              <TextInput
+                style={styles.champNombreSaisie}
+                value={sport}
+                onChangeText={(t) => setSport(t.replace(/[^0-9]/g, ""))}
+                keyboardType="number-pad"
+                placeholder="0"
+                placeholderTextColor={COULEURS.doux}
+                maxLength={4}
+              />
+              <Text style={styles.champNombreUnite}>kcal brûlées</Text>
+            </View>
+
+            {dispoSante ? (
+              <>
+                <TouchableOpacity
+                  style={[styles.bouton, styles.boutonSecondaire, { marginTop: 12 }]}
+                  onPress={importerSante}
+                  disabled={etatSante === "chargement"}
+                >
+                  <Text style={styles.boutonTexte}>
+                    {etatSante === "chargement" ? "Lecture…" : "Importer depuis Apple Santé"}
+                  </Text>
+                </TouchableOpacity>
+                {erreurSante ? <Text style={styles.erreurLigne}>{erreurSante}</Text> : null}
+              </>
+            ) : (
+              <Text style={styles.disclaimer}>
+                L'import automatique depuis Apple Santé nécessite un build de
+                développement (voir README). En attendant, saisissez les calories
+                de votre séance à la main.
+              </Text>
+            )}
+          </View>
+
+          <View style={styles.carte}>
+            <Text style={styles.champLabel}>Consommé aujourd'hui</Text>
+            <Text style={styles.objectifDetail}>
+              {consomme} kcal ajoutées depuis l'onglet Photo. Analysez un plat
+              puis touchez « Ajouter au bilan » pour l'inclure ici.
+            </Text>
+            {consomme > 0 ? (
+              <TouchableOpacity
+                style={[styles.bouton, styles.boutonSecondaire, { marginTop: 12 }]}
+                onPress={onResetConsomme}
+              >
+                <Text style={styles.boutonTexte}>Remettre à zéro (nouveau jour)</Text>
+              </TouchableOpacity>
+            ) : null}
+          </View>
+        </>
+      )}
+    </ScrollView>
+  );
+}
+
+/** Carte de resultat : besoin, objectif, macros, avertissements de securite. */
+function ResultatObjectif({ r }) {
+  const signe = r.ecartReel > 0 ? "+" : "";
+  const libelleBut =
+    r.but === "perte" ? "perte de poids" : r.but === "prise" ? "prise de muscle" : "maintien";
+
+  return (
+    <View style={styles.carte}>
+      <Text style={styles.champLabel}>Objectif quotidien</Text>
+      <Text style={styles.objectifGros}>{r.objectif} kcal</Text>
+      <Text style={styles.objectifSous}>pour un objectif de {libelleBut}</Text>
+
+      {r.but !== "maintien" && !r.deficitImpossible && (
+        <Text style={styles.objectifDetail}>
+          {signe}
+          {r.ecartReel} kcal/j par rapport au maintien · rythme ≈ {r.rythmeHebdoKg} kg/sem
+        </Text>
+      )}
+
+      <View style={styles.gridBesoins}>
+        <View style={styles.besoinCase}>
+          <Text style={styles.besoinValeur}>{r.bmr}</Text>
+          <Text style={styles.besoinLabel}>métabolisme{"\n"}de base</Text>
+        </View>
+        <View style={styles.besoinCase}>
+          <Text style={styles.besoinValeur}>{r.tdee}</Text>
+          <Text style={styles.besoinLabel}>maintien{"\n"}au repos</Text>
+        </View>
+        <View style={styles.besoinCase}>
+          <Text style={[styles.besoinValeur, { color: COULEURS.accent }]}>{r.objectif}</Text>
+          <Text style={styles.besoinLabel}>objectif{"\n"}visé</Text>
+        </View>
+      </View>
+
+      <Text style={styles.champLabel}>Répartition indicative</Text>
+      <View style={styles.gridMacros}>
+        <MacroCase valeur={r.macros.proteines} label="Protéines" />
+        <MacroCase valeur={r.macros.glucides} label="Glucides" />
+        <MacroCase valeur={r.macros.lipides} label="Lipides" />
+      </View>
+
+      {r.avertissements.map((a, i) => (
+        <View key={i} style={styles.avertissement}>
+          <Text style={styles.avertissementTexte}>⚠️ {a}</Text>
+        </View>
+      ))}
+
+      <Text style={styles.disclaimer}>
+        Estimation indicative (formule de Mifflin-St Jeor). Ce n'est pas un avis
+        médical. En cas de grossesse, d'allaitement, de pathologie ou de trouble
+        du comportement alimentaire, consultez un professionnel de santé avant
+        de modifier votre alimentation.
+      </Text>
+    </View>
+  );
+}
+
+function MacroCase({ valeur, label }) {
+  return (
+    <View style={styles.macroCase}>
+      <Text style={styles.macroValeur}>{valeur} g</Text>
+      <Text style={styles.macroLabel}>{label}</Text>
+    </View>
+  );
+}
+
+/** Controle segmente generique. `colonne` empile verticalement (libelles longs). */
+function Segment({ options, valeur, onChange, colonne }) {
+  return (
+    <View style={[styles.segment, colonne && styles.segmentColonne]}>
+      {options.map(([cle, libelle]) => (
+        <Pressable
+          key={cle}
+          style={[
+            styles.segmentBtn,
+            colonne && styles.segmentBtnColonne,
+            valeur === cle && styles.segmentBtnActif,
+          ]}
+          onPress={() => onChange(cle)}
+        >
+          <Text style={[styles.segmentTexte, valeur === cle && styles.segmentTexteActif]}>
+            {libelle}
+          </Text>
+        </Pressable>
+      ))}
+    </View>
+  );
+}
+
+/** Champ numerique labellise, pour age / poids / taille. */
+function ChampNombre({ label, valeur, onChange, unite }) {
+  return (
+    <View style={styles.champNombre}>
+      <Text style={styles.champLabel}>{label}</Text>
+      <View style={styles.champNombreBoite}>
+        <TextInput
+          style={styles.champNombreSaisie}
+          value={valeur}
+          onChangeText={(t) => onChange(t.replace(/[^0-9.,]/g, ""))}
+          keyboardType="numeric"
+          placeholder="—"
+          placeholderTextColor={COULEURS.doux}
+          maxLength={5}
+        />
+        <Text style={styles.champNombreUnite}>{unite}</Text>
+      </View>
+    </View>
+  );
+}
+
 const styles = StyleSheet.create({
   ecran: { flex: 1, backgroundColor: COULEURS.fond },
-  contenu: { padding: 20, paddingTop: 70, paddingBottom: 60 },
+  contenu: { padding: 20, paddingTop: 16, paddingBottom: 60 },
+
+  tabs: {
+    flexDirection: "row",
+    paddingTop: 56,
+    paddingHorizontal: 20,
+    backgroundColor: COULEURS.fond,
+    gap: 8,
+  },
+  tab: {
+    flex: 1,
+    paddingVertical: 10,
+    borderRadius: 10,
+    backgroundColor: "#EAE5DA",
+  },
+  tabActif: { backgroundColor: COULEURS.accent },
+  tabTexte: { textAlign: "center", fontWeight: "600", color: COULEURS.doux },
+  tabTexteActif: { color: "white" },
 
   titre: { fontSize: 32, fontWeight: "700", textAlign: "center", color: COULEURS.texte },
   sousTitre: {
@@ -406,4 +885,108 @@ const styles = StyleSheet.create({
   optionNom: { fontSize: 15, color: COULEURS.texte },
   optionMeta: { fontSize: 12, color: COULEURS.doux, marginTop: 3 },
   vide: { textAlign: "center", color: COULEURS.doux, marginTop: 30 },
+
+  // --- Ecran Objectif ---
+  champLabel: { fontSize: 13, fontWeight: "600", color: COULEURS.doux, marginBottom: 8, marginTop: 4 },
+  noteChamp: { fontSize: 11, color: COULEURS.doux, fontStyle: "italic", marginTop: -4, marginBottom: 8 },
+
+  segment: { flexDirection: "row", gap: 8, marginBottom: 6 },
+  segmentColonne: { flexDirection: "column" },
+  segmentBtn: {
+    flex: 1,
+    paddingVertical: 12,
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: COULEURS.bord,
+    backgroundColor: COULEURS.fond,
+  },
+  segmentBtnColonne: { flex: 0 },
+  segmentBtnActif: { backgroundColor: COULEURS.accent, borderColor: COULEURS.accent },
+  segmentTexte: { textAlign: "center", color: COULEURS.texte, fontWeight: "600" },
+  segmentTexteActif: { color: "white" },
+
+  ligneChamps: { flexDirection: "row", gap: 10, marginTop: 14, marginBottom: 4 },
+  champNombre: { flex: 1 },
+  champNombreBoite: {
+    flexDirection: "row",
+    alignItems: "center",
+    borderWidth: 1,
+    borderColor: COULEURS.bord,
+    borderRadius: 10,
+    paddingHorizontal: 10,
+    backgroundColor: COULEURS.fond,
+  },
+  champNombreSaisie: { flex: 1, paddingVertical: 10, fontSize: 17, color: COULEURS.texte },
+  champNombreUnite: { fontSize: 13, color: COULEURS.doux },
+
+  optionActivite: {
+    paddingVertical: 11,
+    paddingHorizontal: 12,
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: COULEURS.bord,
+    backgroundColor: COULEURS.fond,
+    marginBottom: 6,
+  },
+  optionActiviteActive: { backgroundColor: COULEURS.accent, borderColor: COULEURS.accent },
+  optionActiviteTexte: { color: COULEURS.texte, fontSize: 14 },
+  optionActiviteTexteActif: { color: "white", fontWeight: "600" },
+
+  rythmeApercu: { fontSize: 12, color: COULEURS.doux, marginTop: 2, marginBottom: 2 },
+
+  blocErreurs: {
+    marginTop: 14,
+    padding: 12,
+    borderRadius: 10,
+    backgroundColor: "#FBEAEA",
+  },
+  erreurLigne: { color: "#B00020", fontSize: 13, marginVertical: 1 },
+
+  objectifGros: { fontSize: 40, fontWeight: "800", color: COULEURS.accent, marginTop: 2 },
+  objectifSous: { fontSize: 14, color: COULEURS.doux },
+  objectifDetail: { fontSize: 13, color: COULEURS.texte, marginTop: 6 },
+
+  barreFond: {
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: "#EAE5DA",
+    marginTop: 12,
+    overflow: "hidden",
+  },
+  barreRemplie: { height: 8, borderRadius: 4, backgroundColor: COULEURS.accent },
+
+  gridBesoins: { flexDirection: "row", gap: 10, marginTop: 18, marginBottom: 8 },
+  besoinCase: {
+    flex: 1,
+    alignItems: "center",
+    paddingVertical: 12,
+    borderRadius: 12,
+    backgroundColor: COULEURS.fond,
+  },
+  besoinValeur: { fontSize: 20, fontWeight: "700", color: COULEURS.texte },
+  besoinLabel: { fontSize: 11, color: COULEURS.doux, textAlign: "center", marginTop: 4 },
+
+  gridMacros: { flexDirection: "row", gap: 10, marginTop: 6, marginBottom: 4 },
+  macroCase: {
+    flex: 1,
+    alignItems: "center",
+    paddingVertical: 12,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: COULEURS.bord,
+  },
+  macroValeur: { fontSize: 18, fontWeight: "700", color: COULEURS.texte },
+  macroLabel: { fontSize: 12, color: COULEURS.doux, marginTop: 3 },
+
+  avertissement: {
+    marginTop: 12,
+    padding: 12,
+    borderRadius: 10,
+    backgroundColor: "#FFF4E5",
+    borderWidth: 1,
+    borderColor: "#F0D9B8",
+  },
+  avertissementTexte: { fontSize: 13, color: "#7A4B12", lineHeight: 18 },
+
+  disclaimer: { marginTop: 16, fontSize: 11, color: COULEURS.doux, lineHeight: 16, fontStyle: "italic" },
 });
