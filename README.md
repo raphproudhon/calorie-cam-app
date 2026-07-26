@@ -55,9 +55,17 @@ que de lui demander de deviner un code parmi 2 298.
 
 Pré-requis : **Node.js** (nodejs.org) et **Git** installés.
 
+> ⚠️ **Ne pas cloner dans OneDrive, Dropbox ou iCloud.** Ces outils ne
+> fusionnent pas : quand deux machines touchent au même fichier, ils créent une
+> copie suffixée du nom de l'ordinateur (`secrets-<machine>.js`). Ces copies
+> contiennent la vraie clé API et échappent aux règles du `.gitignore` écrites
+> pour le nom exact. Pire, la synchronisation peut rembobiner les références de
+> `.git` et faire croire à une désynchronisation avec GitHub. Un dossier local
+> simple (`C:\dev\`) évite tout ça — GitHub est déjà la sauvegarde.
+
 ```bash
-git clone <URL-DU-REPO>
-cd calorie-cam-app
+git clone https://github.com/raphproudhon/calorie-cam-app.git C:/dev/calorie-cam-app
+cd C:/dev/calorie-cam-app
 npm install
 ```
 
@@ -68,7 +76,9 @@ Copy-Item secrets.example.js secrets.js
 notepad secrets.js
 ```
 
-Coller sa clé Gemini (gratuite : https://aistudio.google.com/apikey) dans `secrets.js`, enregistrer.
+Coller sa clé Gemini (gratuite : https://aistudio.google.com/apikey) dans
+`secrets.js`, enregistrer. Les clés récentes commencent par `AQ.` au lieu de
+`AIza` — les deux fonctionnent.
 
 Enfin, lancer le serveur :
 
@@ -76,13 +86,20 @@ Enfin, lancer le serveur :
 npx expo start
 ```
 
-Un QR code apparaît → le scanner avec l'appareil photo de l'iPhone (Expo Go
-installé, sur le même Wi-Fi que le PC).
+Un QR code apparaît → le scanner avec l'appareil photo de l'iPhone.
+
+**L'iPhone doit être en Wi-Fi, sur le même réseau que le PC.** Expo Go se
+connecte à une adresse locale (`exp://192.168.x.x:8081`), qui n'existe pas
+depuis internet : en 4G/5G, la connexion expire sans message clair.
 
 ## Sécurité
 
-- La clé API est dans `secrets.js`, **jamais commité** (voir `.gitignore`).
-- Elle est en clair dans l'app : OK pour tester sur son propre iPhone, mais
+- La clé API est dans `secrets.js`, **jamais commité** (voir `.gitignore`, qui
+  couvre `secrets*.js` et pas seulement le nom exact).
+- Elle est envoyée dans l'en-tête HTTP `x-goog-api-key`, **jamais dans l'URL** :
+  une clé en paramètre de requête se retrouve dans les journaux de tous les
+  serveurs et proxys traversés.
+- Elle reste en clair dans l'app : OK pour tester sur son propre iPhone, mais
   **ne jamais distribuer l'app ainsi**. Pour une vraie app publiée → passer par
   un petit backend qui garde la clé cachée.
 
@@ -121,10 +138,22 @@ prompt ; une dispersion aléatoire ne se corrige que par la saisie manuelle.
 
 ## Notes de dépannage
 
+- **« The request timed out » dans Expo Go** → l'iPhone n'est pas sur le même
+  réseau que le PC (souvent : il est resté en 4G). Passer en Wi-Fi. À défaut,
+  `npx expo start --tunnel` fait transiter la connexion par internet — ça
+  fonctionne en 4G mais c'est nettement plus lent, à réserver au dépannage.
+- **« EADDRINUSE: address already in use :::8081 »** → un serveur Metro tourne
+  déjà, probablement dans une fenêtre fermée ou oubliée. Vérifier avec
+  `curl http://localhost:8081/status` : s'il répond `packager-status:running`,
+  il suffit de s'y connecter. Sinon, le libérer :
+  `powershell -Command "Get-NetTCPConnection -LocalPort 8081 -State Listen | ForEach-Object { Stop-Process -Id $_.OwningProcess -Force }"`
 - **« incompatible with this version of Expo Go »** → le projet est sur un SDK
   plus récent que l'Expo Go de l'iPhone. Aligner le projet :
   `npm install expo@~54.0.0` puis `npx expo install --fix`.
 - **« Unable to resolve ./secrets »** → le fichier `secrets.js` n'existe pas sur
   cette machine. Le recréer depuis `secrets.example.js`.
 - **« model ... is no longer available »** → le nom du modèle Gemini a changé ;
-  mettre à jour la constante `MODELE` dans `App.js`.
+  mettre à jour la constante `MODELE` dans `gemini.js`.
+- **Fichiers `-<nom-machine>` qui apparaissent** (`secrets-ordiraph.js`) → ce
+  sont des copies de conflit créées par OneDrive. Signe que le dossier est
+  synchronisé : voir l'avertissement plus haut.
