@@ -11,6 +11,12 @@
 // ne doit toucher a rien de natif.
 
 import { Platform } from "react-native";
+import Constants from "expo-constants";
+
+// Expo Go ne contient aucun module natif : y charger HealthKit / NitroModules
+// leve une erreur qu'un try/catch synchrone ne rattrape pas (le module plante
+// au chargement). On detecte donc Expo Go pour ne JAMAIS tenter le require.
+const DANS_EXPO_GO = Constants.executionEnvironment === "storeClient";
 
 // Types HealthKit lus. L'energie "active" = depense de mouvement (anneau Bouger
 // d'Apple Forme) ; l'energie "de repos" = metabolisme de base mesure. La depense
@@ -25,6 +31,12 @@ let _charge = false;
 function moduleNatif() {
   if (_charge) return _hk;
   _charge = true;
+  // Dans Expo Go, le natif est absent et son chargement plante l'app
+  // (erreur NitroModules non rattrapable) : on n'essaie meme pas.
+  if (DANS_EXPO_GO) {
+    _hk = null;
+    return _hk;
+  }
   try {
     // require (et non import) pour contenir toute erreur native ici meme.
     _hk = require("@kingstinct/react-native-healthkit");
