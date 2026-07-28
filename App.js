@@ -1105,9 +1105,11 @@ const HERO_FRAMES = [
   require("./assets/hero/10.png"),
 ];
 
-// Les 8 angles du personnage (extraits du GIF PixelLab par
-// tools/extract-rotations.js). Ordre = rotation continue autour du perso.
-const ROT_FRAMES = [
+// Les 8 angles du personnage PAR NIVEAU (extraits des GIF PixelLab par
+// tools/extract-rotations.js). Un jeu de 8 frames par etape de personnage.
+// On complete au fur et a mesure qu'on genere les niveaux ; les etapes sans
+// art encore genere retombent sur le dernier jeu disponible.
+const ROT_NIVEAU_1 = [
   require("./assets/hero/rot/0.png"),
   require("./assets/hero/rot/1.png"),
   require("./assets/hero/rot/2.png"),
@@ -1117,13 +1119,32 @@ const ROT_FRAMES = [
   require("./assets/hero/rot/6.png"),
   require("./assets/hero/rot/7.png"),
 ];
+const ROT_NIVEAU_2 = [
+  require("./assets/hero/rot2/0.png"),
+  require("./assets/hero/rot2/1.png"),
+  require("./assets/hero/rot2/2.png"),
+  require("./assets/hero/rot2/3.png"),
+  require("./assets/hero/rot2/4.png"),
+  require("./assets/hero/rot2/5.png"),
+  require("./assets/hero/rot2/6.png"),
+  require("./assets/hero/rot2/7.png"),
+];
+
+// Un jeu de rotations par etape (index = etapePersonnage 0..9). Tant que les
+// niveaux superieurs ne sont pas dessines, on garde le dernier jeu disponible.
+const ROT_SETS = [ROT_NIVEAU_1, ROT_NIVEAU_2];
+
+/** Jeu de rotations a afficher pour une etape de personnage donnee. */
+function rotationsPourEtape(etape) {
+  return ROT_SETS[Math.min(etape, ROT_SETS.length - 1)];
+}
 
 /**
  * Avatar que l'utilisateur peut faire tourner sur lui-meme : on glisse le doigt
  * horizontalement pour parcourir les 8 angles. Chaque tranche de deplacement
  * fait avancer d'un angle ; ca boucle. Aucune dependance (PanResponder natif).
  */
-function AvatarRotatif({ frames = ROT_FRAMES, taille = 128, style }) {
+function AvatarRotatif({ frames = ROT_NIVEAU_1, taille = 128, style }) {
   const [angle, setAngle] = useState(0);
   const angleRef = useRef(0);      // valeur courante, lisible dans le geste
   const baseRef = useRef(0);       // angle au debut du glissement
@@ -1140,9 +1161,9 @@ function AvatarRotatif({ frames = ROT_FRAMES, taille = 128, style }) {
       onMoveShouldSetPanResponder: (_e, g) => Math.abs(g.dx) > 3,
       onPanResponderGrant: () => { baseRef.current = angleRef.current; },
       onPanResponderMove: (_e, g) => {
-        // ~22 px de glissement = un angle. Glisser vers la droite tourne le
-        // personnage dans un sens, vers la gauche dans l'autre.
-        maj(baseRef.current - Math.round(g.dx / 22));
+        // ~22 px de glissement = un angle. Glisser vers la droite fait tourner
+        // le personnage vers la droite (sens naturel du geste).
+        maj(baseRef.current + Math.round(g.dx / 22));
       },
     })
   ).current;
@@ -1170,7 +1191,7 @@ function CarteHeros({ jeu }) {
     <View style={styles.carte}>
       <View style={styles.herosHaut}>
         <View style={styles.herosPortrait}>
-          <AvatarRotatif taille={118} style={styles.centreEcran} />
+          <AvatarRotatif frames={rotationsPourEtape(etape)} taille={118} style={styles.centreEcran} />
           <Text style={styles.rotationAstuce}>glissez pour tourner</Text>
         </View>
         <View style={styles.herosInfos}>

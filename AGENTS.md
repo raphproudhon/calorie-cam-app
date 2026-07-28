@@ -25,30 +25,47 @@ Corollaire : l'état de cuisson compte autant que l'aliment. Le riz cru est à
 2,4. Le scoring de `ciqual.js` et le prompt de la passe 2 traitent ce cas
 explicitement.
 
+## Structure de l'app
+
+Trois onglets — **Photo** (analyse d'un plat), **Progression** (avatar/niveaux +
+courbe de poids + calories), **Bilan** (calories restantes du jour). Onboarding
+obligatoire au 1er lancement ; objectif réglable ensuite via la **roue crantée**
+(menu Paramètres, haut gauche). Tout est persisté localement (`stockage.js`).
+
 ## Fichiers
 
 | Fichier | Rôle |
 |---|---|
-| `App.js` | deux onglets : Photo (analyse + correction) et Objectif (besoin calorique) |
+| `App.js` | les 3 onglets, l'onboarding, les paramètres, l'avatar rotatif |
 | `gemini.js` | passe 1 (vision) et passe 2 (choix de la fiche Ciqual) |
 | `ciqual.js` | recherche floue dans la table + calcul nutritionnel |
-| `besoins.js` | BMR/TDEE/objectif calorique, avec garde-fous de sécurité |
+| `besoins.js` | BMR/objectif calorique + bilan du jour, garde-fous de sécurité |
 | `health.js` | lecture de la dépense via Apple Santé (HealthKit) |
+| `stockage.js` | persistance locale (AsyncStorage) + bascule de journée à minuit |
+| `jeu.js` | gamification : XP, niveaux, badges, étapes du personnage |
+| `sprites.js` | lecteur de sprites pixel (grille + palette) — cf. `tools/sprite-studio.html` |
 | `data/ciqual.json` | table réduite (235 Ko), **versionnée** — ne pas régénérer sans raison |
-| `tools/build-ciqual.js` | conversion des XML officiels de l'ANSES vers ce JSON |
+| `assets/hero/` | frames du personnage + rotations 8 directions par niveau (`rot/`, `rot2/`…) |
+| `tools/` | outils hors-app : conversion Ciqual, découpe/détourage/rotation des sprites |
 
 ## Invariants à ne pas casser
 
 - **`health.js` doit toujours se dégrader proprement dans Expo Go.** HealthKit
   est natif et absent d'Expo Go : le module natif est chargé en *lazy require*
-  dans un try/catch, jamais importé en tête de fichier. `estDisponible()` renvoie
-  `false` si le natif manque, et l'UI affiche un message au lieu de planter. Ne
-  jamais transformer ce require en `import` de haut niveau : cela ferait crasher
-  l'app dans Expo Go, où tournent encore la photo et le calcul d'objectif.
+  dans un try/catch (et un garde `expo-constants` détecte Expo Go pour ne jamais
+  tenter le require — NitroModules plante sinon au chargement). `estDisponible()`
+  renvoie `false` si le natif manque, l'UI affiche un message au lieu de planter.
+  Ne jamais transformer ce require en `import` de haut niveau.
 - **`besoins.js` ne doit jamais proposer un objectif sous le plancher de
-  sécurité** (1200 kcal femme / 1500 kcal homme). C'est la garantie « sans
-  mettre la santé en danger ». Les cas limites (TDEE déjà sous le plancher) sont
-  gérés et testés.
+  sécurité** (1200 kcal femme / 1500 kcal homme). Et **l'activité choisie
+  n'entre pas dans le calcul** : l'objectif de base = BMR × 1,2 (repos, hors
+  sport) ; la dépense de sport ne vient QUE d'Apple Santé (ou saisie manuelle),
+  ajoutée dans le Bilan → aucun double comptage.
+- **`jeu.js` ne récompense jamais la sous-alimentation.** Le bonus « cible »
+  d'une journée exige que le consommé reste dans une fourchette autour de
+  l'objectif ; manger beaucoup trop peu ne donne pas d'XP « cible ». Garde-fou
+  santé, testé.
+- **L'IA n'invente aucune valeur nutritionnelle** (voir la règle plus haut).
 
 ## Deux modes d'exécution
 

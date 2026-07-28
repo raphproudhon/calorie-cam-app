@@ -33,11 +33,13 @@ que de lui demander de deviner un code parmi 2 298.
 
 ### Objectif calorique et bilan du jour
 
-Trois onglets : **Photo**, **Objectif**, **Bilan**.
+Trois onglets : **Photo**, **Progression**, **Bilan**. L'objectif calorique se
+règle à l'**onboarding** (1er lancement) puis via la **roue crantée**
+(Paramètres) — ce n'est plus un onglet.
 
-L'onglet **Objectif** calcule un besoin de base (formule Mifflin-St Jeor) avec
-des garde-fous de sécurité (plancher 1200/1500 kcal, déficit modéré). Choix
-d'architecture important :
+Le calcul du besoin de base (formule Mifflin-St Jeor) applique des garde-fous de
+sécurité (plancher 1200/1500 kcal, déficit modéré). Choix d'architecture
+important :
 
 > **Le niveau d'activité n'entre pas dans le calcul de l'objectif.** L'objectif
 > de base représente le maintien **au repos** (BMR × 1,2, hors sport). La seule
@@ -140,9 +142,9 @@ Données publiées sous **Licence Ouverte (Etalab)**.
 
 ## Apple Santé — dépense calorique (build de développement requis)
 
-L'onglet **Objectif** peut lire la dépense énergétique réelle (calories actives
-+ de repos) depuis **Apple Santé**, pour la comparer à la TDEE estimée. Le code
-est en place (`health.js`, plugin dans `app.json`), mais :
+L'onglet **Bilan** peut importer la dépense de sport réelle (calories actives)
+depuis **Apple Santé**, pour l'ajouter au budget du jour. Le code est en place
+(`health.js`, plugin dans `app.json`), mais :
 
 > ⚠️ **HealthKit ne fonctionne pas dans Expo Go.** C'est du code natif : il faut
 > un **build de développement** (une version compilée sur mesure de l'app). Dans
@@ -184,12 +186,23 @@ La configuration technique (entitlement HealthKit, descriptions d'usage Santé,
 - [x] Améliorer les estimations de portions : repères d'échelle et portions
       usuelles dans le prompt, fourchette min/max affichée, et **correction
       manuelle du poids** avec recalcul immédiat
-- [x] **Calculateur de besoin calorique** (onglet Objectif) : BMR Mifflin-St
-      Jeor, TDEE, objectif perte/prise avec garde-fous de sécurité
+- [x] **Calculateur de besoin calorique** : BMR Mifflin-St Jeor, objectif
+      perte/prise avec garde-fous de sécurité (réglé à l'onboarding puis dans
+      les Paramètres). L'activité n'entre pas dans le calcul ; la dépense de
+      sport vient d'Apple Santé (ou saisie manuelle) et s'ajoute au Bilan.
+- [x] **Onglet Bilan** : calories restantes du jour = objectif + sport − consommé
+- [x] **Persistance locale** (AsyncStorage) : profil, historique, poids ;
+      bascule de journée à minuit (archivage de la veille)
+- [x] **Onglet Progression** : avatar/personnage **évolutif par niveau** (image
+      + rotation 8 directions au doigt), courbe de poids, historique des calories
+- [x] **Gamification** (`jeu.js`) : XP, niveaux, badges. Garde-fou santé : la
+      sous-alimentation ne rapporte jamais le bonus « cible »
 - [~] **Apple Santé** : lecture de la dépense réelle — code prêt, nécessite le
       build de développement ci-dessus pour fonctionner
+- [~] **Avatar** : personnages générés (PixelLab) intégrés niveau par niveau —
+      en cours (niveaux 1-2 faits ; voir `tools/extract-rotations.js`)
 - [ ] Valider la précision sur des repas réels **et pesés** (voir ci-dessous)
-- [ ] Ajouter un **journal** (stockage local des plats de la journée + total)
+- [ ] Journal détaillé des plats de la journée (au-delà du total)
 - [ ] Scan de code-barres pour les produits emballés (via Open Food Facts)
 - [ ] À terme : app iOS native (SwiftUI) si le concept est validé
 
