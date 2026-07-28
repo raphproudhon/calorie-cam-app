@@ -1,0 +1,288 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>CalorieCam — Studio de sprites</title>
+<style>
+  :root { --bg:#1c1a24; --panel:#26232f; --line:#3a3646; --txt:#eae7f0; --muted:#9c98ab; --accent:#c4622d; }
+  * { box-sizing:border-box; }
+  body { margin:0; font-family:system-ui,Segoe UI,Roboto,sans-serif; background:var(--bg); color:var(--txt); }
+  header { padding:10px 16px; border-bottom:1px solid var(--line); display:flex; align-items:center; gap:12px; flex-wrap:wrap; }
+  h1 { font-size:15px; margin:0; font-weight:600; }
+  .hint { color:var(--muted); font-size:12px; }
+  main { display:flex; gap:16px; padding:16px; align-items:flex-start; flex-wrap:wrap; }
+  .zone { background:var(--panel); border:1px solid var(--line); border-radius:10px; padding:12px; }
+  #wrapCanvas { position:relative; overflow:auto; max-width:70vw; }
+  canvas { image-rendering:pixelated; display:block; background:
+    repeating-conic-gradient(#2b2833 0% 25%, #201e28 0% 50%) 0 0 / 20px 20px; cursor:crosshair; }
+  .col { display:flex; flex-direction:column; gap:12px; width:300px; }
+  label { font-size:12px; color:var(--muted); display:block; margin-bottom:4px; }
+  input[type=number], textarea, select { width:100%; background:#1a1822; color:var(--txt);
+    border:1px solid var(--line); border-radius:6px; padding:6px; font-family:ui-monospace,monospace; font-size:12px; }
+  textarea { height:220px; white-space:pre; overflow:auto; line-height:1.15; }
+  button { background:#332f3d; color:var(--txt); border:1px solid var(--line); border-radius:6px;
+    padding:7px 10px; font-size:13px; cursor:pointer; }
+  button:hover { border-color:var(--accent); }
+  button.primary { background:var(--accent); border-color:var(--accent); color:#fff; }
+  .row { display:flex; gap:8px; align-items:center; flex-wrap:wrap; }
+  .palette { display:flex; flex-wrap:wrap; gap:6px; }
+  .sw { width:34px; height:34px; border-radius:6px; border:2px solid transparent; cursor:pointer;
+    position:relative; display:flex; align-items:flex-end; justify-content:center; }
+  .sw.active { border-color:#fff; }
+  .sw span { font-size:10px; background:#0006; padding:0 2px; border-radius:3px; }
+  .sw.eraser { background:
+    repeating-conic-gradient(#555 0% 25%, #333 0% 50%) 0 0 / 10px 10px; }
+  .checkline { display:flex; align-items:center; gap:6px; font-size:13px; }
+  small { color:var(--muted); font-size:11px; line-height:1.5; display:block; }
+</style>
+</head>
+<body>
+<header>
+  <h1>Studio de sprites — CalorieCam</h1>
+  <span class="hint">Dessine une grille de pixels, exporte au format lu par l'app (sprites.js).</span>
+</header>
+
+<main>
+  <div class="zone" id="wrapCanvas">
+    <canvas id="cv" width="640" height="800"></canvas>
+  </div>
+
+  <div class="col">
+    <div class="zone">
+      <label>Dimensions (largeur × hauteur en pixels)</label>
+      <div class="row">
+        <input id="w" type="number" min="4" max="128" value="32" style="width:70px" />
+        <span>×</span>
+        <input id="h" type="number" min="4" max="128" value="40" style="width:70px" />
+        <button id="applySize">Appliquer</button>
+      </div>
+      <div class="row" style="margin-top:8px">
+        <label style="margin:0">Zoom</label>
+        <input id="zoom" type="range" min="6" max="28" value="18" />
+        <label class="checkline"><input id="grid" type="checkbox" checked /> Grille</label>
+        <label class="checkline"><input id="mirror" type="checkbox" /> Symétrie</label>
+      </div>
+    </div>
+
+    <div class="zone">
+      <label>Palette (clic = couleur active)</label>
+      <div class="palette" id="palette"></div>
+      <div class="row" style="margin-top:8px">
+        <input id="colorEdit" type="color" value="#c4622d" />
+        <button id="setColor">Changer la couleur active</button>
+        <button id="addColor">+ Couleur</button>
+      </div>
+      <small>La couleur « vide » (damier) efface le pixel. Chaque couleur a une lettre : c'est ce qui est stocké dans la matrice.</small>
+    </div>
+
+    <div class="zone">
+      <label>Image de référence (pour caler les proportions)</label>
+      <div class="row">
+        <input id="ref" type="file" accept="image/*" />
+      </div>
+      <div class="row" style="margin-top:8px">
+        <label style="margin:0">Opacité</label>
+        <input id="refOpacity" type="range" min="0" max="100" value="40" />
+        <button id="clearRef">Retirer</button>
+      </div>
+      <small>Sert uniquement à tracer/caler. Le sprite final doit rester une création originale (pas un calque d'une œuvre existante).</small>
+    </div>
+
+    <div class="zone">
+      <label>Matrice (éditable) — colle ici un brouillon puis « Appliquer le texte »</label>
+      <textarea id="matrix" spellcheck="false"></textarea>
+      <div class="row" style="margin-top:8px">
+        <button id="applyText">Appliquer le texte</button>
+        <button id="clearGrid">Vider</button>
+      </div>
+    </div>
+
+    <div class="zone">
+      <label>Export pour l'app</label>
+      <div class="row">
+        <button class="primary" id="export">Exporter JSON</button>
+        <button id="copy">Copier</button>
+      </div>
+      <textarea id="out" spellcheck="false" style="height:120px; margin-top:8px"></textarea>
+      <small>Colle ce JSON dans <code>sprites.js</code> (tableau SPRITES) — l'app le rend tel quel.</small>
+    </div>
+  </div>
+</main>
+
+<script>
+// --- Palette par defaut (style heros dark-fantasy) -------------------------
+// char -> couleur. L'espace = transparent (jamais dans la palette).
+const PALETTE = {
+  "#": "#17121e", // contour
+  "S": "#f4cfa6", "s": "#d7a274",            // peau / ombre
+  "H": "#f2f3f8", "h": "#c7cbd8", "g": "#969bad", // cheveux clair/moyen/fonce
+  "E": "#ffffff", "R": "#e8382c", "x": "#7c1a16", // oeil blanc/rouge/fonce
+  "B": "#221d2b", "b": "#2c2636", "d": "#14101a", // armure / clair / ombre
+  "Q": "#cf3b2b",                             // lisere rouge
+  "C": "#c4392a", "c": "#8c2418",             // cape / ombre
+  "W": "#eaf4ff", "w": "#9fc0e6",             // lame / arete
+  "Y": "#ffd24a", "k": "#6b4a2a",             // or / manche
+  "F": "#ff7a2a", "f": "#ffab2e", "o": "#ffd25a", // flamme
+  "m": "#7c3f2e",                             // bouche
+};
+
+let W = 32, H = 40, ZOOM = 18, showGrid = true, mirror = false;
+let grid = [];        // grid[y][x] = char ou " "
+let active = "#";     // couleur active (char)
+let refImg = null, refOpacity = 0.4;
+let painting = false, paintChar = null;
+
+const cv = document.getElementById("cv");
+const ctx = cv.getContext("2d");
+
+function blankGrid(w, h) {
+  return Array.from({ length: h }, () => Array.from({ length: w }, () => " "));
+}
+
+function resize() {
+  cv.width = W * ZOOM;
+  cv.height = H * ZOOM;
+  draw();
+}
+
+function draw() {
+  ctx.clearRect(0, 0, cv.width, cv.height);
+  if (refImg) {
+    ctx.globalAlpha = refOpacity;
+    ctx.imageSmoothingEnabled = true;
+    ctx.drawImage(refImg, 0, 0, cv.width, cv.height);
+    ctx.globalAlpha = 1;
+  }
+  for (let y = 0; y < H; y++) {
+    for (let x = 0; x < W; x++) {
+      const ch = grid[y][x];
+      const col = PALETTE[ch];
+      if (col) { ctx.fillStyle = col; ctx.fillRect(x * ZOOM, y * ZOOM, ZOOM, ZOOM); }
+    }
+  }
+  if (showGrid) {
+    ctx.strokeStyle = "#ffffff22"; ctx.lineWidth = 1;
+    for (let x = 0; x <= W; x++) { ctx.beginPath(); ctx.moveTo(x*ZOOM,0); ctx.lineTo(x*ZOOM,cv.height); ctx.stroke(); }
+    for (let y = 0; y <= H; y++) { ctx.beginPath(); ctx.moveTo(0,y*ZOOM); ctx.lineTo(cv.width,y*ZOOM); ctx.stroke(); }
+    // reperes tous les 5
+    ctx.fillStyle = "#ffffff55"; ctx.font = "9px monospace";
+    for (let x = 0; x < W; x += 5) ctx.fillText(x, x*ZOOM+1, 8);
+    for (let y = 0; y < H; y += 5) ctx.fillText(y, 1, y*ZOOM+9);
+  }
+}
+
+function cellFromEvent(e) {
+  const r = cv.getBoundingClientRect();
+  const x = Math.floor((e.clientX - r.left) / ZOOM);
+  const y = Math.floor((e.clientY - r.top) / ZOOM);
+  return { x, y };
+}
+
+function poser(x, y, ch) {
+  if (x < 0 || y < 0 || x >= W || y >= H) return;
+  grid[y][x] = ch;
+  if (mirror) grid[y][W - 1 - x] = ch;
+  draw();
+}
+
+cv.addEventListener("contextmenu", (e) => e.preventDefault());
+cv.addEventListener("pointerdown", (e) => {
+  painting = true;
+  paintChar = e.button === 2 ? " " : active;
+  const { x, y } = cellFromEvent(e); poser(x, y, paintChar);
+});
+cv.addEventListener("pointermove", (e) => {
+  if (!painting) return;
+  const { x, y } = cellFromEvent(e); poser(x, y, paintChar);
+});
+window.addEventListener("pointerup", () => { if (painting) { painting = false; syncText(); } });
+
+// --- Palette UI ---
+function renderPalette() {
+  const el = document.getElementById("palette");
+  el.innerHTML = "";
+  const eraser = document.createElement("div");
+  eraser.className = "sw eraser" + (active === " " ? " active" : "");
+  eraser.title = "Effacer (transparent)";
+  eraser.onclick = () => { active = " "; renderPalette(); };
+  el.appendChild(eraser);
+  for (const ch of Object.keys(PALETTE)) {
+    const d = document.createElement("div");
+    d.className = "sw" + (active === ch ? " active" : "");
+    d.style.background = PALETTE[ch];
+    d.innerHTML = `<span>${ch}</span>`;
+    d.onclick = () => { active = ch; document.getElementById("colorEdit").value = PALETTE[ch]; renderPalette(); };
+    el.appendChild(d);
+  }
+}
+
+// --- Matrice texte <-> grille ---
+function syncText() {
+  document.getElementById("matrix").value = grid.map((r) => r.join("")).join("\n");
+}
+function appliquerTexte() {
+  const lignes = document.getElementById("matrix").value.replace(/\r/g, "").split("\n");
+  const h = lignes.length, w = Math.max(...lignes.map((l) => l.length));
+  W = w; H = h;
+  document.getElementById("w").value = W; document.getElementById("h").value = H;
+  grid = blankGrid(W, H);
+  for (let y = 0; y < h; y++)
+    for (let x = 0; x < lignes[y].length; x++) {
+      const ch = lignes[y][x];
+      grid[y][x] = PALETTE[ch] ? ch : " ";
+    }
+  resize();
+}
+
+// --- Export ---
+function exporter() {
+  const chars = new Set();
+  grid.forEach((r) => r.forEach((c) => { if (c !== " ") chars.add(c); }));
+  const pal = {};
+  chars.forEach((c) => { pal[c] = PALETTE[c]; });
+  const spec = { w: W, h: H, palette: pal, rows: grid.map((r) => r.join("")) };
+  document.getElementById("out").value = JSON.stringify(spec, null, 0);
+}
+
+// --- Controles ---
+document.getElementById("applySize").onclick = () => {
+  W = +document.getElementById("w").value; H = +document.getElementById("h").value;
+  grid = blankGrid(W, H); resize(); syncText();
+};
+document.getElementById("zoom").oninput = (e) => { ZOOM = +e.target.value; resize(); };
+document.getElementById("grid").onchange = (e) => { showGrid = e.target.checked; draw(); };
+document.getElementById("mirror").onchange = (e) => { mirror = e.target.checked; };
+document.getElementById("setColor").onclick = () => {
+  if (active === " ") return;
+  PALETTE[active] = document.getElementById("colorEdit").value; renderPalette(); draw();
+};
+document.getElementById("addColor").onclick = () => {
+  const libres = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+  const ch = [...libres].find((c) => !(c in PALETTE));
+  if (!ch) return alert("Palette pleine.");
+  PALETTE[ch] = document.getElementById("colorEdit").value; active = ch; renderPalette();
+};
+document.getElementById("applyText").onclick = appliquerTexte;
+document.getElementById("clearGrid").onclick = () => { grid = blankGrid(W, H); draw(); syncText(); };
+document.getElementById("export").onclick = exporter;
+document.getElementById("copy").onclick = () => {
+  const t = document.getElementById("out"); t.select(); document.execCommand("copy");
+};
+document.getElementById("ref").onchange = (e) => {
+  const f = e.target.files[0]; if (!f) return;
+  const rd = new FileReader();
+  rd.onload = () => { const im = new Image(); im.onload = () => { refImg = im; draw(); }; im.src = rd.result; };
+  rd.readAsDataURL(f);
+};
+document.getElementById("refOpacity").oninput = (e) => { refOpacity = e.target.value / 100; draw(); };
+document.getElementById("clearRef").onclick = () => { refImg = null; draw(); };
+
+// --- Init ---
+grid = blankGrid(W, H);
+renderPalette();
+resize();
+syncText();
+</script>
+</body>
+</html>

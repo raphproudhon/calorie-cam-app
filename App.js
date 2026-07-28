@@ -1,21 +1,23 @@
-// CalorieCam — deux ecrans :
-//   - "Photo"    : photo d'un plat -> calories et macros (voir gemini.js/ciqual.js)
-//   - "Objectif" : calculateur de besoin calorique selon un but (perte/prise)
+// CalorieCam — onglets :
+//   - "Photo"       : photo d'un plat -> calories et macros (gemini.js/ciqual.js)
+//   - "Progression" : courbe de poids + historique des calories jour par jour
+//   - "Bilan"       : calories restantes du jour (objectif + sport - consomme)
+// L'objectif se regle au premier lancement (onboarding), puis via la roue
+// crantee en haut a gauche (menu parametres).
 //
 // Repartition des roles (voir README) :
-//   - gemini.js  : l'IA identifie les aliments et estime les portions
-//   - ciqual.js  : la table officielle de l'ANSES fournit les valeurs nutritionnelles
-//   - besoins.js : calcul du besoin calorique et de l'objectif, avec garde-fous
-//   - ce fichier : l'affichage
-//
-// La correction manuelle des portions est volontairement au premier plan :
-// l'estimation visuelle d'une masse reste approximative, donc l'IA propose et
-// l'utilisateur ajuste. Un gramme corrige recalcule immediatement tout le reste.
+//   - gemini.js   : l'IA identifie les aliments et estime les portions
+//   - ciqual.js   : la table officielle de l'ANSES fournit les valeurs nutritionnelles
+//   - besoins.js  : calcul du besoin calorique et de l'objectif, avec garde-fous
+//   - stockage.js : persistance locale (profil, historique, poids) + bascule de jour
+//   - ce fichier  : l'affichage
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
   ActivityIndicator,
+  Image,
   Modal,
+  PanResponder,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -25,31 +27,87 @@ import {
   View,
 } from "react-native";
 import * as ImagePicker from "expo-image-picker";
+import Svg, { Polyline, Circle, Line as SvgLine } from "react-native-svg";
 
 import { analyserPhoto } from "./gemini";
 import { calculer, totaliser, rechercher, NB_ALIMENTS, SOURCE } from "./ciqual";
 import { ACTIVITES, RYTHMES, calculerObjectif, bilanJournalier } from "./besoins";
 import { estDisponible as santeDisponible, demanderAcces, depenseDuJour } from "./health";
+import { chargerEtat, sauvegarderEtat, dateDuJour } from "./stockage";
+import {
+  niveauDepuisXp,
+  etapePersonnage,
+  NOMS_ETAPES,
+  BADGES,
+  recompenserPesee,
+  ajouterXp,
+  jeuParDefaut,
+} from "./jeu";
 
-// --- Navigation par onglets ------------------------------------------------
+// --- Racine : chargement, onboarding, navigation ---------------------------
 
 export default function App() {
+  const [etat, setEtat] = useState(null); // null = en cours de chargement
   const [onglet, setOnglet] = useState("photo");
+  const [paramsOuverts, setParamsOuverts] = useState(false);
 
-  // Etat partage entre les onglets pour le bilan du jour :
-  //   - objectifInfo : l'objectif calorique calcule dans l'onglet Objectif
-  //   - consomme     : cumul des calories envoyees depuis l'onglet Photo
-  const [objectifInfo, setObjectifInfo] = useState(null); // { objectif, cleActivite }
-  const [consomme, setConsomme] = useState(0);
+  // Chargement de l'etat persiste (profil, historique, poids) au demarrage.
+  // chargerEtat applique aussi la bascule de journee (archivage de la veille).
+  useEffect(() => {
+    chargerEtat().then(setEtat);
+  }, []);
 
-  const ajouterConsomme = (kcal) => setConsomme((c) => c + Math.max(0, Math.round(kcal || 0)));
+  // Sauvegarde a chaque modification de l'etat (une fois charge).
+  useEffect(() => {
+    if (etat) sauvegarderEtat(etat);
+  }, [etat]);
+
+  // --- Ecran d'attente pendant le chargement ---
+  if (!etat) {
+    return (
+      <View style={[styles.ecran, styles.centreEcran]}>
+        <ActivityIndicator size="large" color={COULEURS.accent} />
+      </View>
+    );
+  }
+
+  // --- Premier lancement : onboarding obligatoire ---
+  if (!etat.profil) {
+    return (
+      <View style={styles.ecran}>
+        <FormulaireObjectif
+          titre="Bienvenue"
+          sousTitre="Configurons votre objectif pour commencer."
+          libelleValider="Commencer"
+          onValider={(profil, objectif) =>
+            setEtat((e) => ({ ...e, profil, objectif }))
+          }
+        />
+      </View>
+    );
+  }
+
+  // --- Application principale ---
+  const majJour = (champs) =>
+    setEtat((e) => ({ ...e, jour: { ...e.jour, ...champs } }));
+
+  const ajouterConsomme = (kcal) =>
+    majJour({ consomme: (etat.jour.consomme || 0) + Math.max(0, Math.round(kcal || 0)) });
 
   return (
     <View style={styles.ecran}>
+      {/* Barre du haut : roue crantee (parametres) a gauche + titre */}
+      <View style={styles.barreHaut}>
+        <Pressable onPress={() => setParamsOuverts(true)} hitSlop={12} style={styles.rouePos}>
+          <Text style={styles.roue}>⚙︎</Text>
+        </Pressable>
+        <Text style={styles.barreTitre}>CalorieCam</Text>
+      </View>
+
       <View style={styles.tabs}>
         {[
           ["photo", "Photo"],
-          ["objectif", "Objectif"],
+          ["progression", "Progression"],
           ["bilan", "Bilan"],
         ].map(([cle, libelle]) => (
           <Pressable
@@ -64,16 +122,49 @@ export default function App() {
         ))}
       </View>
 
-      {onglet === "photo" && <EcranPhoto onAjouterConsomme={ajouterConsomme} />}
-      {onglet === "objectif" && <EcranObjectif onObjectif={setObjectifInfo} />}
-      {onglet === "bilan" && (
+      {/*
+        Les ecrans restent MONTES en permanence (masques avec display:"none" au
+        lieu d'etre demontes) : chaque ecran garde son etat, l'analyse photo en
+        cours continue meme si on change d'onglet, et son resultat reste affiche
+        jusqu'a fermeture explicite.
+      */}
+      <View style={[styles.page, onglet !== "photo" && styles.pageCachee]}>
+        <EcranPhoto onAjouterConsomme={ajouterConsomme} />
+      </View>
+      <View style={[styles.page, onglet !== "progression" && styles.pageCachee]}>
+        <EcranProgression etat={etat} />
+      </View>
+      <View style={[styles.page, onglet !== "bilan" && styles.pageCachee]}>
         <EcranBilan
-          objectifInfo={objectifInfo}
-          consomme={consomme}
-          onResetConsomme={() => setConsomme(0)}
-          allerObjectif={() => setOnglet("objectif")}
+          objectif={etat.objectif}
+          consomme={etat.jour.consomme || 0}
+          sport={etat.jour.sport || ""}
+          onSport={(v) => majJour({ sport: v })}
         />
-      )}
+      </View>
+
+      <MenuParametres
+        visible={paramsOuverts}
+        etat={etat}
+        onFermer={() => setParamsOuverts(false)}
+        onModifierObjectif={(profil, objectif) =>
+          setEtat((e) => ({ ...e, profil, objectif }))
+        }
+        onAjouterPoids={(valeur) =>
+          setEtat((e) => {
+            const entree = { date: dateDuJour(), valeur };
+            return {
+              ...e,
+              poids: [...(e.poids || []), entree],
+              // Recompense ludique : XP de suivi + paliers de poids.
+              jeu: recompenserPesee(e.jeu, entree, e.profil?.but),
+            };
+          })
+        }
+        onResetJour={() => majJour({ consomme: 0, sport: "" })}
+        onDevXp={(m) => setEtat((e) => ({ ...e, jeu: ajouterXp(e.jeu, m) }))}
+        onResetHeros={() => setEtat((e) => ({ ...e, jeu: jeuParDefaut() }))}
+      />
     </View>
   );
 }
@@ -106,9 +197,6 @@ function EcranPhoto({ onAjouterConsomme }) {
   const [ajoute, setAjoute] = useState(false); // ce plat a-t-il ete envoye au bilan ?
 
   async function lancer(source) {
-    setErreur(null);
-    setAnalyse(null);
-
     const options = { base64: true, quality: 0.5, allowsEditing: false };
     let res;
     if (source === "camera") {
@@ -121,8 +209,13 @@ function EcranPhoto({ onAjouterConsomme }) {
     } else {
       res = await ImagePicker.launchImageLibraryAsync(options);
     }
+    // Si l'utilisateur annule, on ne touche a rien : le resultat precedent reste
+    // affiche (il ne disparait que via le bouton Fermer ou une nouvelle analyse).
     if (res.canceled) return;
 
+    // Une photo a bien ete prise : on remplace le resultat precedent.
+    setErreur(null);
+    setAnalyse(null);
     setEtape("Analyse de la photo…");
     try {
       const resultat = await analyserPhoto(res.assets[0].base64);
@@ -190,7 +283,8 @@ function EcranPhoto({ onAjouterConsomme }) {
             <Text style={styles.plat}>{analyse.plat}</Text>
             <Text style={styles.aide}>
               Touchez un poids pour le corriger, ou le nom de la fiche pour
-              changer d'aliment.
+              changer d'aliment. Le résultat reste ici, même si vous changez
+              d'onglet, jusqu'à ce que vous le fermiez.
             </Text>
 
             {analyse.aliments.map((al, i) => (
@@ -234,6 +328,16 @@ function EcranPhoto({ onAjouterConsomme }) {
               <Text style={styles.boutonTexte}>
                 {ajoute ? "✓ Ajouté au bilan" : `Ajouter au bilan (${totaux.kcal} kcal)`}
               </Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={styles.boutonFermer}
+              onPress={() => {
+                setAnalyse(null);
+                setAjoute(false);
+              }}
+            >
+              <Text style={styles.boutonFermerTexte}>Fermer</Text>
             </TouchableOpacity>
 
             <Text style={styles.source}>{SOURCE}</Text>
@@ -393,15 +497,20 @@ const BUTS = [
   ["prise", "Prendre du muscle"],
 ];
 
-function EcranObjectif({ onObjectif }) {
-  const [sexe, setSexe] = useState("homme");
-  const [age, setAge] = useState("");
-  const [poids, setPoids] = useState("");
-  const [taille, setTaille] = useState("");
-  const [activite, setActivite] = useState("modere");
-  const [but, setBut] = useState("perte");
-  const [rythme, setRythme] = useState("standard");
+// Formulaire de profil + objectif. Reutilise a deux endroits : l'onboarding du
+// premier lancement, et le menu parametres ("modifier mon objectif"). On saisit
+// le profil, on calcule, on voit le resultat, puis on valide (onValider remonte
+// le profil complet et l'objectif calcule au parent, qui les persiste).
+function FormulaireObjectif({ profilInitial, titre, sousTitre, libelleValider = "Enregistrer", onValider }) {
+  const [sexe, setSexe] = useState(profilInitial?.sexe ?? "homme");
+  const [age, setAge] = useState(profilInitial?.age != null ? String(profilInitial.age) : "");
+  const [poids, setPoids] = useState(profilInitial?.poids != null ? String(profilInitial.poids) : "");
+  const [taille, setTaille] = useState(profilInitial?.taille != null ? String(profilInitial.taille) : "");
+  const [activite, setActivite] = useState(profilInitial?.activite ?? "modere");
+  const [but, setBut] = useState(profilInitial?.but ?? "perte");
+  const [rythme, setRythme] = useState(profilInitial?.rythme ?? "standard");
   const [resultat, setResultat] = useState(null);
+  const [profilValide, setProfilValide] = useState(null);
   const [erreurs, setErreurs] = useState([]);
 
   function calculer() {
@@ -415,12 +524,13 @@ function EcranObjectif({ onObjectif }) {
     if (!r.ok) {
       setErreurs(r.erreurs);
       setResultat(null);
+      setProfilValide(null);
     } else {
       setErreurs([]);
       setResultat(r);
-      // Publie l'objectif vers l'onglet Bilan (avec l'activite, pour detecter
-      // un eventuel double comptage du sport).
-      onObjectif?.({ objectif: r.objectif, cleActivite: activite });
+      // On memorise le profil complet (avec but/rythme/activite) qui a produit
+      // ce resultat, pour le persister tel quel a la validation.
+      setProfilValide({ ...profil, activite, but, rythme });
     }
   }
 
@@ -429,11 +539,8 @@ function EcranObjectif({ onObjectif }) {
 
   return (
     <ScrollView contentContainerStyle={styles.contenu} keyboardShouldPersistTaps="handled">
-      <Text style={styles.titre}>Mon objectif</Text>
-      <Text style={styles.sousTitre}>
-        Besoin calorique estimé à partir de votre profil, avec des marges de
-        sécurité
-      </Text>
+      <Text style={styles.titre}>{titre}</Text>
+      <Text style={styles.sousTitre}>{sousTitre}</Text>
 
       <View style={styles.carte}>
         <Text style={styles.champLabel}>Sexe</Text>
@@ -497,7 +604,181 @@ function EcranObjectif({ onObjectif }) {
       </View>
 
       {resultat && <ResultatObjectif r={resultat} />}
+
+      {resultat && (
+        <TouchableOpacity
+          style={[styles.bouton, { marginTop: 4, marginBottom: 20 }]}
+          onPress={() => onValider?.(profilValide, resultat.objectif)}
+        >
+          <Text style={styles.boutonTexte}>{libelleValider}</Text>
+        </TouchableOpacity>
+      )}
     </ScrollView>
+  );
+}
+
+// =========================================================================
+//  MENU PARAMETRES — roue crantee : objectif, poids, reset, Apple Sante
+// =========================================================================
+
+function MenuParametres({ visible, etat, onFermer, onModifierObjectif, onAjouterPoids, onResetJour, onDevXp, onResetHeros }) {
+  const [vue, setVue] = useState("menu"); // menu | objectif
+  const [poidsSaisi, setPoidsSaisi] = useState("");
+  const [dispoSante] = useState(() => santeDisponible());
+  const [messageSante, setMessageSante] = useState(null);
+
+  // A la fermeture, on revient toujours au menu principal pour la prochaine fois.
+  function fermer() {
+    setVue("menu");
+    setPoidsSaisi("");
+    setMessageSante(null);
+    onFermer();
+  }
+
+  const dernierPoids =
+    etat.poids && etat.poids.length ? etat.poids[etat.poids.length - 1] : null;
+
+  async function reconnecterSante() {
+    setMessageSante("Connexion…");
+    try {
+      await demanderAcces();
+      setMessageSante("Autorisation Apple Santé demandée.");
+    } catch (e) {
+      setMessageSante(e.message);
+    }
+  }
+
+  function validerPoids() {
+    const v = parseFloat(String(poidsSaisi).replace(",", "."));
+    if (Number.isFinite(v) && v > 20 && v < 400) {
+      onAjouterPoids(Math.round(v * 10) / 10);
+      setPoidsSaisi("");
+    }
+  }
+
+  return (
+    <Modal visible={visible} animationType="slide" onRequestClose={fermer}>
+      <View style={styles.modale}>
+        <View style={styles.modaleEntete}>
+          <Text style={styles.modaleTitre}>
+            {vue === "objectif" ? "Modifier l'objectif" : "Paramètres"}
+          </Text>
+          <Pressable onPress={vue === "objectif" ? () => setVue("menu") : fermer} hitSlop={10}>
+            <Text style={styles.fermer}>{vue === "objectif" ? "Retour" : "Fermer"}</Text>
+          </Pressable>
+        </View>
+
+        {vue === "objectif" ? (
+          <FormulaireObjectif
+            profilInitial={etat.profil}
+            titre="Modifier l'objectif"
+            sousTitre="Ajustez votre profil ; l'objectif est recalculé."
+            libelleValider="Enregistrer"
+            onValider={(profil, objectif) => {
+              onModifierObjectif(profil, objectif);
+              setVue("menu");
+            }}
+          />
+        ) : (
+          <ScrollView keyboardShouldPersistTaps="handled">
+            {/* Objectif actuel */}
+            <View style={styles.carte}>
+              <Text style={styles.champLabel}>Objectif quotidien</Text>
+              <Text style={styles.objectifGros}>{etat.objectif} kcal</Text>
+              <TouchableOpacity
+                style={[styles.bouton, { marginTop: 12 }]}
+                onPress={() => setVue("objectif")}
+              >
+                <Text style={styles.boutonTexte}>Modifier mon objectif</Text>
+              </TouchableOpacity>
+            </View>
+
+            {/* Saisie du poids */}
+            <View style={styles.carte}>
+              <Text style={styles.champLabel}>Mon poids</Text>
+              {dernierPoids ? (
+                <Text style={styles.objectifDetail}>
+                  Dernier : {dernierPoids.valeur} kg ({dernierPoids.date})
+                </Text>
+              ) : (
+                <Text style={styles.objectifDetail}>Aucun poids enregistré.</Text>
+              )}
+              <View style={[styles.champNombreBoite, { marginTop: 10 }]}>
+                <TextInput
+                  style={styles.champNombreSaisie}
+                  value={poidsSaisi}
+                  onChangeText={(t) => setPoidsSaisi(t.replace(/[^0-9.,]/g, ""))}
+                  keyboardType="numeric"
+                  placeholder="Poids du jour"
+                  placeholderTextColor={COULEURS.doux}
+                  maxLength={5}
+                />
+                <Text style={styles.champNombreUnite}>kg</Text>
+              </View>
+              <TouchableOpacity
+                style={[styles.bouton, styles.boutonSecondaire, { marginTop: 10 }]}
+                onPress={validerPoids}
+              >
+                <Text style={styles.boutonTexte}>Enregistrer mon poids</Text>
+              </TouchableOpacity>
+            </View>
+
+            {/* Remise a zero du jour */}
+            <View style={styles.carte}>
+              <Text style={styles.champLabel}>Journée en cours</Text>
+              <TouchableOpacity
+                style={[styles.bouton, styles.boutonSecondaire]}
+                onPress={onResetJour}
+              >
+                <Text style={styles.boutonTexte}>Remettre le jour à zéro</Text>
+              </TouchableOpacity>
+            </View>
+
+            {/* Section de TEST — visible uniquement en mode developpement
+                (Expo Go), jamais dans un build de production. Permet de voir le
+                personnage evoluer sans attendre l'XP reelle. */}
+            {typeof __DEV__ !== "undefined" && __DEV__ ? (
+              <View style={[styles.carte, { borderWidth: 1, borderColor: COULEURS.accent }]}>
+                <Text style={styles.champLabel}>🧪 Test (mode développeur)</Text>
+                <Text style={styles.objectifDetail}>
+                  Niveau {niveauDepuisXp(etat.jeu.xp).niveau} · {etat.jeu.xp} XP ·
+                  étape {etapePersonnage(niveauDepuisXp(etat.jeu.xp).niveau) + 1}/10
+                </Text>
+                <View style={[styles.row2, { marginTop: 10 }]}>
+                  <TouchableOpacity style={[styles.bouton, styles.boutonSecondaire, styles.boutonMoitie]} onPress={() => onDevXp(100)}>
+                    <Text style={styles.boutonTexte}>+100 XP</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity style={[styles.bouton, styles.boutonSecondaire, styles.boutonMoitie]} onPress={() => onDevXp(1000)}>
+                    <Text style={styles.boutonTexte}>+1000 XP</Text>
+                  </TouchableOpacity>
+                </View>
+                <TouchableOpacity style={[styles.bouton, styles.boutonSecondaire, { marginTop: 8 }]} onPress={onResetHeros}>
+                  <Text style={styles.boutonTexte}>Réinitialiser le héros</Text>
+                </TouchableOpacity>
+              </View>
+            ) : null}
+
+            {/* Apple Sante */}
+            <View style={styles.carte}>
+              <Text style={styles.champLabel}>Apple Santé</Text>
+              {dispoSante ? (
+                <TouchableOpacity
+                  style={[styles.bouton, styles.boutonSecondaire]}
+                  onPress={reconnecterSante}
+                >
+                  <Text style={styles.boutonTexte}>Reconnecter Apple Santé</Text>
+                </TouchableOpacity>
+              ) : (
+                <Text style={styles.disclaimer}>
+                  Disponible seulement dans un build de développement (voir README).
+                </Text>
+              )}
+              {messageSante ? <Text style={styles.objectifDetail}>{messageSante}</Text> : null}
+            </View>
+          </ScrollView>
+        )}
+      </View>
+    </Modal>
   );
 }
 
@@ -505,10 +786,9 @@ function EcranObjectif({ onObjectif }) {
 //  ECRAN BILAN — calories restantes du jour (objectif + sport - consomme)
 // =========================================================================
 
-function EcranBilan({ objectifInfo, consomme, onResetConsomme, allerObjectif }) {
-  // Sport du jour : saisi a la main, ou importe depuis Apple Sante (energie
-  // active) quand un build de developpement le permet.
-  const [sport, setSport] = useState("");
+function EcranBilan({ objectif, consomme, sport, onSport }) {
+  // Le "sport du jour" (saisi a la main, ou importe depuis Apple Sante) vit dans
+  // l'etat global : sinon il serait efface a chaque changement d'onglet.
   const [dispoSante] = useState(() => santeDisponible());
   const [etatSante, setEtatSante] = useState("depart"); // depart | chargement | erreur
   const [erreurSante, setErreurSante] = useState(null);
@@ -521,7 +801,7 @@ function EcranBilan({ objectifInfo, consomme, onResetConsomme, allerObjectif }) 
       const d = await depenseDuJour();
       // On ajoute l'energie ACTIVE (le sport), pas le metabolisme de repos :
       // le repos est deja couvert par l'objectif de base.
-      if (d.active != null) setSport(String(d.active));
+      if (d.active != null) onSport(String(d.active));
       setEtatSante("depart");
     } catch (e) {
       setErreurSante(e.message);
@@ -529,14 +809,11 @@ function EcranBilan({ objectifInfo, consomme, onResetConsomme, allerObjectif }) 
     }
   }
 
-  const objectif = objectifInfo?.objectif ?? null;
-  const bilan = objectif
-    ? bilanJournalier({
-        objectif,
-        sport: parseInt(sport || "0", 10),
-        consomme,
-      })
-    : null;
+  const bilan = bilanJournalier({
+    objectif,
+    sport: parseInt(sport || "0", 10),
+    consomme,
+  });
 
   return (
     <ScrollView contentContainerStyle={styles.contenu} keyboardShouldPersistTaps="handled">
@@ -545,16 +822,7 @@ function EcranBilan({ objectifInfo, consomme, onResetConsomme, allerObjectif }) 
         Ce qu'il vous reste à manger = objectif + sport − déjà consommé
       </Text>
 
-      {!objectif ? (
-        <View style={styles.carte}>
-          <Text style={styles.disclaimer}>
-            Calculez d'abord votre objectif calorique dans l'onglet Objectif.
-          </Text>
-          <TouchableOpacity style={[styles.bouton, { marginTop: 12 }]} onPress={allerObjectif}>
-            <Text style={styles.boutonTexte}>Aller à l'onglet Objectif</Text>
-          </TouchableOpacity>
-        </View>
-      ) : (
+      {(
         <>
           <View style={styles.carte}>
             <Text style={styles.champLabel}>Il vous reste</Text>
@@ -615,7 +883,7 @@ function EcranBilan({ objectifInfo, consomme, onResetConsomme, allerObjectif }) 
               <TextInput
                 style={styles.champNombreSaisie}
                 value={sport}
-                onChangeText={(t) => setSport(t.replace(/[^0-9]/g, ""))}
+                onChangeText={(t) => onSport(t.replace(/[^0-9]/g, ""))}
                 keyboardType="number-pad"
                 placeholder="0"
                 placeholderTextColor={COULEURS.doux}
@@ -652,14 +920,10 @@ function EcranBilan({ objectifInfo, consomme, onResetConsomme, allerObjectif }) 
               {consomme} kcal ajoutées depuis l'onglet Photo. Analysez un plat
               puis touchez « Ajouter au bilan » pour l'inclure ici.
             </Text>
-            {consomme > 0 ? (
-              <TouchableOpacity
-                style={[styles.bouton, styles.boutonSecondaire, { marginTop: 12 }]}
-                onPress={onResetConsomme}
-              >
-                <Text style={styles.boutonTexte}>Remettre à zéro (nouveau jour)</Text>
-              </TouchableOpacity>
-            ) : null}
+            <Text style={[styles.disclaimer, { marginTop: 8 }]}>
+              La journée est archivée automatiquement à minuit. Pour repartir à
+              zéro manuellement, utilisez la roue crantée (Paramètres).
+            </Text>
           </View>
         </>
       )}
@@ -777,13 +1041,271 @@ function ChampNombre({ label, valeur, onChange, unite }) {
   );
 }
 
+// =========================================================================
+//  ECRAN PROGRESSION — courbe de poids + historique des calories
+// =========================================================================
+
+function EcranProgression({ etat }) {
+  const poids = etat.poids || [];
+  const historique = etat.historique || [];
+
+  // But (perte/prise/maintien) pour orienter la lecture de la courbe de poids.
+  const but = etat.profil?.but;
+
+  return (
+    <ScrollView contentContainerStyle={styles.contenu}>
+      <Text style={styles.titre}>Progression</Text>
+      <Text style={styles.sousTitre}>Votre poids et vos calories dans le temps</Text>
+
+      {/* --- Personnage & niveau --- */}
+      <CarteHeros jeu={etat.jeu} />
+
+      {/* --- Courbe de poids --- */}
+      <View style={styles.carte}>
+        <Text style={styles.champLabel}>Poids</Text>
+        {poids.length < 2 ? (
+          <Text style={styles.objectifDetail}>
+            {poids.length === 0
+              ? "Aucun poids enregistré. Ajoutez-en un via la roue crantée (Paramètres)."
+              : `Un seul point (${poids[0].valeur} kg). Ajoutez-en d'autres pour voir la courbe.`}
+          </Text>
+        ) : (
+          <CourbePoids poids={poids} but={but} />
+        )}
+      </View>
+
+      {/* --- Historique des calories --- */}
+      <View style={styles.carte}>
+        <Text style={styles.champLabel}>Calories des derniers jours</Text>
+        {historique.length === 0 ? (
+          <Text style={styles.objectifDetail}>
+            L'historique se remplit tout seul : chaque jour terminé est archivé
+            ici (consommé vs objectif).
+          </Text>
+        ) : (
+          <BarresCalories historique={historique} />
+        )}
+      </View>
+    </ScrollView>
+  );
+}
+
+// Les 10 etapes du heros (images decoupees de assets/hero-sheet.png par
+// tools/slice-hero.js). L'index correspond a etapePersonnage() (0..9).
+const HERO_FRAMES = [
+  require("./assets/hero/01.png"),
+  require("./assets/hero/02.png"),
+  require("./assets/hero/03.png"),
+  require("./assets/hero/04.png"),
+  require("./assets/hero/05.png"),
+  require("./assets/hero/06.png"),
+  require("./assets/hero/07.png"),
+  require("./assets/hero/08.png"),
+  require("./assets/hero/09.png"),
+  require("./assets/hero/10.png"),
+];
+
+// Les 8 angles du personnage (extraits du GIF PixelLab par
+// tools/extract-rotations.js). Ordre = rotation continue autour du perso.
+const ROT_FRAMES = [
+  require("./assets/hero/rot/0.png"),
+  require("./assets/hero/rot/1.png"),
+  require("./assets/hero/rot/2.png"),
+  require("./assets/hero/rot/3.png"),
+  require("./assets/hero/rot/4.png"),
+  require("./assets/hero/rot/5.png"),
+  require("./assets/hero/rot/6.png"),
+  require("./assets/hero/rot/7.png"),
+];
+
+/**
+ * Avatar que l'utilisateur peut faire tourner sur lui-meme : on glisse le doigt
+ * horizontalement pour parcourir les 8 angles. Chaque tranche de deplacement
+ * fait avancer d'un angle ; ca boucle. Aucune dependance (PanResponder natif).
+ */
+function AvatarRotatif({ frames = ROT_FRAMES, taille = 128, style }) {
+  const [angle, setAngle] = useState(0);
+  const angleRef = useRef(0);      // valeur courante, lisible dans le geste
+  const baseRef = useRef(0);       // angle au debut du glissement
+
+  const maj = (i) => {
+    const n = ((i % frames.length) + frames.length) % frames.length;
+    angleRef.current = n;
+    setAngle(n);
+  };
+
+  const pan = useRef(
+    PanResponder.create({
+      onStartShouldSetPanResponder: () => true,
+      onMoveShouldSetPanResponder: (_e, g) => Math.abs(g.dx) > 3,
+      onPanResponderGrant: () => { baseRef.current = angleRef.current; },
+      onPanResponderMove: (_e, g) => {
+        // ~22 px de glissement = un angle. Glisser vers la droite tourne le
+        // personnage dans un sens, vers la gauche dans l'autre.
+        maj(baseRef.current - Math.round(g.dx / 22));
+      },
+    })
+  ).current;
+
+  return (
+    <View style={style} {...pan.panHandlers}>
+      <Image
+        source={frames[angle]}
+        style={{ width: taille * 0.72, height: taille }}
+        resizeMode="contain"
+        fadeDuration={0}
+      />
+    </View>
+  );
+}
+
+/** Carte du heros : niveau, barre d'XP, personnage evolutif, badges. */
+function CarteHeros({ jeu }) {
+  const j = jeu || { xp: 0, streak: 0, badges: [] };
+  const niv = niveauDepuisXp(j.xp);
+  const etape = etapePersonnage(niv.niveau);
+  const badgesAcquis = new Set(j.badges || []);
+
+  return (
+    <View style={styles.carte}>
+      <View style={styles.herosHaut}>
+        <View style={styles.herosPortrait}>
+          <AvatarRotatif taille={118} style={styles.centreEcran} />
+          <Text style={styles.rotationAstuce}>glissez pour tourner</Text>
+        </View>
+        <View style={styles.herosInfos}>
+          <Text style={styles.herosNiveau}>Niveau {niv.niveau}</Text>
+          <Text style={styles.herosTitre}>{NOMS_ETAPES[etape]}</Text>
+          <Text style={styles.herosXp}>
+            {niv.xpDansNiveau} / {niv.xpNiveau} XP
+          </Text>
+          {/* Barre d'XP */}
+          <View style={styles.xpFond}>
+            <View style={[styles.xpRempli, { width: `${Math.round(niv.progression * 100)}%` }]} />
+          </View>
+          {j.streak > 0 ? (
+            <Text style={styles.herosStreak}>🔥 Série : {j.streak} jour{j.streak > 1 ? "s" : ""}</Text>
+          ) : null}
+        </View>
+      </View>
+
+      {/* Badges */}
+      <Text style={[styles.champLabel, { marginTop: 14 }]}>Badges</Text>
+      <View style={styles.badgesZone}>
+        {BADGES.map((b) => {
+          const acquis = badgesAcquis.has(b.id);
+          return (
+            <View key={b.id} style={[styles.badge, !acquis && styles.badgeVerrou]}>
+              <Text style={[styles.badgeEmoji, !acquis && styles.badgeEmojiVerrou]}>
+                {acquis ? b.emoji : "🔒"}
+              </Text>
+              <Text style={styles.badgeLibelle}>{b.libelle}</Text>
+            </View>
+          );
+        })}
+      </View>
+    </View>
+  );
+}
+
+/** Courbe de poids en SVG (react-native-svg, inclus dans Expo Go). */
+function CourbePoids({ poids, but }) {
+  const L = 300; // largeur logique du dessin
+  const H = 160;
+  const marge = { g: 8, d: 8, h: 14, b: 18 };
+
+  const valeurs = poids.map((p) => p.valeur);
+  const min = Math.min(...valeurs);
+  const max = Math.max(...valeurs);
+  const etendue = max - min || 1; // evite la division par zero si tout est egal
+
+  const x = (i) => marge.g + (i / (poids.length - 1)) * (L - marge.g - marge.d);
+  const y = (v) => marge.h + (1 - (v - min) / etendue) * (H - marge.h - marge.b);
+
+  const points = poids.map((p, i) => `${x(i)},${y(p.valeur)}`).join(" ");
+  const premier = poids[0].valeur;
+  const dernier = poids[poids.length - 1].valeur;
+  const delta = Math.round((dernier - premier) * 10) / 10;
+  const sensAttendu = but === "perte" ? -1 : but === "prise" ? 1 : 0;
+  const bonSens = sensAttendu === 0 || Math.sign(delta) === sensAttendu || delta === 0;
+
+  return (
+    <View>
+      <Svg width="100%" height={H} viewBox={`0 0 ${L} ${H}`}>
+        {/* ligne de base (premier poids) */}
+        <SvgLine x1={marge.g} y1={y(premier)} x2={L - marge.d} y2={y(premier)}
+          stroke={COULEURS.bord} strokeWidth="1" strokeDasharray="4 4" />
+        <Polyline points={points} fill="none" stroke={COULEURS.accent} strokeWidth="2.5" />
+        {poids.map((p, i) => (
+          <Circle key={i} cx={x(i)} cy={y(p.valeur)} r="3" fill={COULEURS.accent} />
+        ))}
+      </Svg>
+      <View style={styles.legendePoids}>
+        <Text style={styles.legendePoidsTexte}>
+          {premier} kg → {dernier} kg
+        </Text>
+        <Text style={[styles.legendePoidsDelta, { color: bonSens ? "#2E7D32" : "#B00020" }]}>
+          {delta > 0 ? "+" : ""}{delta} kg
+        </Text>
+      </View>
+    </View>
+  );
+}
+
+/** Barres du consomme par jour, colorees selon le budget (objectif). */
+function BarresCalories({ historique }) {
+  const jours = historique.slice(-14); // 2 dernieres semaines
+  const budgets = jours.map((j) => (j.objectif || 0) + (j.sport || 0));
+  const maxRef = Math.max(...jours.map((j) => j.consomme), ...budgets, 1);
+
+  return (
+    <View style={styles.barresZone}>
+      {jours.map((j, i) => {
+        const budget = (j.objectif || 0) + (j.sport || 0);
+        const depasse = budget > 0 && j.consomme > budget;
+        const hauteur = Math.max(2, Math.round((j.consomme / maxRef) * 90));
+        const jourNum = j.date.slice(8, 10); // "JJ"
+        return (
+          <View key={i} style={styles.barreCol}>
+            <View
+              style={[
+                styles.barreCal,
+                { height: hauteur, backgroundColor: depasse ? "#B00020" : "#2E7D32" },
+              ]}
+            />
+            <Text style={styles.barreJour}>{jourNum}</Text>
+          </View>
+        );
+      })}
+    </View>
+  );
+}
+
 const styles = StyleSheet.create({
   ecran: { flex: 1, backgroundColor: COULEURS.fond },
+  centreEcran: { alignItems: "center", justifyContent: "center" },
   contenu: { padding: 20, paddingTop: 16, paddingBottom: 60 },
+
+  // Ecrans gardes montes : la page active occupe l'espace, les autres sont
+  // masquees (mais conservent leur etat et leurs traitements en cours).
+  page: { flex: 1 },
+  pageCachee: { display: "none" },
+
+  barreHaut: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingTop: 56,
+    paddingHorizontal: 20,
+    paddingBottom: 4,
+    backgroundColor: COULEURS.fond,
+  },
+  rouePos: { position: "absolute", left: 16, top: 50, padding: 6 },
+  roue: { fontSize: 24, color: COULEURS.texte },
+  barreTitre: { flex: 1, textAlign: "center", fontSize: 18, fontWeight: "700", color: COULEURS.texte },
 
   tabs: {
     flexDirection: "row",
-    paddingTop: 56,
+    paddingTop: 8,
     paddingHorizontal: 20,
     backgroundColor: COULEURS.fond,
     gap: 8,
@@ -795,7 +1317,7 @@ const styles = StyleSheet.create({
     backgroundColor: "#EAE5DA",
   },
   tabActif: { backgroundColor: COULEURS.accent },
-  tabTexte: { textAlign: "center", fontWeight: "600", color: COULEURS.doux },
+  tabTexte: { textAlign: "center", fontWeight: "600", color: COULEURS.doux, fontSize: 13 },
   tabTexteActif: { color: "white" },
 
   titre: { fontSize: 32, fontWeight: "700", textAlign: "center", color: COULEURS.texte },
@@ -810,6 +1332,8 @@ const styles = StyleSheet.create({
   bouton: { backgroundColor: COULEURS.accent, padding: 16, borderRadius: 12, marginBottom: 12 },
   boutonSecondaire: { backgroundColor: COULEURS.secondaire },
   boutonTexte: { color: "white", fontSize: 16, fontWeight: "600", textAlign: "center" },
+  row2: { flexDirection: "row", gap: 8 },
+  boutonMoitie: { flex: 1 },
 
   centre: { alignItems: "center", marginTop: 30 },
   info: { marginTop: 10, color: COULEURS.doux },
@@ -818,6 +1342,8 @@ const styles = StyleSheet.create({
   carte: { backgroundColor: COULEURS.carte, borderRadius: 16, padding: 20, marginTop: 24 },
   plat: { fontSize: 22, fontWeight: "700", color: COULEURS.texte },
   aide: { fontSize: 12, color: COULEURS.doux, marginTop: 4, marginBottom: 14 },
+  boutonFermer: { paddingVertical: 12, marginTop: 8 },
+  boutonFermerTexte: { color: COULEURS.doux, fontSize: 15, fontWeight: "600", textAlign: "center" },
 
   ligneAliment: {
     flexDirection: "row",
@@ -989,4 +1515,60 @@ const styles = StyleSheet.create({
   avertissementTexte: { fontSize: 13, color: "#7A4B12", lineHeight: 18 },
 
   disclaimer: { marginTop: 16, fontSize: 11, color: COULEURS.doux, lineHeight: 16, fontStyle: "italic" },
+
+  // --- Heros / gamification ---
+  herosHaut: { flexDirection: "row", alignItems: "center" },
+  herosPortrait: {
+    width: 120,
+    height: 150,
+    borderRadius: 12,
+    backgroundColor: "#161320",
+    borderWidth: 1,
+    borderColor: COULEURS.bord,
+    alignItems: "center",
+    justifyContent: "center",
+    overflow: "hidden",
+  },
+  rotationAstuce: {
+    position: "absolute",
+    bottom: 4,
+    fontSize: 9,
+    color: "#ffffff88",
+  },
+  herosInfos: { flex: 1, marginLeft: 12 },
+  herosNiveau: { fontSize: 22, fontWeight: "800", color: COULEURS.texte },
+  herosTitre: { fontSize: 14, fontWeight: "600", color: COULEURS.accent, marginTop: 1 },
+  herosXp: { fontSize: 12, color: COULEURS.doux, marginTop: 6 },
+  xpFond: { height: 10, borderRadius: 5, backgroundColor: "#EAE5DA", marginTop: 4, overflow: "hidden" },
+  xpRempli: { height: 10, borderRadius: 5, backgroundColor: COULEURS.accent },
+  herosStreak: { fontSize: 13, color: COULEURS.texte, marginTop: 8, fontWeight: "600" },
+
+  badgesZone: { flexDirection: "row", flexWrap: "wrap", gap: 8, marginTop: 4 },
+  badge: {
+    width: "22%",
+    alignItems: "center",
+    paddingVertical: 8,
+    borderRadius: 10,
+    backgroundColor: COULEURS.fond,
+  },
+  badgeVerrou: { opacity: 0.5 },
+  badgeEmoji: { fontSize: 22 },
+  badgeEmojiVerrou: { fontSize: 18 },
+  badgeLibelle: { fontSize: 9, color: COULEURS.doux, textAlign: "center", marginTop: 3 },
+
+  // --- Progression ---
+  legendePoids: { flexDirection: "row", justifyContent: "space-between", marginTop: 6 },
+  legendePoidsTexte: { fontSize: 13, color: COULEURS.doux },
+  legendePoidsDelta: { fontSize: 14, fontWeight: "700" },
+
+  barresZone: {
+    flexDirection: "row",
+    alignItems: "flex-end",
+    gap: 4,
+    height: 110,
+    marginTop: 10,
+  },
+  barreCol: { flex: 1, alignItems: "center", justifyContent: "flex-end" },
+  barreCal: { width: "70%", borderRadius: 3, minHeight: 2 },
+  barreJour: { fontSize: 9, color: COULEURS.doux, marginTop: 4 },
 });
