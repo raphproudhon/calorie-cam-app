@@ -1,6 +1,7 @@
 # Contexte pour un assistant IA
 
 Ce projet (**CalorieCam**) est décrit en détail dans le `README.md` — le lire en premier.
+Les prompts et le workflow de l'avatar (personnage évolutif) sont dans `AVATAR.md`.
 
 Points clés :
 
