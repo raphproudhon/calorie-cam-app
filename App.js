@@ -1129,10 +1129,20 @@ const ROT_NIVEAU_2 = [
   require("./assets/hero/rot2/6.png"),
   require("./assets/hero/rot2/7.png"),
 ];
+const ROT_NIVEAU_3 = [
+  require("./assets/hero/rot3/0.png"),
+  require("./assets/hero/rot3/1.png"),
+  require("./assets/hero/rot3/2.png"),
+  require("./assets/hero/rot3/3.png"),
+  require("./assets/hero/rot3/4.png"),
+  require("./assets/hero/rot3/5.png"),
+  require("./assets/hero/rot3/6.png"),
+  require("./assets/hero/rot3/7.png"),
+];
 
 // Un jeu de rotations par etape (index = etapePersonnage 0..9). Tant que les
 // niveaux superieurs ne sont pas dessines, on garde le dernier jeu disponible.
-const ROT_SETS = [ROT_NIVEAU_1, ROT_NIVEAU_2];
+const ROT_SETS = [ROT_NIVEAU_1, ROT_NIVEAU_2, ROT_NIVEAU_3];
 
 /** Jeu de rotations a afficher pour une etape de personnage donnee. */
 function rotationsPourEtape(etape) {

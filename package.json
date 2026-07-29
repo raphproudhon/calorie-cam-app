@@ -19,5 +19,9 @@
     "ios": "expo start --ios",
     "web": "expo start --web"
   },
-  "private": true
+  "private": true,
+  "devDependencies": {
+    "gifwrap": "^0.10.1",
+    "jimp": "^0.22.12"
+  }
 }
