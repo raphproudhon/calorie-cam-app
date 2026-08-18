@@ -66,7 +66,7 @@ Same young character as before, same face and messy dark hair, clearly visible f
 
 | Niv | Idée directrice |
 |---|---|
-| 4 | manteau long + **accents rouges** marqués, double dague, regard plus dur |
+| 4 | manteau long + **accents rouges** marqués, double dague, regard plus dur ✅ |
 | 5 | **armure légère noire** sous le manteau, premiers **liserés or**, yeux violets qui s'allument |
 | 6 | armure sombre + or, épée sombre, premières **veines d'énergie violette** sur le corps |
 | 7 | armure plus lourde, **ombres qui montent** des épaules, énergie violette nette |
@@ -128,7 +128,8 @@ Same young character as before, same face and messy dark hair, clearly visible f
    distinct par niveau, ex. `niveau3.gif`).
 2. Extraire les 8 frames, recadrées + agrandies ×4 (net) :
    ```bash
-   node tools/extract-rotations.js "assets/hero/niveau3.gif" "assets/hero/rot3"
+   node tools/extract-rotations.js "assets/hero/niveau3.gif" "assets/hero/rot3"   # export GIF
+   node tools/assemble-rotations.js "<dossier>/rotations" "assets/hero/rot4"        # export ZIP (8 PNG south/east/...)
    ```
 3. Dans `App.js` : ajouter `ROT_NIVEAU_3` (les 8 `require` de `rot3/`) et
    l'ajouter à `ROT_SETS`. Le mapping niveau → étape se fait déjà via

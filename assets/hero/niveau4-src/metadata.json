@@ -1,0 +1,36 @@
+{
+  "group_id": "11762cf7-e628-4c23-988b-459bacd4b013",
+  "states": [
+    {
+      "character": {
+        "id": "d9de8150-cf5b-47f4-ae87-7575bbfac05b",
+        "name": "Same young character",
+        "prompt": "Chibi pixel art character sprite, 16-bit RPG style, big head and small body, bold clean black outline, crisp deliberate pixel shading, limited palette. A cheerful young teenage boy, ordinary student: messy short dark hair, large expressive violet-blue eyes, friendly and determined expression, blue hoodie with an orange inner collar, simple backpack straps over the shoulders. No weapon, no armor, no powers \u2014 a beginner, with relaxed hands. Full body, facing forward, static neutral pose, centered with generous empty margin, not touching the edges. Solid flat chroma-key green background, pure #00ff00, no gradient, no ground shadow, no background smoke or particles, no ambient glow. Single character only.",
+        "size": {
+          "width": 120,
+          "height": 120
+        },
+        "template_id": "mannequin",
+        "directions": 8,
+        "view": "low top-down",
+        "created_at": "2026-08-18T11:40:47.236117+00:00"
+      },
+      "folder": "Same_young_character",
+      "frames": {
+        "rotations": {
+          "south": "Same_young_character/rotations/south.png",
+          "south-east": "Same_young_character/rotations/south-east.png",
+          "east": "Same_young_character/rotations/east.png",
+          "north-east": "Same_young_character/rotations/north-east.png",
+          "north": "Same_young_character/rotations/north.png",
+          "north-west": "Same_young_character/rotations/north-west.png",
+          "west": "Same_young_character/rotations/west.png",
+          "south-west": "Same_young_character/rotations/south-west.png"
+        },
+        "animations": {}
+      }
+    }
+  ],
+  "export_version": "3.1",
+  "export_date": "2026-08-18T11:41:54.575946"
+}
