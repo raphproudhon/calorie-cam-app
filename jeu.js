@@ -196,3 +196,23 @@ export function recompenserPesee(jeu, entree, but) {
   for (const id of badgesDebloques(j)) j.badges.push(id);
   return j;
 }
+
+// --- Couleur d'accent par etape (le theme de l'app suit le perso) -----------
+// Rampe bleu (ado, niveau 1) -> cramoisi -> or (souverain de flammes).
+const ACCENT_ETAPE = [
+  "#3E7CB1", // 1 bleu (hoodie)
+  "#8A5A7A", // 2
+  "#B0454E", // 3
+  "#C0392B", // 4 cramoisi
+  "#CC3D28", // 5
+  "#D64B22", // 6 braise
+  "#E05E1C", // 7
+  "#E67318", // 8 orange ardent
+  "#E28E1B", // 9
+  "#E0B02F", // 10 or
+];
+
+/** Couleur d'accent (hex) correspondant a une etape de personnage (0..9). */
+export function accentPourEtape(etape) {
+  return ACCENT_ETAPE[Math.max(0, Math.min(ACCENT_ETAPE.length - 1, etape))];
+}

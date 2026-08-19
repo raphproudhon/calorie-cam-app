@@ -12,7 +12,7 @@
 //   - stockage.js : persistance locale (profil, historique, poids) + bascule de jour
 //   - ce fichier  : l'affichage
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { createContext, useContext, useEffect, useMemo, useRef, useState } from "react";
 import {
   ActivityIndicator,
   Image,
@@ -37,12 +37,18 @@ import { chargerEtat, sauvegarderEtat, dateDuJour } from "./stockage";
 import {
   niveauDepuisXp,
   etapePersonnage,
+  accentPourEtape,
   NOMS_ETAPES,
   BADGES,
   recompenserPesee,
   ajouterXp,
   jeuParDefaut,
 } from "./jeu";
+
+// Le theme "accent" de l'app suit le personnage : sa couleur evolue avec le
+// niveau (bleu -> cramoisi -> or). Fourni par App, lu partout via useContext.
+const AccentCtx = createContext("#C4622D");
+const useAccent = () => useContext(AccentCtx);
 
 // --- Racine : chargement, onboarding, navigation ---------------------------
 
@@ -94,7 +100,11 @@ export default function App() {
   const ajouterConsomme = (kcal) =>
     majJour({ consomme: (etat.jour.consomme || 0) + Math.max(0, Math.round(kcal || 0)) });
 
+  // Accent du theme = couleur de l'etape actuelle du personnage (evolue avec lui).
+  const accent = accentPourEtape(etapePersonnage(niveauDepuisXp((etat.jeu || {}).xp || 0).niveau));
+
   return (
+    <AccentCtx.Provider value={accent}>
     <View style={styles.ecran}>
       {/* Barre du haut : roue crantee (parametres) a gauche + titre */}
       <View style={styles.barreHaut}>
@@ -112,7 +122,7 @@ export default function App() {
         ].map(([cle, libelle]) => (
           <Pressable
             key={cle}
-            style={[styles.tab, onglet === cle && styles.tabActif]}
+            style={[styles.tab, onglet === cle && styles.tabActif, onglet === cle && { backgroundColor: accent }]}
             onPress={() => setOnglet(cle)}
           >
             <Text style={[styles.tabTexte, onglet === cle && styles.tabTexteActif]}>
@@ -166,6 +176,7 @@ export default function App() {
         onResetHeros={() => setEtat((e) => ({ ...e, jeu: jeuParDefaut() }))}
       />
     </View>
+    </AccentCtx.Provider>
   );
 }
 
@@ -190,6 +201,7 @@ const LIBELLE_CONFIANCE = {
 };
 
 function EcranPhoto({ onAjouterConsomme }) {
+  const accent = useAccent();
   const [etape, setEtape] = useState(null); // texte affiche pendant le chargement
   const [analyse, setAnalyse] = useState(null);
   const [erreur, setErreur] = useState(null);
@@ -259,7 +271,7 @@ function EcranPhoto({ onAjouterConsomme }) {
           {" "}({NB_ALIMENTS} aliments)
         </Text>
 
-        <TouchableOpacity style={styles.bouton} onPress={() => lancer("camera")}>
+        <TouchableOpacity style={[styles.bouton, { backgroundColor: accent }]} onPress={() => lancer("camera")}>
           <Text style={styles.boutonTexte}>Prendre une photo</Text>
         </TouchableOpacity>
         <TouchableOpacity
@@ -317,7 +329,7 @@ function EcranPhoto({ onAjouterConsomme }) {
             ) : null}
 
             <TouchableOpacity
-              style={[styles.bouton, ajoute && styles.boutonSecondaire, { marginTop: 16 }]}
+              style={[styles.bouton, !ajoute && { backgroundColor: accent }, ajoute && styles.boutonSecondaire, { marginTop: 16 }]}
               onPress={() => {
                 if (ajoute) return;
                 onAjouterConsomme?.(totaux.kcal);
@@ -502,6 +514,7 @@ const BUTS = [
 // le profil, on calcule, on voit le resultat, puis on valide (onValider remonte
 // le profil complet et l'objectif calcule au parent, qui les persiste).
 function FormulaireObjectif({ profilInitial, titre, sousTitre, libelleValider = "Enregistrer", onValider }) {
+  const accent = useAccent();
   const [sexe, setSexe] = useState(profilInitial?.sexe ?? "homme");
   const [age, setAge] = useState(profilInitial?.age != null ? String(profilInitial.age) : "");
   const [poids, setPoids] = useState(profilInitial?.poids != null ? String(profilInitial.poids) : "");
@@ -590,7 +603,7 @@ function FormulaireObjectif({ profilInitial, titre, sousTitre, libelleValider = 
           </>
         )}
 
-        <TouchableOpacity style={[styles.bouton, { marginTop: 20 }]} onPress={calculer}>
+        <TouchableOpacity style={[styles.bouton, { marginTop: 20, backgroundColor: accent }]} onPress={calculer}>
           <Text style={styles.boutonTexte}>Calculer mon besoin</Text>
         </TouchableOpacity>
 
@@ -607,7 +620,7 @@ function FormulaireObjectif({ profilInitial, titre, sousTitre, libelleValider = 
 
       {resultat && (
         <TouchableOpacity
-          style={[styles.bouton, { marginTop: 4, marginBottom: 20 }]}
+          style={[styles.bouton, { marginTop: 4, marginBottom: 20, backgroundColor: accent }]}
           onPress={() => onValider?.(profilValide, resultat.objectif)}
         >
           <Text style={styles.boutonTexte}>{libelleValider}</Text>
@@ -622,6 +635,7 @@ function FormulaireObjectif({ profilInitial, titre, sousTitre, libelleValider = 
 // =========================================================================
 
 function MenuParametres({ visible, etat, onFermer, onModifierObjectif, onAjouterPoids, onResetJour, onDevXp, onResetHeros }) {
+  const accent = useAccent();
   const [vue, setVue] = useState("menu"); // menu | objectif
   const [poidsSaisi, setPoidsSaisi] = useState("");
   const [dispoSante] = useState(() => santeDisponible());
@@ -686,7 +700,7 @@ function MenuParametres({ visible, etat, onFermer, onModifierObjectif, onAjouter
               <Text style={styles.champLabel}>Objectif quotidien</Text>
               <Text style={styles.objectifGros}>{etat.objectif} kcal</Text>
               <TouchableOpacity
-                style={[styles.bouton, { marginTop: 12 }]}
+                style={[styles.bouton, { marginTop: 12, backgroundColor: accent }]}
                 onPress={() => setVue("objectif")}
               >
                 <Text style={styles.boutonTexte}>Modifier mon objectif</Text>
@@ -1189,6 +1203,7 @@ function CarteHeros({ jeu }) {
   const j = jeu || { xp: 0, streak: 0, badges: [] };
   const niv = niveauDepuisXp(j.xp);
   const etape = etapePersonnage(niv.niveau);
+  const accent = accentPourEtape(etape); // couleur du theme a cette etape
   const badgesAcquis = new Set(j.badges || []);
 
   return (
@@ -1200,10 +1215,10 @@ function CarteHeros({ jeu }) {
       <Text style={styles.astuceCentre}>glissez pour le faire tourner</Text>
 
       <Text style={styles.herosNiveauGros}>Niveau {niv.niveau}</Text>
-      <Text style={styles.herosTitreCentre}>{NOMS_ETAPES[etape]}</Text>
+      <Text style={[styles.herosTitreCentre, { color: accent }]}>{NOMS_ETAPES[etape]}</Text>
 
       <View style={styles.xpFond}>
-        <View style={[styles.xpRempli, { width: `${Math.round(niv.progression * 100)}%` }]} />
+        <View style={[styles.xpRempli, { width: `${Math.round(niv.progression * 100)}%`, backgroundColor: accent }]} />
       </View>
       <Text style={styles.herosXpCentre}>{niv.xpDansNiveau} / {niv.xpNiveau} XP</Text>
 
