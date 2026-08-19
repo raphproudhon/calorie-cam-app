@@ -38,6 +38,7 @@ import {
   niveauDepuisXp,
   etapePersonnage,
   accentPourEtape,
+  fondPourEtape,
   NOMS_ETAPES,
   BADGES,
   recompenserPesee,
@@ -100,21 +101,24 @@ export default function App() {
   const ajouterConsomme = (kcal) =>
     majJour({ consomme: (etat.jour.consomme || 0) + Math.max(0, Math.round(kcal || 0)) });
 
-  // Accent du theme = couleur de l'etape actuelle du personnage (evolue avec lui).
-  const accent = accentPourEtape(etapePersonnage(niveauDepuisXp((etat.jeu || {}).xp || 0).niveau));
+  // Accent + fond du theme = couleurs de l'etape actuelle du personnage
+  // (evoluent avec lui). Le fond reste clair (teinte legere) pour la lisibilite.
+  const etapeCourante = etapePersonnage(niveauDepuisXp((etat.jeu || {}).xp || 0).niveau);
+  const accent = accentPourEtape(etapeCourante);
+  const fond = fondPourEtape(etapeCourante);
 
   return (
     <AccentCtx.Provider value={accent}>
-    <View style={styles.ecran}>
+    <View style={[styles.ecran, { backgroundColor: fond }]}>
       {/* Barre du haut : roue crantee (parametres) a gauche + titre */}
-      <View style={styles.barreHaut}>
+      <View style={[styles.barreHaut, { backgroundColor: fond }]}>
         <Pressable onPress={() => setParamsOuverts(true)} hitSlop={12} style={styles.rouePos}>
           <Text style={styles.roue}>⚙︎</Text>
         </Pressable>
         <Text style={styles.barreTitre}>CalorieCam</Text>
       </View>
 
-      <View style={styles.tabs}>
+      <View style={[styles.tabs, { backgroundColor: fond }]}>
         {[
           ["photo", "Photo"],
           ["progression", "Progression"],
@@ -181,13 +185,13 @@ export default function App() {
 }
 
 const COULEURS = {
-  fond: "#F4F1EA",
+  fond: "#17151F",
   accent: "#C4622D",
-  secondaire: "#8A8578",
-  texte: "#2B2925",
-  doux: "#7A756C",
-  carte: "#FFFFFF",
-  bord: "#E8E3D8",
+  secondaire: "#363143",
+  texte: "#EEE9F2",
+  doux: "#A49FAE",
+  carte: "#221E2C",
+  bord: "#332F3D",
 };
 
 // Le code de confiance de l'ANSES (A a D) indique la fiabilite de la donnee
@@ -843,7 +847,7 @@ function EcranBilan({ objectif, consomme, sport, onSport }) {
             <Text
               style={[
                 styles.objectifGros,
-                bilan.restant < 0 && { color: "#B00020" },
+                bilan.restant < 0 && { color: "#FF6B6B" },
               ]}
             >
               {bilan.restant} kcal
@@ -860,7 +864,7 @@ function EcranBilan({ objectif, consomme, sport, onSport }) {
                 style={[
                   styles.barreRemplie,
                   { width: `${Math.round(bilan.part * 100)}%` },
-                  bilan.restant < 0 && { backgroundColor: "#B00020" },
+                  bilan.restant < 0 && { backgroundColor: "#FF6B6B" },
                 ]}
               />
             </View>
@@ -871,7 +875,7 @@ function EcranBilan({ objectif, consomme, sport, onSport }) {
                 <Text style={styles.besoinLabel}>objectif{"\n"}de base</Text>
               </View>
               <View style={styles.besoinCase}>
-                <Text style={[styles.besoinValeur, { color: "#2E7D32" }]}>
+                <Text style={[styles.besoinValeur, { color: "#58D08A" }]}>
                   +{parseInt(sport || "0", 10)}
                 </Text>
                 <Text style={styles.besoinLabel}>sport{"\n"}du jour</Text>
@@ -1281,7 +1285,7 @@ function CourbePoids({ poids, but }) {
         <Text style={styles.legendePoidsTexte}>
           {premier} kg → {dernier} kg
         </Text>
-        <Text style={[styles.legendePoidsDelta, { color: bonSens ? "#2E7D32" : "#B00020" }]}>
+        <Text style={[styles.legendePoidsDelta, { color: bonSens ? "#58D08A" : "#FF6B6B" }]}>
           {delta > 0 ? "+" : ""}{delta} kg
         </Text>
       </View>
@@ -1307,7 +1311,7 @@ function BarresCalories({ historique }) {
             <View
               style={[
                 styles.barreCal,
-                { height: hauteur, backgroundColor: depasse ? "#B00020" : "#2E7D32" },
+                { height: hauteur, backgroundColor: depasse ? "#FF6B6B" : "#58D08A" },
               ]}
             />
             <Text style={styles.barreJour}>{jourNum}</Text>
@@ -1351,7 +1355,7 @@ const styles = StyleSheet.create({
     flex: 1,
     paddingVertical: 10,
     borderRadius: 10,
-    backgroundColor: "#EAE5DA",
+    backgroundColor: "#2A2636",
   },
   tabActif: { backgroundColor: COULEURS.accent },
   tabTexte: { textAlign: "center", fontWeight: "600", color: COULEURS.doux, fontSize: 13 },
@@ -1374,7 +1378,7 @@ const styles = StyleSheet.create({
 
   centre: { alignItems: "center", marginTop: 30 },
   info: { marginTop: 10, color: COULEURS.doux },
-  erreur: { color: "#B00020", marginTop: 20 },
+  erreur: { color: "#FF6B6B", marginTop: 20 },
 
   carte: { backgroundColor: COULEURS.carte, borderRadius: 16, padding: 20, marginTop: 24 },
   plat: { fontSize: 22, fontWeight: "700", color: COULEURS.texte },
@@ -1501,9 +1505,9 @@ const styles = StyleSheet.create({
     marginTop: 14,
     padding: 12,
     borderRadius: 10,
-    backgroundColor: "#FBEAEA",
+    backgroundColor: "#3A2126",
   },
-  erreurLigne: { color: "#B00020", fontSize: 13, marginVertical: 1 },
+  erreurLigne: { color: "#FF6B6B", fontSize: 13, marginVertical: 1 },
 
   objectifGros: { fontSize: 40, fontWeight: "800", color: COULEURS.accent, marginTop: 2 },
   objectifSous: { fontSize: 14, color: COULEURS.doux },
@@ -1512,7 +1516,7 @@ const styles = StyleSheet.create({
   barreFond: {
     height: 8,
     borderRadius: 4,
-    backgroundColor: "#EAE5DA",
+    backgroundColor: "#2A2636",
     marginTop: 12,
     overflow: "hidden",
   },
@@ -1545,11 +1549,11 @@ const styles = StyleSheet.create({
     marginTop: 12,
     padding: 12,
     borderRadius: 10,
-    backgroundColor: "#FFF4E5",
+    backgroundColor: "#3A2F1E",
     borderWidth: 1,
-    borderColor: "#F0D9B8",
+    borderColor: "#574326",
   },
-  avertissementTexte: { fontSize: 13, color: "#7A4B12", lineHeight: 18 },
+  avertissementTexte: { fontSize: 13, color: "#E7C883", lineHeight: 18 },
 
   disclaimer: { marginTop: 16, fontSize: 11, color: COULEURS.doux, lineHeight: 16, fontStyle: "italic" },
 
@@ -1576,7 +1580,7 @@ const styles = StyleSheet.create({
   herosNiveau: { fontSize: 22, fontWeight: "800", color: COULEURS.texte },
   herosTitre: { fontSize: 14, fontWeight: "600", color: COULEURS.accent, marginTop: 1 },
   herosXp: { fontSize: 12, color: COULEURS.doux, marginTop: 6 },
-  xpFond: { height: 10, borderRadius: 5, backgroundColor: "#EAE5DA", marginTop: 4, overflow: "hidden" },
+  xpFond: { height: 10, borderRadius: 5, backgroundColor: "#2A2636", marginTop: 4, overflow: "hidden" },
   xpRempli: { height: 10, borderRadius: 5, backgroundColor: COULEURS.accent },
   herosStreak: { fontSize: 13, color: COULEURS.texte, marginTop: 8, fontWeight: "600" },
 

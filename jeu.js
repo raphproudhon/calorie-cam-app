@@ -216,3 +216,16 @@ const ACCENT_ETAPE = [
 export function accentPourEtape(etape) {
   return ACCENT_ETAPE[Math.max(0, Math.min(ACCENT_ETAPE.length - 1, etape))];
 }
+
+// --- Teinte de fond par etape (fond de l'app legerement colore vers le perso)
+// On melange l'accent a une base creme pour rester clair et lisible.
+function melangeHex(a, b, t) {
+  const pa = parseInt(a.slice(1), 16), pb = parseInt(b.slice(1), 16);
+  const mix = (sh) => Math.round(((pa >> sh) & 255) * t + ((pb >> sh) & 255) * (1 - t));
+  return "#" + [mix(16), mix(8), mix(0)].map((v) => v.toString(16).padStart(2, "0")).join("");
+}
+
+/** Couleur de fond (claire) teintee vers l'accent de l'etape. */
+export function fondPourEtape(etape) {
+  return melangeHex(accentPourEtape(etape), "#15131B", 0.16);
+}
