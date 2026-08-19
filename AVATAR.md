@@ -21,8 +21,8 @@ jusqu'à un **souverain de flammes** (niveau 10). Style **chibi pixel art 16-bit
 
 ## Qualité / résolution
 
-À générer en **320×320** (PixelLab Tier 1), **fond transparent**, **8 directions**.
-On refait toute la série en HQ à partir du niveau 1.
+À générer en **128×128** (taille du niveau 1), **fond transparent**, **8 directions**.
+Garder la MÊME taille pour tous les niveaux, pour un détail homogène.
 
 ## Outil recommandé
 
