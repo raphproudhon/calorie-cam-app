@@ -1193,26 +1193,23 @@ function CarteHeros({ jeu }) {
 
   return (
     <View style={styles.carte}>
-      <View style={styles.herosHaut}>
-        <View style={styles.herosPortrait}>
-          <AvatarRotatif frames={rotationsPourEtape(etape)} taille={118} style={styles.centreEcran} />
-          <Text style={styles.rotationAstuce}>glissez pour tourner</Text>
-        </View>
-        <View style={styles.herosInfos}>
-          <Text style={styles.herosNiveau}>Niveau {niv.niveau}</Text>
-          <Text style={styles.herosTitre}>{NOMS_ETAPES[etape]}</Text>
-          <Text style={styles.herosXp}>
-            {niv.xpDansNiveau} / {niv.xpNiveau} XP
-          </Text>
-          {/* Barre d'XP */}
-          <View style={styles.xpFond}>
-            <View style={[styles.xpRempli, { width: `${Math.round(niv.progression * 100)}%` }]} />
-          </View>
-          {j.streak > 0 ? (
-            <Text style={styles.herosStreak}>🔥 Série : {j.streak} jour{j.streak > 1 ? "s" : ""}</Text>
-          ) : null}
-        </View>
+      {/* Le personnage : element central de la progression */}
+      <View style={styles.herosScene}>
+        <AvatarRotatif frames={rotationsPourEtape(etape)} taille={230} />
       </View>
+      <Text style={styles.astuceCentre}>glissez pour le faire tourner</Text>
+
+      <Text style={styles.herosNiveauGros}>Niveau {niv.niveau}</Text>
+      <Text style={styles.herosTitreCentre}>{NOMS_ETAPES[etape]}</Text>
+
+      <View style={styles.xpFond}>
+        <View style={[styles.xpRempli, { width: `${Math.round(niv.progression * 100)}%` }]} />
+      </View>
+      <Text style={styles.herosXpCentre}>{niv.xpDansNiveau} / {niv.xpNiveau} XP</Text>
+
+      {j.streak > 0 ? (
+        <Text style={styles.herosStreakCentre}>🔥 Série : {j.streak} jour{j.streak > 1 ? "s" : ""}</Text>
+      ) : null}
 
       {/* Badges */}
       <Text style={[styles.champLabel, { marginTop: 14 }]}>Badges</Text>
@@ -1568,7 +1565,20 @@ const styles = StyleSheet.create({
   xpRempli: { height: 10, borderRadius: 5, backgroundColor: COULEURS.accent },
   herosStreak: { fontSize: 13, color: COULEURS.texte, marginTop: 8, fontWeight: "600" },
 
-  badgesZone: { flexDirection: "row", flexWrap: "wrap", gap: 8, marginTop: 4 },
+  herosScene: {
+    alignItems: "center",
+    justifyContent: "center",
+    paddingVertical: 14,
+    borderRadius: 16,
+    backgroundColor: "#161320",
+  },
+  astuceCentre: { fontSize: 11, color: COULEURS.doux, textAlign: "center", marginTop: 6 },
+  herosNiveauGros: { fontSize: 30, fontWeight: "800", color: COULEURS.texte, textAlign: "center", marginTop: 10 },
+  herosTitreCentre: { fontSize: 16, fontWeight: "600", color: COULEURS.accent, textAlign: "center", marginTop: 2, marginBottom: 12 },
+  herosXpCentre: { fontSize: 12, color: COULEURS.doux, textAlign: "center", marginTop: 5 },
+  herosStreakCentre: { fontSize: 14, color: COULEURS.texte, textAlign: "center", marginTop: 10, fontWeight: "600" },
+
+  badgesZone: { flexDirection: "row", flexWrap: "wrap", gap: 8, marginTop: 4, justifyContent: "center" },
   badge: {
     width: "22%",
     alignItems: "center",
