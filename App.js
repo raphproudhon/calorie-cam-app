@@ -1090,6 +1090,50 @@ function EcranProgression({ etat }) {
   );
 }
 
+// Les 8 angles du personnage PAR NIVEAU (extraits par tools/extract-rotations.js
+// ou tools/assemble-rotations.js). Un jeu de 8 frames par etape ; les etapes
+// sans art genere retombent sur le dernier jeu disponible.
+const ROT_NIVEAU_1 = [
+  require("./assets/hero/rot/0.png"),
+  require("./assets/hero/rot/1.png"),
+  require("./assets/hero/rot/2.png"),
+  require("./assets/hero/rot/3.png"),
+  require("./assets/hero/rot/4.png"),
+  require("./assets/hero/rot/5.png"),
+  require("./assets/hero/rot/6.png"),
+  require("./assets/hero/rot/7.png"),
+];
+const ROT_NIVEAU_2 = [
+  require("./assets/hero/rot2/0.png"),
+  require("./assets/hero/rot2/1.png"),
+  require("./assets/hero/rot2/2.png"),
+  require("./assets/hero/rot2/3.png"),
+  require("./assets/hero/rot2/4.png"),
+  require("./assets/hero/rot2/5.png"),
+  require("./assets/hero/rot2/6.png"),
+  require("./assets/hero/rot2/7.png"),
+];
+const ROT_NIVEAU_3 = [
+  require("./assets/hero/rot3/0.png"),
+  require("./assets/hero/rot3/1.png"),
+  require("./assets/hero/rot3/2.png"),
+  require("./assets/hero/rot3/3.png"),
+  require("./assets/hero/rot3/4.png"),
+  require("./assets/hero/rot3/5.png"),
+  require("./assets/hero/rot3/6.png"),
+  require("./assets/hero/rot3/7.png"),
+];
+const ROT_NIVEAU_4 = [
+  require("./assets/hero/rot4/0.png"),
+  require("./assets/hero/rot4/1.png"),
+  require("./assets/hero/rot4/2.png"),
+  require("./assets/hero/rot4/3.png"),
+  require("./assets/hero/rot4/4.png"),
+  require("./assets/hero/rot4/5.png"),
+  require("./assets/hero/rot4/6.png"),
+  require("./assets/hero/rot4/7.png"),
+];
+
 // Un jeu de rotations par etape (index = etapePersonnage 0..9). Tant que les
 // niveaux superieurs ne sont pas dessines, on garde le dernier jeu disponible.
 const ROT_SETS = [ROT_NIVEAU_1, ROT_NIVEAU_2, ROT_NIVEAU_3, ROT_NIVEAU_4];
