@@ -97,6 +97,17 @@ IMPORTANT : ne donne AUCUNE valeur nutritionnelle (ni calories, ni macros).
 Elles sont calculees ailleurs a partir d'une base officielle. Ton seul travail
 est d'identifier les aliments et d'estimer leurs masses.`;
 
+const pause = (ms) => new Promise((r) => setTimeout(r, ms));
+
+// Erreur transitoire cote Google (modele surcharge, quota momentane) : ca vaut
+// le coup de reessayer. Sinon (cle invalide, requete malformee), inutile.
+function estTransitoire(status, message) {
+  if (status === 429 || status === 500 || status === 503) return true;
+  const m = (message || "").toLowerCase();
+  return m.includes("overload") || m.includes("high demand") ||
+    m.includes("unavailable") || m.includes("try again") || m.includes("rate limit");
+}
+
 async function appelerGemini(corps) {
   const url =
     `https://generativelanguage.googleapis.com/v1beta/models/${MODELE}:generateContent`;
@@ -107,22 +118,54 @@ async function appelerGemini(corps) {
   // "auth keys" (prefixe "AQ.") et sont refusees en parametre ?key= ; seul
   // l'en-tete fonctionne. Ensuite une cle placee dans une URL se retrouve dans
   // les journaux des serveurs et des proxys traverses.
-  const reponse = await fetch(url, {
-    method: "POST",
-    headers: {
-      "content-type": "application/json",
-      "x-goog-api-key": GEMINI_API_KEY,
-    },
-    body: JSON.stringify(corps),
-  });
+  //
+  // Le modele Gemini gratuit est souvent surcharge ("high demand") : on reessaie
+  // automatiquement quelques fois avec un delai croissant avant d'abandonner.
+  const MAX_ESSAIS = 4;
+  let derniere = null;
 
-  const data = await reponse.json();
-  if (data.error) throw new Error(data.error.message || "Erreur API");
+  for (let essai = 1; essai <= MAX_ESSAIS; essai++) {
+    let reponse;
+    try {
+      reponse = await fetch(url, {
+        method: "POST",
+        headers: { "content-type": "application/json", "x-goog-api-key": GEMINI_API_KEY },
+        body: JSON.stringify(corps),
+      });
+    } catch (e) {
+      // Erreur reseau : transitoire, on retente.
+      derniere = e.message;
+      if (essai < MAX_ESSAIS) { await pause(essai * 1200); continue; }
+      throw new Error("Reseau indisponible. Verifiez votre connexion.");
+    }
 
-  const parts = data?.candidates?.[0]?.content?.parts || [];
-  const texte = parts.map((p) => p.text).filter(Boolean).join("");
-  if (!texte) throw new Error("Reponse vide : " + JSON.stringify(data).slice(0, 300));
-  return JSON.parse(texte);
+    const data = await reponse.json().catch(() => ({}));
+
+    if (data.error) {
+      derniere = data.error.message || "Erreur API";
+      if (estTransitoire(reponse.status, derniere) && essai < MAX_ESSAIS) {
+        await pause(essai * 1500); // 1.5s, 3s, 4.5s
+        continue;
+      }
+      // Message clair pour le cas le plus frequent (surcharge).
+      if (estTransitoire(reponse.status, derniere)) {
+        throw new Error("Le service d'IA est surchargé. Réessayez dans un instant.");
+      }
+      throw new Error(derniere);
+    }
+
+    const parts = data?.candidates?.[0]?.content?.parts || [];
+    const texte = parts.map((p) => p.text).filter(Boolean).join("");
+    if (!texte) {
+      // Reponse vide : parfois transitoire aussi, on retente une fois.
+      derniere = "Reponse vide";
+      if (essai < MAX_ESSAIS) { await pause(essai * 1200); continue; }
+      throw new Error("Reponse vide de l'IA. Réessayez.");
+    }
+    return JSON.parse(texte);
+  }
+
+  throw new Error(derniere || "Échec de l'analyse. Réessayez.");
 }
 
 async function passeVision(base64) {
