@@ -12,7 +12,7 @@
 //   - stockage.js : persistance locale (profil, historique, poids) + bascule de jour
 //   - ce fichier  : l'affichage
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { createContext, useContext, useEffect, useMemo, useRef, useState } from "react";
 import {
   ActivityIndicator,
   Image,
@@ -39,12 +39,19 @@ import { chargerEtat, sauvegarderEtat, dateDuJour } from "./stockage";
 import {
   niveauDepuisXp,
   etapePersonnage,
+  accentPourEtape,
+  fondPourEtape,
   NOMS_ETAPES,
   BADGES,
   recompenserPesee,
   ajouterXp,
   jeuParDefaut,
 } from "./jeu";
+
+// Le theme "accent" de l'app suit le personnage : sa couleur evolue avec le
+// niveau (bleu -> cramoisi -> or). Fourni par App, lu partout via useContext.
+const AccentCtx = createContext("#C4622D");
+const useAccent = () => useContext(AccentCtx);
 
 // --- Racine : chargement, onboarding, navigation ---------------------------
 
@@ -96,17 +103,24 @@ export default function App() {
   const ajouterConsomme = (kcal) =>
     majJour({ consomme: (etat.jour.consomme || 0) + Math.max(0, Math.round(kcal || 0)) });
 
+  // Accent + fond du theme = couleurs de l'etape actuelle du personnage
+  // (evoluent avec lui). Le fond reste clair (teinte legere) pour la lisibilite.
+  const etapeCourante = etapePersonnage(niveauDepuisXp((etat.jeu || {}).xp || 0).niveau);
+  const accent = accentPourEtape(etapeCourante);
+  const fond = fondPourEtape(etapeCourante);
+
   return (
-    <View style={styles.ecran}>
+    <AccentCtx.Provider value={accent}>
+    <View style={[styles.ecran, { backgroundColor: fond }]}>
       {/* Barre du haut : roue crantee (parametres) a gauche + titre */}
-      <View style={styles.barreHaut}>
+      <View style={[styles.barreHaut, { backgroundColor: fond }]}>
         <Pressable onPress={() => setParamsOuverts(true)} hitSlop={12} style={styles.rouePos}>
           <Text style={styles.roue}>⚙︎</Text>
         </Pressable>
         <Text style={styles.barreTitre}>CalorieCam</Text>
       </View>
 
-      <View style={styles.tabs}>
+      <View style={[styles.tabs, { backgroundColor: fond }]}>
         {[
           ["photo", "Photo"],
           ["progression", "Progression"],
@@ -114,7 +128,7 @@ export default function App() {
         ].map(([cle, libelle]) => (
           <Pressable
             key={cle}
-            style={[styles.tab, onglet === cle && styles.tabActif]}
+            style={[styles.tab, onglet === cle && styles.tabActif, onglet === cle && { backgroundColor: accent }]}
             onPress={() => setOnglet(cle)}
           >
             <Text style={[styles.tabTexte, onglet === cle && styles.tabTexteActif]}>
@@ -168,17 +182,18 @@ export default function App() {
         onResetHeros={() => setEtat((e) => ({ ...e, jeu: jeuParDefaut() }))}
       />
     </View>
+    </AccentCtx.Provider>
   );
 }
 
 const COULEURS = {
-  fond: "#F4F1EA",
+  fond: "#17151F",
   accent: "#C4622D",
-  secondaire: "#8A8578",
-  texte: "#2B2925",
-  doux: "#7A756C",
-  carte: "#FFFFFF",
-  bord: "#E8E3D8",
+  secondaire: "#363143",
+  texte: "#EEE9F2",
+  doux: "#A49FAE",
+  carte: "#221E2C",
+  bord: "#332F3D",
 };
 
 // Le code de confiance de l'ANSES (A a D) indique la fiabilite de la donnee
@@ -192,6 +207,7 @@ const LIBELLE_CONFIANCE = {
 };
 
 function EcranPhoto({ onAjouterConsomme }) {
+  const accent = useAccent();
   const [etape, setEtape] = useState(null); // texte affiche pendant le chargement
   const [analyse, setAnalyse] = useState(null);
   const [erreur, setErreur] = useState(null);
@@ -331,7 +347,7 @@ function EcranPhoto({ onAjouterConsomme }) {
           {" "}({NB_ALIMENTS} aliments)
         </Text>
 
-        <TouchableOpacity style={styles.bouton} onPress={() => lancer("camera")}>
+        <TouchableOpacity style={[styles.bouton, { backgroundColor: accent }]} onPress={() => lancer("camera")}>
           <Text style={styles.boutonTexte}>Prendre une photo</Text>
         </TouchableOpacity>
         <TouchableOpacity
@@ -407,7 +423,7 @@ function EcranPhoto({ onAjouterConsomme }) {
             ) : null}
 
             <TouchableOpacity
-              style={[styles.bouton, ajoute && styles.boutonSecondaire, { marginTop: 16 }]}
+              style={[styles.bouton, !ajoute && { backgroundColor: accent }, ajoute && styles.boutonSecondaire, { marginTop: 16 }]}
               onPress={() => {
                 if (ajoute) return;
                 onAjouterConsomme?.(totaux.kcal);
@@ -641,6 +657,7 @@ const BUTS = [
 // le profil, on calcule, on voit le resultat, puis on valide (onValider remonte
 // le profil complet et l'objectif calcule au parent, qui les persiste).
 function FormulaireObjectif({ profilInitial, titre, sousTitre, libelleValider = "Enregistrer", onValider }) {
+  const accent = useAccent();
   const [sexe, setSexe] = useState(profilInitial?.sexe ?? "homme");
   const [age, setAge] = useState(profilInitial?.age != null ? String(profilInitial.age) : "");
   const [poids, setPoids] = useState(profilInitial?.poids != null ? String(profilInitial.poids) : "");
@@ -729,7 +746,7 @@ function FormulaireObjectif({ profilInitial, titre, sousTitre, libelleValider = 
           </>
         )}
 
-        <TouchableOpacity style={[styles.bouton, { marginTop: 20 }]} onPress={calculer}>
+        <TouchableOpacity style={[styles.bouton, { marginTop: 20, backgroundColor: accent }]} onPress={calculer}>
           <Text style={styles.boutonTexte}>Calculer mon besoin</Text>
         </TouchableOpacity>
 
@@ -746,7 +763,7 @@ function FormulaireObjectif({ profilInitial, titre, sousTitre, libelleValider = 
 
       {resultat && (
         <TouchableOpacity
-          style={[styles.bouton, { marginTop: 4, marginBottom: 20 }]}
+          style={[styles.bouton, { marginTop: 4, marginBottom: 20, backgroundColor: accent }]}
           onPress={() => onValider?.(profilValide, resultat.objectif)}
         >
           <Text style={styles.boutonTexte}>{libelleValider}</Text>
@@ -761,6 +778,7 @@ function FormulaireObjectif({ profilInitial, titre, sousTitre, libelleValider = 
 // =========================================================================
 
 function MenuParametres({ visible, etat, onFermer, onModifierObjectif, onAjouterPoids, onResetJour, onDevXp, onResetHeros }) {
+  const accent = useAccent();
   const [vue, setVue] = useState("menu"); // menu | objectif
   const [poidsSaisi, setPoidsSaisi] = useState("");
   const [dispoSante] = useState(() => santeDisponible());
@@ -825,7 +843,7 @@ function MenuParametres({ visible, etat, onFermer, onModifierObjectif, onAjouter
               <Text style={styles.champLabel}>Objectif quotidien</Text>
               <Text style={styles.objectifGros}>{etat.objectif} kcal</Text>
               <TouchableOpacity
-                style={[styles.bouton, { marginTop: 12 }]}
+                style={[styles.bouton, { marginTop: 12, backgroundColor: accent }]}
                 onPress={() => setVue("objectif")}
               >
                 <Text style={styles.boutonTexte}>Modifier mon objectif</Text>
@@ -968,7 +986,7 @@ function EcranBilan({ objectif, consomme, sport, onSport }) {
             <Text
               style={[
                 styles.objectifGros,
-                bilan.restant < 0 && { color: "#B00020" },
+                bilan.restant < 0 && { color: "#FF6B6B" },
               ]}
             >
               {bilan.restant} kcal
@@ -985,7 +1003,7 @@ function EcranBilan({ objectif, consomme, sport, onSport }) {
                 style={[
                   styles.barreRemplie,
                   { width: `${Math.round(bilan.part * 100)}%` },
-                  bilan.restant < 0 && { backgroundColor: "#B00020" },
+                  bilan.restant < 0 && { backgroundColor: "#FF6B6B" },
                 ]}
               />
             </View>
@@ -996,7 +1014,7 @@ function EcranBilan({ objectif, consomme, sport, onSport }) {
                 <Text style={styles.besoinLabel}>objectif{"\n"}de base</Text>
               </View>
               <View style={styles.besoinCase}>
-                <Text style={[styles.besoinValeur, { color: "#2E7D32" }]}>
+                <Text style={[styles.besoinValeur, { color: "#58D08A" }]}>
                   +{parseInt(sport || "0", 10)}
                 </Text>
                 <Text style={styles.besoinLabel}>sport{"\n"}du jour</Text>
@@ -1229,25 +1247,9 @@ function EcranProgression({ etat }) {
   );
 }
 
-// Les 10 etapes du heros (images decoupees de assets/hero-sheet.png par
-// tools/slice-hero.js). L'index correspond a etapePersonnage() (0..9).
-const HERO_FRAMES = [
-  require("./assets/hero/01.png"),
-  require("./assets/hero/02.png"),
-  require("./assets/hero/03.png"),
-  require("./assets/hero/04.png"),
-  require("./assets/hero/05.png"),
-  require("./assets/hero/06.png"),
-  require("./assets/hero/07.png"),
-  require("./assets/hero/08.png"),
-  require("./assets/hero/09.png"),
-  require("./assets/hero/10.png"),
-];
-
-// Les 8 angles du personnage PAR NIVEAU (extraits des GIF PixelLab par
-// tools/extract-rotations.js). Un jeu de 8 frames par etape de personnage.
-// On complete au fur et a mesure qu'on genere les niveaux ; les etapes sans
-// art encore genere retombent sur le dernier jeu disponible.
+// Les 8 angles du personnage PAR NIVEAU (extraits par tools/extract-rotations.js
+// ou tools/assemble-rotations.js). Un jeu de 8 frames par etape ; les etapes
+// sans art genere retombent sur le dernier jeu disponible.
 const ROT_NIVEAU_1 = [
   require("./assets/hero/rot/0.png"),
   require("./assets/hero/rot/1.png"),
@@ -1278,10 +1280,20 @@ const ROT_NIVEAU_3 = [
   require("./assets/hero/rot3/6.png"),
   require("./assets/hero/rot3/7.png"),
 ];
+const ROT_NIVEAU_4 = [
+  require("./assets/hero/rot4/0.png"),
+  require("./assets/hero/rot4/1.png"),
+  require("./assets/hero/rot4/2.png"),
+  require("./assets/hero/rot4/3.png"),
+  require("./assets/hero/rot4/4.png"),
+  require("./assets/hero/rot4/5.png"),
+  require("./assets/hero/rot4/6.png"),
+  require("./assets/hero/rot4/7.png"),
+];
 
 // Un jeu de rotations par etape (index = etapePersonnage 0..9). Tant que les
 // niveaux superieurs ne sont pas dessines, on garde le dernier jeu disponible.
-const ROT_SETS = [ROT_NIVEAU_1, ROT_NIVEAU_2, ROT_NIVEAU_3];
+const ROT_SETS = [ROT_NIVEAU_1, ROT_NIVEAU_2, ROT_NIVEAU_3, ROT_NIVEAU_4];
 
 /** Jeu de rotations a afficher pour une etape de personnage donnee. */
 function rotationsPourEtape(etape) {
@@ -1334,30 +1346,28 @@ function CarteHeros({ jeu }) {
   const j = jeu || { xp: 0, streak: 0, badges: [] };
   const niv = niveauDepuisXp(j.xp);
   const etape = etapePersonnage(niv.niveau);
+  const accent = accentPourEtape(etape); // couleur du theme a cette etape
   const badgesAcquis = new Set(j.badges || []);
 
   return (
     <View style={styles.carte}>
-      <View style={styles.herosHaut}>
-        <View style={styles.herosPortrait}>
-          <AvatarRotatif frames={rotationsPourEtape(etape)} taille={118} style={styles.centreEcran} />
-          <Text style={styles.rotationAstuce}>glissez pour tourner</Text>
-        </View>
-        <View style={styles.herosInfos}>
-          <Text style={styles.herosNiveau}>Niveau {niv.niveau}</Text>
-          <Text style={styles.herosTitre}>{NOMS_ETAPES[etape]}</Text>
-          <Text style={styles.herosXp}>
-            {niv.xpDansNiveau} / {niv.xpNiveau} XP
-          </Text>
-          {/* Barre d'XP */}
-          <View style={styles.xpFond}>
-            <View style={[styles.xpRempli, { width: `${Math.round(niv.progression * 100)}%` }]} />
-          </View>
-          {j.streak > 0 ? (
-            <Text style={styles.herosStreak}>🔥 Série : {j.streak} jour{j.streak > 1 ? "s" : ""}</Text>
-          ) : null}
-        </View>
+      {/* Le personnage : element central de la progression */}
+      <View style={styles.herosScene}>
+        <AvatarRotatif frames={rotationsPourEtape(etape)} taille={230} />
       </View>
+      <Text style={styles.astuceCentre}>glissez pour le faire tourner</Text>
+
+      <Text style={styles.herosNiveauGros}>Niveau {niv.niveau}</Text>
+      <Text style={[styles.herosTitreCentre, { color: accent }]}>{NOMS_ETAPES[etape]}</Text>
+
+      <View style={styles.xpFond}>
+        <View style={[styles.xpRempli, { width: `${Math.round(niv.progression * 100)}%`, backgroundColor: accent }]} />
+      </View>
+      <Text style={styles.herosXpCentre}>{niv.xpDansNiveau} / {niv.xpNiveau} XP</Text>
+
+      {j.streak > 0 ? (
+        <Text style={styles.herosStreakCentre}>🔥 Série : {j.streak} jour{j.streak > 1 ? "s" : ""}</Text>
+      ) : null}
 
       {/* Badges */}
       <Text style={[styles.champLabel, { marginTop: 14 }]}>Badges</Text>
@@ -1414,7 +1424,7 @@ function CourbePoids({ poids, but }) {
         <Text style={styles.legendePoidsTexte}>
           {premier} kg → {dernier} kg
         </Text>
-        <Text style={[styles.legendePoidsDelta, { color: bonSens ? "#2E7D32" : "#B00020" }]}>
+        <Text style={[styles.legendePoidsDelta, { color: bonSens ? "#58D08A" : "#FF6B6B" }]}>
           {delta > 0 ? "+" : ""}{delta} kg
         </Text>
       </View>
@@ -1440,7 +1450,7 @@ function BarresCalories({ historique }) {
             <View
               style={[
                 styles.barreCal,
-                { height: hauteur, backgroundColor: depasse ? "#B00020" : "#2E7D32" },
+                { height: hauteur, backgroundColor: depasse ? "#FF6B6B" : "#58D08A" },
               ]}
             />
             <Text style={styles.barreJour}>{jourNum}</Text>
@@ -1484,7 +1494,7 @@ const styles = StyleSheet.create({
     flex: 1,
     paddingVertical: 10,
     borderRadius: 10,
-    backgroundColor: "#EAE5DA",
+    backgroundColor: "#2A2636",
   },
   tabActif: { backgroundColor: COULEURS.accent },
   tabTexte: { textAlign: "center", fontWeight: "600", color: COULEURS.doux, fontSize: 13 },
@@ -1554,7 +1564,7 @@ const styles = StyleSheet.create({
 
   centre: { alignItems: "center", marginTop: 30 },
   info: { marginTop: 10, color: COULEURS.doux },
-  erreur: { color: "#B00020", marginTop: 20 },
+  erreur: { color: "#FF6B6B", marginTop: 20 },
 
   carte: { backgroundColor: COULEURS.carte, borderRadius: 16, padding: 20, marginTop: 24 },
   plat: { fontSize: 22, fontWeight: "700", color: COULEURS.texte },
@@ -1681,9 +1691,9 @@ const styles = StyleSheet.create({
     marginTop: 14,
     padding: 12,
     borderRadius: 10,
-    backgroundColor: "#FBEAEA",
+    backgroundColor: "#3A2126",
   },
-  erreurLigne: { color: "#B00020", fontSize: 13, marginVertical: 1 },
+  erreurLigne: { color: "#FF6B6B", fontSize: 13, marginVertical: 1 },
 
   objectifGros: { fontSize: 40, fontWeight: "800", color: COULEURS.accent, marginTop: 2 },
   objectifSous: { fontSize: 14, color: COULEURS.doux },
@@ -1692,7 +1702,7 @@ const styles = StyleSheet.create({
   barreFond: {
     height: 8,
     borderRadius: 4,
-    backgroundColor: "#EAE5DA",
+    backgroundColor: "#2A2636",
     marginTop: 12,
     overflow: "hidden",
   },
@@ -1725,11 +1735,11 @@ const styles = StyleSheet.create({
     marginTop: 12,
     padding: 12,
     borderRadius: 10,
-    backgroundColor: "#FFF4E5",
+    backgroundColor: "#3A2F1E",
     borderWidth: 1,
-    borderColor: "#F0D9B8",
+    borderColor: "#574326",
   },
-  avertissementTexte: { fontSize: 13, color: "#7A4B12", lineHeight: 18 },
+  avertissementTexte: { fontSize: 13, color: "#E7C883", lineHeight: 18 },
 
   disclaimer: { marginTop: 16, fontSize: 11, color: COULEURS.doux, lineHeight: 16, fontStyle: "italic" },
 
@@ -1756,11 +1766,24 @@ const styles = StyleSheet.create({
   herosNiveau: { fontSize: 22, fontWeight: "800", color: COULEURS.texte },
   herosTitre: { fontSize: 14, fontWeight: "600", color: COULEURS.accent, marginTop: 1 },
   herosXp: { fontSize: 12, color: COULEURS.doux, marginTop: 6 },
-  xpFond: { height: 10, borderRadius: 5, backgroundColor: "#EAE5DA", marginTop: 4, overflow: "hidden" },
+  xpFond: { height: 10, borderRadius: 5, backgroundColor: "#2A2636", marginTop: 4, overflow: "hidden" },
   xpRempli: { height: 10, borderRadius: 5, backgroundColor: COULEURS.accent },
   herosStreak: { fontSize: 13, color: COULEURS.texte, marginTop: 8, fontWeight: "600" },
 
-  badgesZone: { flexDirection: "row", flexWrap: "wrap", gap: 8, marginTop: 4 },
+  herosScene: {
+    alignItems: "center",
+    justifyContent: "center",
+    paddingVertical: 14,
+    borderRadius: 16,
+    backgroundColor: "#161320",
+  },
+  astuceCentre: { fontSize: 11, color: COULEURS.doux, textAlign: "center", marginTop: 6 },
+  herosNiveauGros: { fontSize: 30, fontWeight: "800", color: COULEURS.texte, textAlign: "center", marginTop: 10 },
+  herosTitreCentre: { fontSize: 16, fontWeight: "600", color: COULEURS.accent, textAlign: "center", marginTop: 2, marginBottom: 12 },
+  herosXpCentre: { fontSize: 12, color: COULEURS.doux, textAlign: "center", marginTop: 5 },
+  herosStreakCentre: { fontSize: 14, color: COULEURS.texte, textAlign: "center", marginTop: 10, fontWeight: "600" },
+
+  badgesZone: { flexDirection: "row", flexWrap: "wrap", gap: 8, marginTop: 4, justifyContent: "center" },
   badge: {
     width: "22%",
     alignItems: "center",

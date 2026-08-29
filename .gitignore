@@ -50,3 +50,4 @@ secrets*.js
 # generated native folders
 /ios
 /android
+archives/
