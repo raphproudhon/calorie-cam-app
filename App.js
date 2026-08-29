@@ -27,9 +27,11 @@ import {
   View,
 } from "react-native";
 import * as ImagePicker from "expo-image-picker";
+import { CameraView, useCameraPermissions } from "expo-camera";
 import Svg, { Polyline, Circle, Line as SvgLine } from "react-native-svg";
 
 import { analyserPhoto } from "./gemini";
+import { produitParCodeBarres, analyseDepuisProduit, alimentDepuisProduit } from "./off";
 import { calculer, totaliser, rechercher, NB_ALIMENTS, SOURCE } from "./ciqual";
 import { ACTIVITES, RYTHMES, calculerObjectif, bilanJournalier } from "./besoins";
 import { estDisponible as santeDisponible, demanderAcces, depenseDuJour } from "./health";
@@ -195,6 +197,67 @@ function EcranPhoto({ onAjouterConsomme }) {
   const [erreur, setErreur] = useState(null);
   const [editionFiche, setEditionFiche] = useState(null); // index de l'aliment en cours de correction
   const [ajoute, setAjoute] = useState(false); // ce plat a-t-il ete envoye au bilan ?
+  const [scanOuvert, setScanOuvert] = useState(false);
+  const [scanMsg, setScanMsg] = useState(null); // banniere dans la camera : { texte, type }
+  const [permCam, demanderPermCam] = useCameraPermissions();
+  const scanEnCours = useRef(false); // onBarcodeScanned se declenche en rafale
+
+  // Codes-barres deja presents, tenus a jour hors du cycle de rendu pour que la
+  // detection de doublon reste fiable meme entre deux scans rapproches.
+  const codesRef = useRef(new Set());
+  useEffect(() => {
+    codesRef.current = new Set(
+      (analyse?.aliments || []).map((al) => al.fiche?.code).filter(Boolean)
+    );
+  }, [analyse]);
+
+  async function ouvrirScanner(ajouter = false) {
+    setErreur(null);
+    setScanMsg(null);
+    if (!permCam?.granted) {
+      const r = await demanderPermCam();
+      if (!r.granted) {
+        setErreur("Accès à la caméra refusé.");
+        return;
+      }
+    }
+    if (!ajouter) setAnalyse(null); // "Scanner" (sans +) repart d'une liste vide
+    scanEnCours.current = false;
+    setScanOuvert(true);
+  }
+
+  async function surCodeScanne({ data }) {
+    if (scanEnCours.current) return; // rafales : ne traiter qu'un scan a la fois
+    scanEnCours.current = true;
+    try {
+      const fiche = await produitParCodeBarres(data);
+      if (!fiche) {
+        setScanMsg({ texte: "Produit introuvable, réessayez.", type: "warn" });
+        return; // on reste dans la camera
+      }
+      if (codesRef.current.has(fiche.code)) {
+        setScanMsg({ texte: `Déjà scanné : ${fiche.nom}`, type: "warn" });
+        return; // doublon : message en haut, la camera reste ouverte
+      }
+      // Nouveau produit : on l'ajoute et on ferme la camera.
+      codesRef.current.add(fiche.code);
+      setAnalyse((a) =>
+        a
+          ? { ...a, aliments: [...a.aliments, alimentDepuisProduit(fiche)] }
+          : analyseDepuisProduit(fiche)
+      );
+      setAjoute(false); // le total a change : il faudra re-ajouter au bilan
+      setScanMsg(null);
+      setScanOuvert(false);
+    } catch (e) {
+      setScanMsg({ texte: "Erreur : " + e.message, type: "warn" });
+    } finally {
+      // Re-autorise un scan apres un court delai (evite de traiter 10x le meme code).
+      setTimeout(() => {
+        scanEnCours.current = false;
+      }, 1200);
+    }
+  }
 
   async function lancer(source) {
     const options = { base64: true, quality: 0.5, allowsEditing: false };
@@ -240,6 +303,15 @@ function EcranPhoto({ onAjouterConsomme }) {
     });
   }
 
+  /** Retire un aliment de l'analyse en cours. */
+  function supprimerAliment(index) {
+    setAnalyse((a) => {
+      if (!a) return a;
+      return { ...a, aliments: a.aliments.filter((_, i) => i !== index) };
+    });
+    setAjoute(false); // le total change
+  }
+
   // Recalcul a chaque changement de portion ou de fiche.
   const portions = useMemo(() => {
     if (!analyse) return [];
@@ -268,6 +340,12 @@ function EcranPhoto({ onAjouterConsomme }) {
         >
           <Text style={styles.boutonTexte}>Choisir dans la galerie</Text>
         </TouchableOpacity>
+        <TouchableOpacity
+          style={[styles.bouton, styles.boutonScan]}
+          onPress={() => ouvrirScanner(false)}
+        >
+          <Text style={styles.boutonTexte}>Scanner un code-barres</Text>
+        </TouchableOpacity>
 
         {etape && (
           <View style={styles.centre}>
@@ -294,8 +372,20 @@ function EcranPhoto({ onAjouterConsomme }) {
                 portion={portions[i]}
                 onGrammes={(g) => modifierAliment(i, { grammes: g })}
                 onOuvrirFiches={() => setEditionFiche(i)}
+                onSupprimer={
+                  analyse.aliments.length > 1 ? () => supprimerAliment(i) : null
+                }
               />
             ))}
+
+            <TouchableOpacity
+              style={styles.boutonAjoutScan}
+              onPress={() => ouvrirScanner(true)}
+            >
+              <Text style={styles.boutonAjoutScanTexte}>
+                + Scanner un autre produit
+              </Text>
+            </TouchableOpacity>
 
             <View style={styles.separateur} />
 
@@ -354,13 +444,57 @@ function EcranPhoto({ onAjouterConsomme }) {
         }}
         onFermer={() => setEditionFiche(null)}
       />
+
+      <Modal
+        visible={scanOuvert}
+        animationType="slide"
+        onRequestClose={() => setScanOuvert(false)}
+      >
+        <View style={styles.scanEcran}>
+          <CameraView
+            style={styles.scanCamera}
+            facing="back"
+            barcodeScannerSettings={{
+              barcodeTypes: ["ean13", "ean8", "upc_a", "upc_e"],
+            }}
+            onBarcodeScanned={scanOuvert ? surCodeScanne : undefined}
+          />
+          {scanMsg ? (
+            <View
+              style={[
+                styles.scanBanniere,
+                scanMsg.type === "warn"
+                  ? styles.scanBanniereWarn
+                  : styles.scanBanniereOk,
+              ]}
+            >
+              <Text style={styles.scanBanniereTexte}>{scanMsg.texte}</Text>
+            </View>
+          ) : null}
+          <View style={styles.scanBas}>
+            <Text style={styles.scanTexte}>Visez le code-barres du produit</Text>
+            <TouchableOpacity
+              style={styles.scanAnnuler}
+              onPress={() => setScanOuvert(false)}
+            >
+              <Text style={styles.boutonTexte}>Annuler</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 }
 
 /** Une ligne d'aliment : poids modifiable, fiche CIQUAL, calories calculees. */
-function LigneAliment({ aliment, portion, onGrammes, onOuvrirFiches }) {
+function LigneAliment({ aliment, portion, onGrammes, onOuvrirFiches, onSupprimer }) {
   const [saisie, setSaisie] = useState(String(aliment.grammes));
+
+  // Resynchronise le champ quand l'aliment sous cette ligne change (ex : apres
+  // suppression, l'index de rendu est reutilise pour un autre aliment).
+  useEffect(() => {
+    setSaisie(String(aliment.grammes));
+  }, [aliment.grammes]);
 
   // L'incertitude annoncee par l'IA n'est affichee que si elle est reelle :
   // une fourchette large est un signal utile, une fourchette nulle du bruit.
@@ -413,6 +547,11 @@ function LigneAliment({ aliment, portion, onGrammes, onOuvrirFiches }) {
         <Text style={styles.alimentKcal}>
           {portion ? `${portion.kcal} kcal` : "—"}
         </Text>
+        {onSupprimer ? (
+          <Pressable onPress={onSupprimer} hitSlop={8}>
+            <Text style={styles.supprimer}>✕ retirer</Text>
+          </Pressable>
+        ) : null}
       </View>
     </View>
   );
@@ -1362,7 +1501,54 @@ const styles = StyleSheet.create({
 
   bouton: { backgroundColor: COULEURS.accent, padding: 16, borderRadius: 12, marginBottom: 12 },
   boutonSecondaire: { backgroundColor: COULEURS.secondaire },
+  boutonScan: { backgroundColor: "#4A7C59" },
+  boutonAjoutScan: {
+    marginTop: 6,
+    paddingVertical: 10,
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: "#4A7C59",
+    alignItems: "center",
+  },
+  boutonAjoutScanTexte: { color: "#4A7C59", fontWeight: "600" },
+  supprimer: { color: "#B00020", fontSize: 12, marginTop: 6 },
   boutonTexte: { color: "white", fontSize: 16, fontWeight: "600", textAlign: "center" },
+  scanEcran: { flex: 1, backgroundColor: "#000" },
+  scanCamera: { flex: 1 },
+  scanBas: {
+    position: "absolute",
+    bottom: 0,
+    left: 0,
+    right: 0,
+    padding: 24,
+    paddingBottom: 44,
+    alignItems: "center",
+    backgroundColor: "rgba(0,0,0,0.45)",
+  },
+  scanTexte: { color: "white", fontSize: 16, marginBottom: 16, textAlign: "center" },
+  scanAnnuler: {
+    backgroundColor: COULEURS.secondaire,
+    paddingVertical: 14,
+    paddingHorizontal: 40,
+    borderRadius: 12,
+  },
+  scanBanniere: {
+    position: "absolute",
+    top: 60,
+    left: 16,
+    right: 16,
+    padding: 14,
+    borderRadius: 12,
+    alignItems: "center",
+  },
+  scanBanniereWarn: { backgroundColor: "rgba(176,0,32,0.92)" },
+  scanBanniereOk: { backgroundColor: "rgba(74,124,89,0.92)" },
+  scanBanniereTexte: {
+    color: "white",
+    fontSize: 15,
+    fontWeight: "600",
+    textAlign: "center",
+  },
   row2: { flexDirection: "row", gap: 8 },
   boutonMoitie: { flex: 1 },
 
