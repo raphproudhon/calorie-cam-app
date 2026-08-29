@@ -28,10 +28,15 @@ explicitement.
 
 ## Structure de l'app
 
-Trois onglets — **Photo** (analyse d'un plat), **Progression** (avatar/niveaux +
-courbe de poids + calories), **Bilan** (calories restantes du jour). Onboarding
-obligatoire au 1er lancement ; objectif réglable ensuite via la **roue crantée**
-(menu Paramètres, haut gauche). Tout est persisté localement (`stockage.js`).
+Trois onglets — **Photo** (analyse d'un plat par photo **ou scan de
+code-barres**), **Progression** (avatar/niveaux + courbe de poids + calories),
+**Bilan** (calories restantes du jour). Onboarding obligatoire au 1er lancement ;
+objectif réglable ensuite via la **roue crantée** (menu Paramètres, haut gauche).
+Tout est persisté localement (`stockage.js`).
+
+Le scan de code-barres (`expo-camera`) interroge **Open Food Facts** et empile
+plusieurs produits dans une même analyse (avec anti-doublon) ; les produits
+passent dans le même affichage/bilan que les aliments d'une photo.
 
 ## Fichiers
 
@@ -40,6 +45,7 @@ obligatoire au 1er lancement ; objectif réglable ensuite via la **roue crantée
 | `App.js` | les 3 onglets, l'onboarding, les paramètres, l'avatar rotatif |
 | `gemini.js` | passe 1 (vision) et passe 2 (choix de la fiche Ciqual) |
 | `ciqual.js` | recherche floue dans la table + calcul nutritionnel |
+| `off.js` | scan de code-barres → produit **Open Food Facts** mis à la forme d'une fiche (compatible `calculer()`) |
 | `besoins.js` | BMR/objectif calorique + bilan du jour, garde-fous de sécurité |
 | `health.js` | lecture de la dépense via Apple Santé (HealthKit) |
 | `stockage.js` | persistance locale (AsyncStorage) + bascule de journée à minuit |
@@ -68,9 +74,13 @@ obligatoire au 1er lancement ; objectif réglable ensuite via la **roue crantée
   santé, testé.
 - **L'IA n'invente aucune valeur nutritionnelle** (voir la règle plus haut).
 
-## Deux modes d'exécution
+## Modes d'exécution
 
-- **Expo Go** (`npx expo start`) : tout marche SAUF Apple Santé.
+- **Expo Go** (`npx expo start`, souvent `--tunnel` car le réseau local bloque) :
+  tout marche SAUF Apple Santé.
+- **Web** (`npx expo start --web`, ou touche `w`) : aperçu dans le navigateur,
+  pratique pour une démo / un partage d'écran. Le scan de code-barres n'y marche
+  pas (caméra web limitée) ; le reste oui. Deps : `react-native-web`, `react-dom`.
 - **Build de développement** (EAS, voir README) : nécessaire pour HealthKit.
   Se lance ensuite avec `npx expo start --dev-client`.
 

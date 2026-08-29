@@ -12,6 +12,11 @@ Gemini.
 4. Les calories et macros sont calculées à partir de cette base officielle
 5. On peut **corriger le poids** de chaque aliment : tout se recalcule aussitôt
 
+**Autre entrée : le scan de code-barres.** Pour un produit emballé, on scanne
+son code-barres (`expo-camera`) et ses valeurs officielles sont récupérées via
+**Open Food Facts** (`off.js`). On peut empiler plusieurs produits dans une même
+analyse — avec anti-doublon (message dans la caméra si un produit est déjà là).
+
 ### Pourquoi l'IA ne calcule pas les calories
 
 L'IA est bonne pour *reconnaître* un aliment sur une photo, mauvaise pour
@@ -116,7 +121,16 @@ Un QR code apparaît → le scanner avec l'appareil photo de l'iPhone.
 
 **L'iPhone doit être en Wi-Fi, sur le même réseau que le PC.** Expo Go se
 connecte à une adresse locale (`exp://192.168.x.x:8081`), qui n'existe pas
-depuis internet : en 4G/5G, la connexion expire sans message clair.
+depuis internet : en 4G/5G, la connexion expire sans message clair. Si le réseau
+local bloque (pare-feu Windows, isolation Wi-Fi), lancer `npx expo start --tunnel`.
+
+### Aperçu dans le navigateur (démo / partage d'écran)
+
+Pour montrer l'app sur le PC (screen share), on peut la lancer dans un
+navigateur : `npx expo start --web` (ou la touche `w` dans le serveur). Deps déjà
+installées (`react-native-web`, `react-dom`, `@expo/metro-runtime`). ⚠️ Le **scan
+de code-barres n'y marche pas** (support caméra web limité) ; photo, objectif,
+bilan et avatar oui.
 
 ## Sécurité
 
@@ -203,7 +217,7 @@ La configuration technique (entitlement HealthKit, descriptions d'usage Santé,
       en cours (niveaux 1-2 faits ; voir `tools/extract-rotations.js`)
 - [ ] Valider la précision sur des repas réels **et pesés** (voir ci-dessous)
 - [ ] Journal détaillé des plats de la journée (au-delà du total)
-- [ ] Scan de code-barres pour les produits emballés (via Open Food Facts)
+- [x] Scan de code-barres pour les produits emballés (Open Food Facts — mono, multi, anti-doublon)
 - [ ] À terme : app iOS native (SwiftUI) si le concept est validé
 
 ### Comment valider la précision pour de bon
