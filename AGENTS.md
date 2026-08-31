@@ -11,7 +11,9 @@ Points clés :
 - IA vision : **Google Gemini**, modèle `gemini-flash-latest`. Le code appelle
   l'API REST directement (`fetch`) dans `gemini.js`.
 - La clé API est dans `secrets.js` (exclu de Git). Ne jamais la commiter, ne
-  jamais la remettre en clair dans le code.
+  jamais la remettre en clair dans le code. `cle.js` la résout à l'exécution :
+  clé saisie dans les Paramètres (persistée localement) sinon clé de
+  `secrets.js`. La version web publiée sur GitHub Pages n'embarque AUCUNE clé.
 
 ## Règle d'architecture à ne pas casser
 
@@ -50,6 +52,7 @@ passent dans le même affichage/bilan que les aliments d'une photo.
 | `health.js` | lecture de la dépense via Apple Santé (HealthKit) |
 | `stockage.js` | persistance locale (AsyncStorage) + bascule de journée à minuit |
 | `jeu.js` | gamification : XP, niveaux, badges, étapes du personnage |
+| `cle.js` | résolution de la clé API Gemini (saisie dans l'app ou `secrets.js`) |
 | `sprites.js` | lecteur de sprites pixel (grille + palette) — cf. `tools/sprite-studio.html` |
 | `data/ciqual.json` | table réduite (235 Ko), **versionnée** — ne pas régénérer sans raison |
 | `assets/hero/` | frames du personnage + rotations 8 directions par niveau (`rot/`, `rot2/`…) |
@@ -81,6 +84,8 @@ passent dans le même affichage/bilan que les aliments d'une photo.
 - **Web** (`npx expo start --web`, ou touche `w`) : aperçu dans le navigateur,
   pratique pour une démo / un partage d'écran. Le scan de code-barres n'y marche
   pas (caméra web limitée) ; le reste oui. Deps : `react-native-web`, `react-dom`.
+- **GitHub Pages** (`.github/workflows/pages.yml`, push sur `main`) : version web
+  publique, sans clé API embarquée — chacun colle la sienne dans les Paramètres.
 - **Build de développement** (EAS, voir README) : nécessaire pour HealthKit.
   Se lance ensuite avec `npx expo start --dev-client`.
 

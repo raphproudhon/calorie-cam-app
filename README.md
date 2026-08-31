@@ -132,6 +132,29 @@ installées (`react-native-web`, `react-dom`, `@expo/metro-runtime`). ⚠️ Le 
 de code-barres n'y marche pas** (support caméra web limité) ; photo, objectif,
 bilan et avatar oui.
 
+### Version en ligne (GitHub Pages)
+
+Le workflow `.github/workflows/pages.yml` publie la version web à chaque push
+sur `main` : l'app est alors accessible **directement depuis GitHub**, sans rien
+installer, à l'adresse `https://<compte>.github.io/calorie-cam-app/`.
+
+À faire **une fois**, dans le dépôt : *Settings → Pages → Build and deployment →
+Source = **GitHub Actions***. Sans ça, le workflow construit mais ne publie pas.
+
+Deux points importants :
+
+- **Aucune clé API n'est embarquée** dans le site publié — le bundle est public.
+  Le workflow génère un `secrets.js` vide (copie du modèle) ; chaque visiteur
+  colle sa propre clé Gemini dans **Paramètres → Clé API Gemini**, où elle reste
+  dans le stockage local de SON navigateur. Sans clé, tout marche sauf l'analyse
+  photo.
+- Le site est servi sous `/calorie-cam-app/` : le workflow injecte
+  `experiments.baseUrl` dans `app.json` juste avant l'export (on ne le versionne
+  pas, ça gênerait le `npx expo start --web` local) et pose un `.nojekyll`, sans
+  lequel Pages ignorerait le dossier `_expo` (bundle).
+
+Mêmes limites que l'aperçu local : pas de scan de code-barres, pas d'Apple Santé.
+
 ## Sécurité
 
 - La clé API est dans `secrets.js`, **jamais commité** (voir `.gitignore`, qui
@@ -139,6 +162,8 @@ bilan et avatar oui.
 - Elle est envoyée dans l'en-tête HTTP `x-goog-api-key`, **jamais dans l'URL** :
   une clé en paramètre de requête se retrouve dans les journaux de tous les
   serveurs et proxys traversés.
+- Sur la **version web publiée**, le bundle ne contient aucune clé : elle est
+  saisie par l'utilisateur (Paramètres) et stockée dans son navigateur.
 - Elle reste en clair dans l'app : OK pour tester sur son propre iPhone, mais
   **ne jamais distribuer l'app ainsi**. Pour une vraie app publiée → passer par
   un petit backend qui garde la clé cachée.
