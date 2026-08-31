@@ -36,6 +36,7 @@ import { calculer, totaliser, rechercher, NB_ALIMENTS, SOURCE } from "./ciqual";
 import { ACTIVITES, RYTHMES, calculerObjectif, bilanJournalier } from "./besoins";
 import { estDisponible as santeDisponible, demanderAcces, depenseDuJour } from "./health";
 import { chargerEtat, sauvegarderEtat, dateDuJour } from "./stockage";
+import { chargerCle, definirCle, cleGemini, cleEmbarqueePresente } from "./cle";
 import {
   niveauDepuisXp,
   etapePersonnage,
@@ -64,6 +65,7 @@ export default function App() {
   // chargerEtat applique aussi la bascule de journee (archivage de la veille).
   useEffect(() => {
     chargerEtat().then(setEtat);
+    chargerCle();
   }, []);
 
   // Sauvegarde a chaque modification de l'etat (une fois charge).
@@ -777,6 +779,53 @@ function FormulaireObjectif({ profilInitial, titre, sousTitre, libelleValider = 
 //  MENU PARAMETRES — roue crantee : objectif, poids, reset, Apple Sante
 // =========================================================================
 
+// Saisie de la cle API Gemini (version web publiee : le bundle n'en contient
+// aucune). La cle est persistee localement, jamais envoyee ailleurs qu'a Google.
+function CarteCleApi() {
+  const [saisie, setSaisie] = useState("");
+  const [message, setMessage] = useState(null);
+  const configuree = cleGemini() !== "";
+
+  async function enregistrer() {
+    const cle = await definirCle(saisie);
+    setSaisie("");
+    setMessage(cle ? "Cle enregistree." : "Cle effacee.");
+  }
+
+  return (
+    <View style={styles.carte}>
+      <Text style={styles.champLabel}>Cle API Gemini</Text>
+      <Text style={styles.objectifDetail}>
+        {configuree
+          ? "Une cle est enregistree sur cet appareil."
+          : "Aucune cle : l'analyse photo est indisponible."}
+      </Text>
+      <Text style={styles.disclaimer}>
+        Cle gratuite sur aistudio.google.com/apikey. Elle reste sur cet appareil.
+      </Text>
+      <View style={[styles.champNombreBoite, { marginTop: 10 }]}>
+        <TextInput
+          style={styles.champNombreSaisie}
+          value={saisie}
+          onChangeText={setSaisie}
+          placeholder={configuree ? "Remplacer la cle" : "Coller la cle"}
+          placeholderTextColor={COULEURS.doux}
+          autoCapitalize="none"
+          autoCorrect={false}
+          secureTextEntry
+        />
+      </View>
+      <TouchableOpacity
+        style={[styles.bouton, styles.boutonSecondaire, { marginTop: 10 }]}
+        onPress={enregistrer}
+      >
+        <Text style={styles.boutonTexte}>Enregistrer la cle</Text>
+      </TouchableOpacity>
+      {message ? <Text style={styles.objectifDetail}>{message}</Text> : null}
+    </View>
+  );
+}
+
 function MenuParametres({ visible, etat, onFermer, onModifierObjectif, onAjouterPoids, onResetJour, onDevXp, onResetHeros }) {
   const accent = useAccent();
   const [vue, setVue] = useState("menu"); // menu | objectif
@@ -914,6 +963,11 @@ function MenuParametres({ visible, etat, onFermer, onModifierObjectif, onAjouter
                 </TouchableOpacity>
               </View>
             ) : null}
+
+            {/* Cle API Gemini — utile seulement quand le build n'en embarque
+                pas (version web publiee) : chacun colle la sienne, elle reste
+                dans son navigateur. */}
+            {cleEmbarqueePresente() ? null : <CarteCleApi />}
 
             {/* Apple Sante */}
             <View style={styles.carte}>

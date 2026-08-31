@@ -1,0 +1,73 @@
+# Publie la version WEB de l'app sur GitHub Pages, a chaque push sur main.
+#
+# Deux precautions propres a une page publique :
+#   - aucune cle API n'est embarquee (secrets.js est genere depuis le modele,
+#     donc vide) : chaque visiteur colle la sienne dans les Parametres ;
+#   - le site est servi sous /<nom-du-depot>/, d'ou le baseUrl injecte dans
+#     app.json juste avant l'export (on ne le met pas dans le fichier versionne,
+#     ca genait le `npx expo start --web` local).
+
+name: Web (GitHub Pages)
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - run: npm ci
+
+      # secrets.js n'est pas versionne (il contient la vraie cle en local).
+      # Ici on met le modele : le bundle public part donc SANS cle.
+      - name: Fichier de secrets vide
+        run: cp secrets.example.js secrets.js
+
+      - name: Base URL du depot
+        run: |
+          node -e '
+            const fs = require("fs");
+            const base = "/" + "${{ github.repository }}".split("/")[1];
+            const cfg = JSON.parse(fs.readFileSync("app.json", "utf8"));
+            cfg.expo.experiments = { ...(cfg.expo.experiments || {}), baseUrl: base };
+            fs.writeFileSync("app.json", JSON.stringify(cfg, null, 2));
+          '
+
+      - name: Export web
+        run: npx expo export --platform web --output-dir dist
+
+      # Sans ce fichier, GitHub Pages passe le site dans Jekyll et ignore les
+      # dossiers commencant par "_" (dont /_expo, qui contient le bundle).
+      - run: touch dist/.nojekyll
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: dist
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deploiement.outputs.page_url }}
+    steps:
+      - id: deploiement
+        uses: actions/deploy-pages@v4

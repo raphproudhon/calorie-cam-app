@@ -12,7 +12,7 @@
 // parmi 2 298 (elle en inventerait), mais qu'elle choisit tres bien dans une
 // liste de 8.
 
-import { GEMINI_API_KEY } from "./secrets";
+import { cleGemini } from "./cle";
 import { rechercher, parCode } from "./ciqual";
 
 const MODELE = "gemini-flash-latest";
@@ -109,6 +109,14 @@ function estTransitoire(status, message) {
 }
 
 async function appelerGemini(corps) {
+  const cle = cleGemini();
+  if (!cle) {
+    throw new Error(
+      "Aucune cle API Gemini. Ouvrez les Parametres (roue crantee) et collez " +
+      "votre cle (https://aistudio.google.com/apikey)."
+    );
+  }
+
   const url =
     `https://generativelanguage.googleapis.com/v1beta/models/${MODELE}:generateContent`;
 
@@ -129,7 +137,7 @@ async function appelerGemini(corps) {
     try {
       reponse = await fetch(url, {
         method: "POST",
-        headers: { "content-type": "application/json", "x-goog-api-key": GEMINI_API_KEY },
+        headers: { "content-type": "application/json", "x-goog-api-key": cle },
         body: JSON.stringify(corps),
       });
     } catch (e) {
