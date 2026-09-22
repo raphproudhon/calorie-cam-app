@@ -5,6 +5,8 @@ Ce projet (**CalorieCam**) est décrit en détail dans le `README.md` — le lir
 ⚠️ **Le système de personnage évolutif a été entièrement retiré** (art, outils
 sprites, étapes, avatar rotatif). Il est à reprendre de zéro ; l'ancienne
 version reste consultable dans l'historique Git, avant le commit de suppression.
+Le pourquoi, l'inventaire de ce qui a sauté et la marche à suivre pour reprendre
+sont dans **`EXPERIMENTATION.md`** — à lire avant de toucher à cette branche.
 Le thème de couleurs de l'app, qui suivait l'étape du personnage, suit
 désormais directement le **niveau** (`accentPourNiveau` / `fondPourNiveau`).
 
