@@ -130,7 +130,7 @@ Pour montrer l'app sur le PC (screen share), on peut la lancer dans un
 navigateur : `npx expo start --web` (ou la touche `w` dans le serveur). Deps déjà
 installées (`react-native-web`, `react-dom`, `@expo/metro-runtime`). ⚠️ Le **scan
 de code-barres n'y marche pas** (support caméra web limité) ; photo, objectif,
-bilan et avatar oui.
+bilan et progression oui.
 
 ### Version en ligne (GitHub Pages)
 
@@ -232,14 +232,14 @@ La configuration technique (entitlement HealthKit, descriptions d'usage Santé,
 - [x] **Onglet Bilan** : calories restantes du jour = objectif + sport − consommé
 - [x] **Persistance locale** (AsyncStorage) : profil, historique, poids ;
       bascule de journée à minuit (archivage de la veille)
-- [x] **Onglet Progression** : avatar/personnage **évolutif par niveau** (image
-      + rotation 8 directions au doigt), courbe de poids, historique des calories
+- [x] **Onglet Progression** : niveau, barre d'XP, badges, courbe de poids,
+      historique des calories
 - [x] **Gamification** (`jeu.js`) : XP, niveaux, badges. Garde-fou santé : la
       sous-alimentation ne rapporte jamais le bonus « cible »
 - [~] **Apple Santé** : lecture de la dépense réelle — code prêt, nécessite le
       build de développement ci-dessus pour fonctionner
-- [~] **Avatar** : personnages générés (PixelLab) intégrés niveau par niveau —
-      en cours (niveaux 1-2 faits ; voir `tools/extract-rotations.js`)
+- [ ] **Personnage évolutif** : système entièrement retiré, à reprendre de zéro
+      (l'ancienne version est dans l'historique Git, avant la suppression)
 - [ ] Valider la précision sur des repas réels **et pesés** (voir ci-dessous)
 - [ ] Journal détaillé des plats de la journée (au-delà du total)
 - [x] Scan de code-barres pour les produits emballés (Open Food Facts — mono, multi, anti-doublon)

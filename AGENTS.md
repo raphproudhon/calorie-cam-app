@@ -1,7 +1,12 @@
 # Contexte pour un assistant IA
 
 Ce projet (**CalorieCam**) est décrit en détail dans le `README.md` — le lire en premier.
-Les prompts et le workflow de l'avatar (personnage évolutif) sont dans `AVATAR.md`.
+
+⚠️ **Le système de personnage évolutif a été entièrement retiré** (art, outils
+sprites, étapes, avatar rotatif). Il est à reprendre de zéro ; l'ancienne
+version reste consultable dans l'historique Git, avant le commit de suppression.
+Le thème de couleurs de l'app, qui suivait l'étape du personnage, suit
+désormais directement le **niveau** (`accentPourNiveau` / `fondPourNiveau`).
 
 Points clés :
 
@@ -31,7 +36,7 @@ explicitement.
 ## Structure de l'app
 
 Trois onglets — **Photo** (analyse d'un plat par photo **ou scan de
-code-barres**), **Progression** (avatar/niveaux + courbe de poids + calories),
+code-barres**), **Progression** (niveau/XP/badges + courbe de poids + calories),
 **Bilan** (calories restantes du jour). Onboarding obligatoire au 1er lancement ;
 objectif réglable ensuite via la **roue crantée** (menu Paramètres, haut gauche).
 Tout est persisté localement (`stockage.js`).
@@ -44,19 +49,17 @@ passent dans le même affichage/bilan que les aliments d'une photo.
 
 | Fichier | Rôle |
 |---|---|
-| `App.js` | les 3 onglets, l'onboarding, les paramètres, l'avatar rotatif |
+| `App.js` | les 3 onglets, l'onboarding, les paramètres |
 | `gemini.js` | passe 1 (vision) et passe 2 (choix de la fiche Ciqual) |
 | `ciqual.js` | recherche floue dans la table + calcul nutritionnel |
 | `off.js` | scan de code-barres → produit **Open Food Facts** mis à la forme d'une fiche (compatible `calculer()`) |
 | `besoins.js` | BMR/objectif calorique + bilan du jour, garde-fous de sécurité |
 | `health.js` | lecture de la dépense via Apple Santé (HealthKit) |
 | `stockage.js` | persistance locale (AsyncStorage) + bascule de journée à minuit |
-| `jeu.js` | gamification : XP, niveaux, badges, étapes du personnage |
+| `jeu.js` | gamification : XP, niveaux, badges + palette du thème par niveau |
 | `cle.js` | résolution de la clé API Gemini (saisie dans l'app ou `secrets.js`) |
-| `sprites.js` | lecteur de sprites pixel (grille + palette) — cf. `tools/sprite-studio.html` |
 | `data/ciqual.json` | table réduite (235 Ko), **versionnée** — ne pas régénérer sans raison |
-| `assets/hero/` | frames du personnage + rotations 8 directions par niveau (`rot/`, `rot2/`…) |
-| `tools/` | outils hors-app : conversion Ciqual, découpe/détourage/rotation des sprites |
+| `tools/` | outils hors-app : `build-ciqual.js` (conversion de la table ANSES) |
 
 ## Invariants à ne pas casser
 

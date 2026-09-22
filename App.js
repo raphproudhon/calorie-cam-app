@@ -15,9 +15,7 @@
 import { createContext, useContext, useEffect, useMemo, useRef, useState } from "react";
 import {
   ActivityIndicator,
-  Image,
   Modal,
-  PanResponder,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -39,10 +37,8 @@ import { chargerEtat, sauvegarderEtat, dateDuJour } from "./stockage";
 import { chargerCle, definirCle, cleGemini, cleEmbarqueePresente } from "./cle";
 import {
   niveauDepuisXp,
-  etapePersonnage,
-  accentPourEtape,
-  fondPourEtape,
-  NOMS_ETAPES,
+  accentPourNiveau,
+  fondPourNiveau,
   BADGES,
   recompenserPesee,
   ajouterXp,
@@ -105,11 +101,11 @@ export default function App() {
   const ajouterConsomme = (kcal) =>
     majJour({ consomme: (etat.jour.consomme || 0) + Math.max(0, Math.round(kcal || 0)) });
 
-  // Accent + fond du theme = couleurs de l'etape actuelle du personnage
-  // (evoluent avec lui). Le fond reste clair (teinte legere) pour la lisibilite.
-  const etapeCourante = etapePersonnage(niveauDepuisXp((etat.jeu || {}).xp || 0).niveau);
-  const accent = accentPourEtape(etapeCourante);
-  const fond = fondPourEtape(etapeCourante);
+  // Accent + fond du theme : ils progressent avec le niveau. Le fond reste
+  // tres sombre (teinte legere) pour la lisibilite.
+  const niveauCourant = niveauDepuisXp((etat.jeu || {}).xp || 0).niveau;
+  const accent = accentPourNiveau(niveauCourant);
+  const fond = fondPourNiveau(niveauCourant);
 
   return (
     <AccentCtx.Provider value={accent}>
@@ -941,14 +937,13 @@ function MenuParametres({ visible, etat, onFermer, onModifierObjectif, onAjouter
             </View>
 
             {/* Section de TEST — visible uniquement en mode developpement
-                (Expo Go), jamais dans un build de production. Permet de voir le
-                personnage evoluer sans attendre l'XP reelle. */}
+                (Expo Go), jamais dans un build de production. Permet de voir la
+                progression evoluer sans attendre l'XP reelle. */}
             {typeof __DEV__ !== "undefined" && __DEV__ ? (
               <View style={[styles.carte, { borderWidth: 1, borderColor: COULEURS.accent }]}>
                 <Text style={styles.champLabel}>🧪 Test (mode développeur)</Text>
                 <Text style={styles.objectifDetail}>
-                  Niveau {niveauDepuisXp(etat.jeu.xp).niveau} · {etat.jeu.xp} XP ·
-                  étape {etapePersonnage(niveauDepuisXp(etat.jeu.xp).niveau) + 1}/10
+                  Niveau {niveauDepuisXp(etat.jeu.xp).niveau} · {etat.jeu.xp} XP
                 </Text>
                 <View style={[styles.row2, { marginTop: 10 }]}>
                   <TouchableOpacity style={[styles.bouton, styles.boutonSecondaire, styles.boutonMoitie]} onPress={() => onDevXp(100)}>
@@ -1301,134 +1296,16 @@ function EcranProgression({ etat }) {
   );
 }
 
-// Les 8 angles du personnage PAR NIVEAU (extraits par tools/extract-rotations.js
-// ou tools/assemble-rotations.js). Un jeu de 8 frames par etape ; les etapes
-// sans art genere retombent sur le dernier jeu disponible.
-const ROT_NIVEAU_1 = [
-  require("./assets/hero/rot/0.png"),
-  require("./assets/hero/rot/1.png"),
-  require("./assets/hero/rot/2.png"),
-  require("./assets/hero/rot/3.png"),
-  require("./assets/hero/rot/4.png"),
-  require("./assets/hero/rot/5.png"),
-  require("./assets/hero/rot/6.png"),
-  require("./assets/hero/rot/7.png"),
-];
-const ROT_NIVEAU_2 = [
-  require("./assets/hero/rot2/0.png"),
-  require("./assets/hero/rot2/1.png"),
-  require("./assets/hero/rot2/2.png"),
-  require("./assets/hero/rot2/3.png"),
-  require("./assets/hero/rot2/4.png"),
-  require("./assets/hero/rot2/5.png"),
-  require("./assets/hero/rot2/6.png"),
-  require("./assets/hero/rot2/7.png"),
-];
-const ROT_NIVEAU_3 = [
-  require("./assets/hero/rot3/0.png"),
-  require("./assets/hero/rot3/1.png"),
-  require("./assets/hero/rot3/2.png"),
-  require("./assets/hero/rot3/3.png"),
-  require("./assets/hero/rot3/4.png"),
-  require("./assets/hero/rot3/5.png"),
-  require("./assets/hero/rot3/6.png"),
-  require("./assets/hero/rot3/7.png"),
-];
-const ROT_NIVEAU_4 = [
-  require("./assets/hero/rot4/0.png"),
-  require("./assets/hero/rot4/1.png"),
-  require("./assets/hero/rot4/2.png"),
-  require("./assets/hero/rot4/3.png"),
-  require("./assets/hero/rot4/4.png"),
-  require("./assets/hero/rot4/5.png"),
-  require("./assets/hero/rot4/6.png"),
-  require("./assets/hero/rot4/7.png"),
-];
-
-const ROT_NIVEAU_5 = [
-  require("./assets/hero/rot5/0.png"),
-  require("./assets/hero/rot5/1.png"),
-  require("./assets/hero/rot5/2.png"),
-  require("./assets/hero/rot5/3.png"),
-  require("./assets/hero/rot5/4.png"),
-  require("./assets/hero/rot5/5.png"),
-  require("./assets/hero/rot5/6.png"),
-  require("./assets/hero/rot5/7.png"),
-];
-
-// Un jeu de rotations par etape (index = etapePersonnage 0..9). Tant que les
-// niveaux superieurs ne sont pas dessines, on garde le dernier jeu disponible.
-const ROT_SETS = [ROT_NIVEAU_1, ROT_NIVEAU_2, ROT_NIVEAU_3, ROT_NIVEAU_4, ROT_NIVEAU_5];
-
-/** Jeu de rotations a afficher pour une etape de personnage donnee. */
-function rotationsPourEtape(etape) {
-  return ROT_SETS[Math.min(etape, ROT_SETS.length - 1)];
-}
-
-/**
- * Avatar que l'utilisateur peut faire tourner sur lui-meme : on glisse le doigt
- * horizontalement pour parcourir les 8 angles. Chaque tranche de deplacement
- * fait avancer d'un angle ; ca boucle. Aucune dependance (PanResponder natif).
- */
-function AvatarRotatif({ frames = ROT_NIVEAU_1, taille = 128, style }) {
-  const [angle, setAngle] = useState(0);
-  const angleRef = useRef(0);      // valeur courante, lisible dans le geste
-  const baseRef = useRef(0);       // angle au debut du glissement
-
-  const maj = (i) => {
-    const n = ((i % frames.length) + frames.length) % frames.length;
-    angleRef.current = n;
-    setAngle(n);
-  };
-
-  const pan = useRef(
-    PanResponder.create({
-      onStartShouldSetPanResponder: () => true,
-      onMoveShouldSetPanResponder: (_e, g) => Math.abs(g.dx) > 3,
-      onPanResponderGrant: () => { baseRef.current = angleRef.current; },
-      onPanResponderMove: (_e, g) => {
-        // ~22 px de glissement = un angle. Glisser vers la droite fait tourner
-        // le personnage vers la droite (sens naturel du geste).
-        maj(baseRef.current + Math.round(g.dx / 22));
-      },
-    })
-  ).current;
-
-  return (
-    <View style={style} {...pan.panHandlers}>
-      <Image
-        source={frames[angle]}
-        // Boite carree : les jeux de sprites n'ont pas tous le meme cadrage
-        // (l'epee elargit la boite aux etapes armees). Avec une boite etroite
-        // c'est la largeur qui bridait l'echelle, et le perso rapetissait a
-        // chaque palier. Carree, c'est la hauteur qui commande : toutes les
-        // etapes s'affichent a la meme taille.
-        style={{ width: taille, height: taille }}
-        resizeMode="contain"
-        fadeDuration={0}
-      />
-    </View>
-  );
-}
-
-/** Carte du heros : niveau, barre d'XP, personnage evolutif, badges. */
+/** Carte de progression : niveau, barre d'XP, serie, badges. */
 function CarteHeros({ jeu }) {
   const j = jeu || { xp: 0, streak: 0, badges: [] };
   const niv = niveauDepuisXp(j.xp);
-  const etape = etapePersonnage(niv.niveau);
-  const accent = accentPourEtape(etape); // couleur du theme a cette etape
+  const accent = accentPourNiveau(niv.niveau); // couleur du theme a ce niveau
   const badgesAcquis = new Set(j.badges || []);
 
   return (
     <View style={styles.carte}>
-      {/* Le personnage : element central de la progression */}
-      <View style={styles.herosScene}>
-        <AvatarRotatif frames={rotationsPourEtape(etape)} taille={230} />
-      </View>
-      <Text style={styles.astuceCentre}>glissez pour le faire tourner</Text>
-
       <Text style={styles.herosNiveauGros}>Niveau {niv.niveau}</Text>
-      <Text style={[styles.herosTitreCentre, { color: accent }]}>{NOMS_ETAPES[etape]}</Text>
 
       <View style={styles.xpFond}>
         <View style={[styles.xpRempli, { width: `${Math.round(niv.progression * 100)}%`, backgroundColor: accent }]} />
@@ -1840,16 +1717,7 @@ const styles = StyleSheet.create({
   xpRempli: { height: 10, borderRadius: 5, backgroundColor: COULEURS.accent },
   herosStreak: { fontSize: 13, color: COULEURS.texte, marginTop: 8, fontWeight: "600" },
 
-  herosScene: {
-    alignItems: "center",
-    justifyContent: "center",
-    paddingVertical: 14,
-    borderRadius: 16,
-    backgroundColor: "#161320",
-  },
-  astuceCentre: { fontSize: 11, color: COULEURS.doux, textAlign: "center", marginTop: 6 },
   herosNiveauGros: { fontSize: 30, fontWeight: "800", color: COULEURS.texte, textAlign: "center", marginTop: 10 },
-  herosTitreCentre: { fontSize: 16, fontWeight: "600", color: COULEURS.accent, textAlign: "center", marginTop: 2, marginBottom: 12 },
   herosXpCentre: { fontSize: 12, color: COULEURS.doux, textAlign: "center", marginTop: 5 },
   herosStreakCentre: { fontSize: 14, color: COULEURS.texte, textAlign: "center", marginTop: 10, fontWeight: "600" },
 

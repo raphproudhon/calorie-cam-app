@@ -44,35 +44,6 @@ export function niveauDepuisXp(xp) {
   };
 }
 
-// --- Etapes du personnage (guerrier) ---------------------------------------
-
-// 10 etapes debloquees selon le niveau (une image par etape, voir assets/hero).
-// Les paliers montent vite au debut (motivant) puis s'espacent (aspirationnel).
-const PALIERS_PERSO = [1, 2, 4, 6, 9, 13, 18, 24, 31, 40];
-export const NB_ETAPES = PALIERS_PERSO.length;
-
-export const NOMS_ETAPES = [
-  "Novice",
-  "Éveillé",
-  "Traqueur",
-  "Chevalier d'ombre",
-  "Spectre",
-  "Seigneur d'ombre",
-  "Revenant",
-  "Archonte",
-  "Souverain",
-  "Monarque des ombres",
-];
-
-/** Index d'etape (0..9) du personnage pour un niveau donne. */
-export function etapePersonnage(niveau) {
-  let e = 0;
-  for (let i = 0; i < PALIERS_PERSO.length; i++) {
-    if (niveau >= PALIERS_PERSO[i]) e = i;
-  }
-  return e;
-}
-
 // --- Badges ----------------------------------------------------------------
 
 // Chaque badge : id, libelle, et predicat sur l'etat de jeu (+ niveau).
@@ -197,35 +168,48 @@ export function recompenserPesee(jeu, entree, but) {
   return j;
 }
 
-// --- Couleur d'accent par etape (le theme de l'app suit le perso) -----------
-// Rampe bleu (ado, niveau 1) -> cramoisi -> or (souverain de flammes).
-const ACCENT_ETAPE = [
-  "#3E7CB1", // 1 bleu (hoodie)
-  "#8A5A7A", // 2
-  "#B0454E", // 3
-  "#C0392B", // 4 cramoisi
-  "#CC3D28", // 5
-  "#D64B22", // 6 braise
-  "#E05E1C", // 7
-  "#E67318", // 8 orange ardent
-  "#E28E1B", // 9
-  "#E0B02F", // 10 or
+// --- Palette de l'app, par palier de niveau --------------------------------
+// Le theme de l'app progresse avec le niveau : rampe bleu -> cramoisi -> or.
+// Les paliers montent vite au debut (motivant) puis s'espacent (aspirationnel).
+const PALIERS_COULEUR = [1, 2, 4, 6, 9, 13, 18, 24, 31, 40];
+
+const RAMPE_ACCENT = [
+  "#3E7CB1", // palier 1  bleu
+  "#8A5A7A", // palier 2
+  "#B0454E", // palier 3
+  "#C0392B", // palier 4  cramoisi
+  "#CC3D28", // palier 5
+  "#D64B22", // palier 6  braise
+  "#E05E1C", // palier 7
+  "#E67318", // palier 8  orange ardent
+  "#E28E1B", // palier 9
+  "#E0B02F", // palier 10 or
 ];
 
-/** Couleur d'accent (hex) correspondant a une etape de personnage (0..9). */
-export function accentPourEtape(etape) {
-  return ACCENT_ETAPE[Math.max(0, Math.min(ACCENT_ETAPE.length - 1, etape))];
+/** Index de palette (0..9) atteint a un niveau donne. */
+export function paletteDepuisNiveau(niveau) {
+  let p = 0;
+  for (let i = 0; i < PALIERS_COULEUR.length; i++) {
+    if (niveau >= PALIERS_COULEUR[i]) p = i;
+  }
+  return p;
 }
 
-// --- Teinte de fond par etape (fond de l'app legerement colore vers le perso)
-// On melange l'accent a une base creme pour rester clair et lisible.
+/** Couleur d'accent (hex) du theme, pour un niveau donne. */
+export function accentPourNiveau(niveau) {
+  return RAMPE_ACCENT[paletteDepuisNiveau(niveau)];
+}
+
+// --- Teinte de fond --------------------------------------------------------
+// On melange l'accent a une base tres sombre : le fond reste lisible tout en
+// tirant legerement vers la couleur du palier atteint.
 function melangeHex(a, b, t) {
   const pa = parseInt(a.slice(1), 16), pb = parseInt(b.slice(1), 16);
   const mix = (sh) => Math.round(((pa >> sh) & 255) * t + ((pb >> sh) & 255) * (1 - t));
   return "#" + [mix(16), mix(8), mix(0)].map((v) => v.toString(16).padStart(2, "0")).join("");
 }
 
-/** Couleur de fond (claire) teintee vers l'accent de l'etape. */
-export function fondPourEtape(etape) {
-  return melangeHex(accentPourEtape(etape), "#15131B", 0.16);
+/** Couleur de fond (sombre) teintee vers l'accent, pour un niveau donne. */
+export function fondPourNiveau(niveau) {
+  return melangeHex(accentPourNiveau(niveau), "#15131B", 0.16);
 }
