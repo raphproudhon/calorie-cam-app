@@ -1398,7 +1398,12 @@ function AvatarRotatif({ frames = ROT_NIVEAU_1, taille = 128, style }) {
     <View style={style} {...pan.panHandlers}>
       <Image
         source={frames[angle]}
-        style={{ width: taille * 0.72, height: taille }}
+        // Boite carree : les jeux de sprites n'ont pas tous le meme cadrage
+        // (l'epee elargit la boite aux etapes armees). Avec une boite etroite
+        // c'est la largeur qui bridait l'echelle, et le perso rapetissait a
+        // chaque palier. Carree, c'est la hauteur qui commande : toutes les
+        // etapes s'affichent a la meme taille.
+        style={{ width: taille, height: taille }}
         resizeMode="contain"
         fadeDuration={0}
       />
