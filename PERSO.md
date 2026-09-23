@@ -62,7 +62,7 @@ jusqu'au bout.
 
 | Réglage | Valeur |
 |---|---|
-| Taille du canevas | **64 × 64** (le perso fait ~45 px de haut) |
+| Taille du canevas | **128 × 128**, comme *Slayer Legend* (le perso fait ~90 px de haut). Plan B si c'est encore trop détaillé : générer en **64 × 64** et agrandir ×2 → 128 × 128 avec des pixels deux fois plus gros |
 | Vue | **low top-down** |
 | Directions | **8** (pour la rotation au doigt) |
 | Proportions | **chibi** (à vérifier dans les options : la 1ʳᵉ génération n'était pas chibi) |
@@ -82,7 +82,7 @@ Avec l'ancien système, le perso rapetissait à chaque étape. La cause n'était
 les effets, mais le recadrage automatique sur les pixels visibles. Deux règles
 pour cette fois :
 
-1. **Le code affichera toujours le canevas 64 × 64 entier, sans recadrage**,
+1. **Le code affichera toujours le canevas 128 × 128 entier, sans recadrage**,
    agrandi en « plus proche voisin » (pixels nets, jamais flous).
 2. **Le perso garde la même hauteur à toutes les étapes.** Chaque prompt le
    rappelle (`character fills about 70% of the canvas height`). Les effets
@@ -98,8 +98,8 @@ dégradé, proportions presque réalistes, perso collé aux bords du canevas.
 
 Ce qu'on vise, façon *Slayer Legend* (RPG mobile idle) :
 
-- **basse résolution** : de gros pixels bien visibles, un perso d'environ
-  45 px de haut ;
+- **canevas 128 × 128**, mais un rendu **« gros pixels »** : peu de détails,
+  des formes simples, pas de lissage ;
 - **super-déformé** : la tête fait à peu près **la moitié de la hauteur**, un
   petit corps, des jambes courtes ;
 - **visage minimal** : yeux de 2-3 pixels, bouche d'1 pixel ou absente ;
@@ -108,7 +108,7 @@ Ce qu'on vise, façon *Slayer Legend* (RPG mobile idle) :
 - **contour sombre d'un pixel**, formes simples et lisibles ;
 - **peu de détails** : les étapes se distinguent par la **silhouette** et les
   **couleurs** (manteau, arme, effets), pas par des petits détails qu'on ne
-  verrait pas à cette taille.
+  verrait pas une fois l'image réduite sur l'écran du téléphone.
 
 ## Bloc commun (à coller à la fin de CHAQUE prompt d'étape)
 
