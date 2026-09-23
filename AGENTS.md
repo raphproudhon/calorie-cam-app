@@ -2,7 +2,8 @@
 
 Ce projet (**CalorieCam**) est décrit en détail dans le `README.md` — le lire en premier.
 
-⚠️ **Le système de personnage évolutif a été entièrement retiré** (art, outils
+⚠️ **Nouveau système de personnage en cours : cahier des charges et prompts
+PixelLab dans `PERSO.md`.** L'ancien système a été entièrement retiré (art, outils
 sprites, étapes, avatar rotatif). Il est à reprendre de zéro ; l'ancienne
 version reste consultable dans l'historique Git, avant le commit de suppression.
 Le pourquoi, l'inventaire de ce qui a sauté et la marche à suivre pour reprendre
