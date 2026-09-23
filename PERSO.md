@@ -8,7 +8,8 @@ personnages, 20 étapes.
 
 | Sujet | Choix |
 |---|---|
-| Personnages | **2** : un **humain** (épique / badass) et un **chat** (mignon / kawaii), inspiré d'une photo de vrai chat |
+| Personnages | **2, totalement indépendants** : un **humain** (épique / badass) et un **chat** (mignon / kawaii), inspiré d'une photo de vrai chat |
+| Choix | à l'**onboarding**, **définitif** : on garde le même perso pour toute l'évolution, aucun lien entre les deux |
 | Évolution | change d'**équipement** + physique **légèrement plus fort** à chaque étape |
 | Nombre d'étapes | **20** par personnage |
 | Paliers | on garde les 10 paliers existants et on en intercale 10 (voir plus bas) |
@@ -21,27 +22,37 @@ personnages, 20 étapes.
 
 ## Concept
 
-**Le Chasseur et son Familier.** Un jeune homme ordinaire s'éveille à un pouvoir
-d'**énergie azur** (bleu-cyan électrique, givre et foudre) et devient au fil des
-étapes un *Souverain d'Azur*. Son chat, d'abord un simple chaton, est son
-**familier** : il s'éveille en parallèle à une **flamme spirituelle ambrée**
-jusqu'à devenir un *Gardien céleste* à trois queues.
+**Deux personnages totalement indépendants.** À l'onboarding, l'utilisateur
+choisit **l'un ou l'autre**, et il le garde pour toute sa progression : pas
+de changement possible ensuite, pas de lien entre les deux, jamais affichés
+ensemble. Chacun a son propre univers, sa propre palette et ses propres
+animations.
+
+### L'humain — le Chasseur (épique / badass)
+
+Un jeune homme ordinaire s'éveille à un pouvoir d'**énergie azur** (bleu-cyan
+électrique, givre et foudre). Il gravit les rangs E → S jusqu'à devenir le
+*Souverain d'Azur*.
 
 - Ce qui rappelle *Solo Leveling* : le chasseur au bas de l'échelle, les rangs,
   les yeux qui s'allument, les dagues puis la grande lame, le manteau sombre,
   la montée en puissance jusqu'à un titre de souverain.
 - Ce qui l'en distingue : l'élément **azur (givre / foudre)** au lieu des
-  ombres violettes, et le **chat familier** à la place de l'armée d'ombres.
+  ombres violettes, et aucune armée d'invocations.
+
+### Le chat — le Chat céleste (mignon / kawaii)
+
+Un chaton ordinaire, inspiré d'un vrai chat (photo), s'éveille à une **flamme
+spirituelle ambrée**. Il gagne des accessoires, puis des queues de flamme,
+jusqu'à devenir un *Gardien céleste* à trois queues. Il reste rond et adorable
+jusqu'au bout.
 
 ### Palettes
 
 | Perso | Base | Accents | Fin de progression |
 |---|---|---|---|
 | Humain | noir charbon, gris ardoise | **cyan azur**, argent | + touches d'**or** aux étapes 19-20 |
-| Chat | pelage de la photo | **ambre / or**, crème, rose pâle | flammes ambre + or, petites touches cyan (lien avec l'humain) |
-
-Les deux palettes se répondent (froid / chaud) : côte à côte à l'écran, on
-distingue tout de suite qui est qui.
+| Chat | pelage de la photo | **ambre / or**, crème, rose pâle | flammes ambre + or, gemmes roses |
 
 ## Réglages PixelLab (communs aux deux persos)
 
@@ -202,7 +213,7 @@ Same character, same face, black hair with a silver-white streak, blazing cyan e
 
 ---
 
-## Chat — le Familier (mignon / kawaii)
+## Chat — le Chat céleste (mignon / kawaii)
 
 ⚠️ **En attente de la photo du chat.** Chaque prompt contient `{CHAT}` : on le
 remplacera par la description du pelage (couleur, motifs, yeux, particularités)
@@ -238,7 +249,7 @@ Same cat, same fur pattern and same face. Cute young kitten with a cream scarf a
 Same cat, same fur pattern and same face. Cute young cat wearing a tiny adventurer cape in cream and amber, golden bell collar that now glows softly. Tail tip glowing amber. A few amber sparkles float around it. Proud, adorable expression. Kawaii style.
 ```
 
-### Acte II — le Familier
+### Acte II — l'Apprenti
 
 **C6 — Le harnais**
 ```text
@@ -289,19 +300,19 @@ Same cat, same fur pattern and same face, glowing amber eyes, golden forehead ma
 
 **C15 — Deux queues de flamme**
 ```text
-Same cat, same fur pattern and same face, glowing amber eyes, golden forehead mark. Both tails now burn with bright amber spirit flames. Golden chest plate, golden paw guards, cape with gold trim, a tiny cyan gem on its collar. Amber orbs orbit around it. Confident and adorable. Kawaii style.
+Same cat, same fur pattern and same face, glowing amber eyes, golden forehead mark. Both tails now burn with bright amber spirit flames. Golden chest plate, golden paw guards, cape with gold trim, a tiny pink gem on its collar. Amber orbs orbit around it. Confident and adorable. Kawaii style.
 ```
 
 ### Acte IV — le Gardien céleste
 
 **C16 — Trois queues**
 ```text
-Same cat, same fur pattern and same face, glowing amber eyes, golden forehead mark. Three flaming amber spirit tails. Ornate golden collar with a cyan gem, golden chest plate and paw guards, cape. Amber orbs orbit around it. Kawaii style.
+Same cat, same fur pattern and same face, glowing amber eyes, golden forehead mark. Three flaming amber spirit tails. Ornate golden collar with a pink gem, golden chest plate and paw guards, cape. Amber orbs orbit around it. Kawaii style.
 ```
 
 **C17 — Les petites ailes**
 ```text
-Same cat, same fur pattern and same face, glowing amber eyes, golden forehead mark. Small cute spectral wings made of amber light on its back. Three flaming tails, ornate golden collar with cyan gem, golden armor pieces. Amber orbs orbit around it. Kawaii style.
+Same cat, same fur pattern and same face, glowing amber eyes, golden forehead mark. Small cute spectral wings made of amber light on its back. Three flaming tails, ornate golden collar with pink gem, golden armor pieces. Amber orbs orbit around it. Kawaii style.
 ```
 
 **C18 — La couronne de flammes**
@@ -316,7 +327,7 @@ Same cat, same fur pattern and same face, glowing amber eyes, golden forehead ma
 
 **C20 — Le Gardien céleste**
 ```text
-Same cat, same fur pattern and same face, radiant golden eyes, glowing golden forehead mark. A small golden crown, a halo of amber flames, large majestic spectral wings of amber and gold light, three blazing spirit tails, ornate golden armor with cyan gems. Tiny stars and amber orbs float around it. Still round, tiny and adorable. Kawaii style.
+Same cat, same fur pattern and same face, radiant golden eyes, glowing golden forehead mark. A small golden crown, a halo of amber flames, large majestic spectral wings of amber and gold light, three blazing spirit tails, ornate golden armor with pink gems. Tiny stars and amber orbs float around it. Still round, tiny and adorable. Kawaii style.
 ```
 
 ---
@@ -346,7 +357,7 @@ on avance par couches :
 1. **Humain H1 + chat C1** : états, 8 rotations, idle. On les intègre dans
    l'app pour valider le rendu (taille, cadrage, lisibilité) **avant** de
    continuer.
-2. Les 20 états + l'**idle** des deux persos.
+2. Les 20 états + l'**idle** de chaque perso.
 3. Les réactions, étape par étape. Tant qu'une réaction manque pour une étape,
    l'app joue l'idle avec un petit effet en code (rebond, secousse) : rien ne
    bloque.
@@ -389,5 +400,6 @@ deux à trois ans : c'est la longévité voulue.
 - [ ] Recevoir la **photo du chat** → remplacer `{CHAT}` dans les prompts C1-C20
 - [ ] Confirmer le look de départ de l'humain (hypothèse : jeune homme, cheveux noirs)
 - [ ] Générer H1 + C1 et les tester dans l'app
+- [ ] Code : choix du perso à l'onboarding (persisté dans `stockage.js`, non modifiable ensuite)
 - [ ] Code : `PALIERS_PERSO` (20 étapes) dans `jeu.js`, composant d'affichage
       (rotation + animations + réactions) dans `App.js`
