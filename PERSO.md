@@ -62,13 +62,13 @@ jusqu'au bout.
 
 | Réglage | Valeur |
 |---|---|
-| Taille du canevas | **120 × 120** |
+| Taille du canevas | **64 × 64** (le perso fait ~45 px de haut) |
 | Vue | **low top-down** |
 | Directions | **8** (pour la rotation au doigt) |
-| Proportions | **chibi** |
-| Contour | **contour noir fin** (single color black outline) |
-| Ombrage | **aucun / aplats** (flat shading) |
-| Détail | **moyen**, à passer en élevé si le résultat manque de lisibilité |
+| Proportions | **chibi** (à vérifier dans les options : la 1ʳᵉ génération n'était pas chibi) |
+| Contour | **contour noir** (single color black outline) |
+| Ombrage | **basique** (2 tons par couleur, pas de dégradé) |
+| Détail | **faible** |
 | Fond | transparent |
 | Frames par animation | **8** |
 
@@ -82,7 +82,8 @@ Avec l'ancien système, le perso rapetissait à chaque étape. La cause n'était
 les effets, mais le recadrage automatique sur les pixels visibles. Deux règles
 pour cette fois :
 
-1. **Le code affichera toujours le canevas 120 × 120 entier, sans recadrage.**
+1. **Le code affichera toujours le canevas 64 × 64 entier, sans recadrage**,
+   agrandi en « plus proche voisin » (pixels nets, jamais flous).
 2. **Le perso garde la même hauteur à toutes les étapes.** Chaque prompt le
    rappelle (`character fills about 70% of the canvas height`). Les effets
    flottants vont dans la marge autour, sans jamais sortir du cadre.
@@ -90,11 +91,33 @@ pour cette fois :
 Si une étape sort plus petite ou plus grande que la précédente, on la régénère
 plutôt que de la corriger en code.
 
+## Style visuel : gros pixels, à la *Slayer Legend*
+
+**Premier essai (H1, 120 × 120) refusé** : trop détaillé, trop lisse, ombrage
+dégradé, proportions presque réalistes, perso collé aux bords du canevas.
+
+Ce qu'on vise, façon *Slayer Legend* (RPG mobile idle) :
+
+- **basse résolution** : de gros pixels bien visibles, un perso d'environ
+  45 px de haut ;
+- **super-déformé** : la tête fait à peu près **la moitié de la hauteur**, un
+  petit corps, des jambes courtes ;
+- **visage minimal** : yeux de 2-3 pixels, bouche d'1 pixel ou absente ;
+- **palette réduite** : ~12-16 couleurs au total, des aplats ;
+- **ombrage simple** : un seul ton plus sombre par couleur, pas de dégradé ;
+- **contour sombre d'un pixel**, formes simples et lisibles ;
+- **peu de détails** : les étapes se distinguent par la **silhouette** et les
+  **couleurs** (manteau, arme, effets), pas par des petits détails qu'on ne
+  verrait pas à cette taille.
+
 ## Bloc commun (à coller à la fin de CHAQUE prompt d'étape)
 
 ```text
-Chibi proportions, big head, small body. Thin black outline, flat colors, no shading, clean readable pixel art. Low top-down view. Character centered, fills about 70% of the canvas height, same size as the previous state. Floating effects stay inside the canvas margins. Transparent background. Single character only.
+Low-resolution retro pixel art in the style of a mobile idle RPG like Slayer Legend. Big chunky visible pixels, small sprite. Super-deformed chibi: head about half of the total height, tiny body, short legs, simple big eyes of 2-3 pixels. Very limited palette (about 12-16 colors), flat colors with one darker tone for shading, no gradients, no soft shading. 1-pixel dark outline, simple bold shapes, minimal details. Low top-down view. Character centered, fills about 70% of the canvas height with empty margin around, same size as the previous state. Floating effects stay inside the canvas margins. Transparent background. Single character only.
 ```
+
+Si PixelLab refuse ou ignore la référence au jeu, retirer `in the style of a
+mobile idle RPG like Slayer Legend` : le reste du bloc décrit le style seul.
 
 ---
 
