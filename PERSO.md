@@ -17,7 +17,7 @@ personnages, 20 étapes.
 | Où il apparaît | partout où c'est légitime (Progression, Bilan, fin d'analyse, montée de niveau…) |
 | Affichage | **rotation au doigt** (8 directions) **+ animations** |
 | Réactions | oui : content, montée de niveau, fatigué, miam |
-| Inspiration | l'esprit de *Solo Leveling* (chasseur faible qui s'éveille et devient un souverain), **sans plagiat** : pas d'ombres violettes, pas d'armée d'ombres, pas de fenêtre « System » copiée |
+| Inspiration (humain) | *Solo Leveling* : **ombre et nécromancie**, jeune homme ordinaire qui s'éveille et devient un souverain. **Sans plagiat** : flamme verte et non violette, faux, crânes et mains spectrales au lieu d'une armée de soldats d'ombre |
 | Effets flottants | **autorisés** (runes, étincelles, éclats…), à condition de rester dans le canevas |
 
 ## Concept
@@ -28,17 +28,21 @@ de changement possible ensuite, pas de lien entre les deux, jamais affichés
 ensemble. Chacun a son propre univers, sa propre palette et ses propres
 animations.
 
-### L'humain — le Chasseur (épique / badass)
+### L'humain — le Nécromancien (épique / badass)
 
-Un jeune homme ordinaire s'éveille à un pouvoir d'**énergie azur** (bleu-cyan
-électrique, givre et foudre). Il gravit les rangs E → S jusqu'à devenir le
-*Souverain d'Azur*.
+Un jeune homme brun d'une vingtaine d'années, ordinaire, s'éveille à un pouvoir
+d'**ombre et de nécromancie**. Son ombre prend vie, il appelle des crânes et des
+mains spectrales, passe des dagues à la faux, et finit *Souverain des Tombes*.
+Ses **yeux**, marron au départ, virent au **vert émeraude** à mesure que son
+pouvoir grandit.
 
-- Ce qui rappelle *Solo Leveling* : le chasseur au bas de l'échelle, les rangs,
-  les yeux qui s'allument, les dagues puis la grande lame, le manteau sombre,
-  la montée en puissance jusqu'à un titre de souverain.
-- Ce qui l'en distingue : l'élément **azur (givre / foudre)** au lieu des
-  ombres violettes, et aucune armée d'invocations.
+- Ce qui rappelle *Solo Leveling* : le jeune homme ordinaire qui s'éveille, le
+  pouvoir d'ombre et de nécromancie, les dagues du début, les yeux qui
+  s'allument, le manteau sombre, le titre de souverain.
+- Ce qui l'en distingue : la **flamme spectrale verte** au lieu du violet, la
+  **faux** au lieu des dagues à haut niveau, des **crânes et mains
+  spectrales** au lieu d'une armée de soldats d'ombre, pas de réplique
+  « Arise », pas de fenêtre « System ».
 
 ### Le chat — le Chat céleste (mignon / kawaii)
 
@@ -51,7 +55,7 @@ jusqu'au bout.
 
 | Perso | Base | Accents | Fin de progression |
 |---|---|---|---|
-| Humain | noir charbon, gris ardoise | **cyan azur**, argent | + touches d'**or** aux étapes 19-20 |
+| Humain | noir, ombre fumée, blanc os | **vert émeraude** (flamme spectrale) | + touches d'**or sombre** aux étapes 19-20 |
 | Chat | pelage de la photo | **ambre / or**, crème, rose pâle | flammes ambre + or, gemmes roses |
 
 ## Réglages PixelLab (communs aux deux persos)
@@ -94,121 +98,132 @@ Chibi proportions, big head, small body. Thin black outline, flat colors, no sha
 
 ---
 
-## Humain — le Chasseur (épique / badass)
+## Humain — le Nécromancien (épique / badass)
 
-Hypothèse de départ, à changer si besoin : **jeune homme d'une vingtaine
-d'années, cheveux noirs en bataille, yeux gris.**
+**Jeune homme d'une vingtaine d'années, cheveux bruns en bataille, yeux
+marron au départ.** Pouvoirs d'**ombre et de nécromancie**. Ses yeux
+changent de couleur avec son pouvoir :
+
+| Étapes | Yeux |
+|---|---|
+| 1-2 | marron, normaux |
+| 3-5 | marron avec un reflet vert |
+| 6-8 | vert noisette, légère lueur |
+| 9-14 | vert émeraude lumineux |
+| 15-18 | émeraude ardent, fines volutes vertes au coin des yeux |
+| 19-20 | émeraude incandescent, cœur blanc |
 
 Pour tous les prompts après le 1 : ils commencent par
-`Same character, same face and same messy black hair.` pour garder le même
-visage d'un état à l'autre.
+`Same character, same face and same messy brown hair.` pour garder le même
+visage d'un état à l'autre. **Seuls les yeux changent de couleur** : c'est
+pourquoi chaque prompt redonne leur couleur.
 
-### Acte I — l'Éveil (rang E)
+### Acte I — l'Éveil
 
-**H1 — Le chasseur de rang E**
+**H1 — L'inconnu**
 ```text
-A young man around 20, ordinary and a bit tired but determined look, messy black hair, grey eyes. Plain grey hoodie, dark jeans, worn sneakers, hands empty. Slim build, slightly hunched posture. No weapon, no armor, no effects.
+A young man in his twenties, ordinary and a bit tired but determined look, messy brown hair, normal brown eyes. Plain dark grey hoodie, dark jeans, worn sneakers, hands empty. Slim build, slightly hunched posture. No weapon, no armor, no effects.
 ```
 
-**H2 — Premier signe**
+**H2 — L'ombre qui bouge**
 ```text
-Same character, same face and same messy black hair. Same grey hoodie and jeans, now with black fingerless gloves and a cheap short knife on the belt. Standing a little straighter. A tiny floating translucent cyan square rune hovers near his head.
+Same character, same face and same messy brown hair, normal brown eyes. Same dark grey hoodie and jeans, now with black fingerless gloves and a cheap short knife on the belt. Standing a little straighter. His shadow on the ground is slightly too dark and a small black wisp rises from it.
 ```
 
 **H3 — L'éveil**
 ```text
-Same character, same face and same messy black hair. Grey hoodie, dark cargo pants, black combat boots, fingerless gloves. Holds a short steel dagger in one hand. His grey eyes now have a faint cyan glow. A tiny floating cyan rune near his head.
+Same character, same face and same messy brown hair, brown eyes with a faint green glint. Dark grey hoodie, black cargo pants, combat boots, fingerless gloves. Holds a short steel dagger. A small pool of living black shadow at his feet, one tiny green ghost-fire wisp floating near his hand.
 ```
 
 **H4 — Le blouson**
 ```text
-Same character, same face and same messy black hair, faint cyan glowing eyes. Black bomber jacket over the grey hoodie, cargo pants, combat boots, short dagger. Slightly broader shoulders, confident stance. Two or three small cyan pixel sparks floating around his hands.
+Same character, same face and same messy brown hair, brown eyes with a green glint. Black bomber jacket over the hoodie, cargo pants, combat boots, short dagger. Slightly broader shoulders, confident stance. Black shadow pool at his feet, two small green ghost-fire wisps floating around him.
 ```
 
-**H5 — Rang D**
+**H5 — Premier appel**
 ```text
-Same character, same face and same messy black hair, glowing cyan eyes. Dark hooded jacket with thin glowing cyan trim lines, black cargo pants, combat boots, a short dagger in each hand held backwards. Athletic build, confident stance. A few small cyan runes and sparks float around him.
+Same character, same face and same messy brown hair, brown eyes with a green glint. Black hooded jacket with torn edges, cargo pants, combat boots, a short dagger in each hand held backwards. Athletic build. A tiny floating spectral skull with green glowing eye sockets hovers beside him. Black shadow pool at his feet.
 ```
 
-### Acte II — le Chasseur (rangs C et B)
+### Acte II — l'Adepte des ombres
 
 **H6 — Le long manteau**
 ```text
-Same character, same face and same messy black hair, glowing cyan eyes. Knee-length dark charcoal coat with silver buckles, black pants, boots, one curved dagger in hand, a second on the belt. Athletic build. Small cyan sparks float around him.
+Same character, same face and same messy brown hair, hazel-green eyes with a faint glow. Knee-length black coat with bone-white buckles, black pants, boots, one curved dagger. Athletic build. Black shadow tendrils curl around his boots, one small floating spectral skull with green eyes.
 ```
 
-**H7 — Harnais de combat**
+**H7 — Le harnais d'os**
 ```text
-Same character, same face and same messy black hair, glowing cyan eyes. Long charcoal coat open over a black leather chest harness, silver bracers on both forearms, two curved daggers in hand. Stronger, more muscular build. Small cyan sparks float around the blades.
+Same character, same face and same messy brown hair, glowing hazel-green eyes. Long black coat open over a dark leather harness decorated with small bone ornaments, bone-white bracers, two curved daggers. Stronger, more muscular build. Shadow tendrils at his feet, green ghost-fire wisps float around the blades.
 ```
 
-**H8 — Le givre**
+**H8 — Les mains de l'ombre**
 ```text
-Same character, same face and same messy black hair, glowing cyan eyes. Long charcoal coat with a high collar and glowing cyan seams, leather harness, silver bracers, two curved daggers. Wisps of pale cyan frost mist float around his feet.
+Same character, same face and same messy brown hair, glowing hazel-green eyes. Long black coat with high collar, bone-decorated harness, bone-white bracers, two curved daggers. Two small spectral skeletal hands made of shadow and green light rise from the black pool at his feet.
 ```
 
-**H9 — Première pièce d'armure**
+**H9 — L'épaulière crâne**
 ```text
-Same character, same face and same messy black hair, glowing cyan eyes. Long charcoal coat with high collar and cyan seams, one silver armored shoulder pad, bracers, two curved daggers with blades glowing cyan. Frost wisps float around his feet.
+Same character, same face and same messy brown hair, glowing emerald green eyes. Long black coat with high collar, one dark armored shoulder pad shaped like a skull, bone-white bracers, two daggers with blades dripping green ghost-fire. Spectral skeletal hands rise from the shadow pool at his feet.
 ```
 
-**H10 — Rang B**
+**H10 — Le capuchon**
 ```text
-Same character, same face and same messy black hair visible under a raised dark hood, bright glowing cyan eyes in the shadow of the hood. Charcoal coat over a light black-and-silver chest armor, silver shoulder pad, two glowing cyan curved daggers. Strong build. Three small ice-blue crystal shards orbit around him.
+Same character, same face and same messy brown hair visible under a raised black hood, bright glowing emerald eyes in the shadow of the hood. Black coat over light dark-metal chest armor, skull shoulder pad, two ghost-fire daggers. Strong build. Three small spectral skulls with green eyes orbit around him.
 ```
 
-### Acte III — l'Élite (rangs A et S)
+### Acte III — le Nécromancien
 
-**H11 — Rang A**
+**H11 — La faux**
 ```text
-Same character, same face and same messy black hair, hood down, glowing cyan eyes, a small scar on the cheek. Black-and-silver light armor, both shoulders armored, heavy boots, longer curved blades glowing cyan. Powerful build. Ice-blue crystal shards orbit around him.
+Same character, same face and same messy brown hair, hood down, glowing emerald eyes, a small scar on the cheek. Dark metal and bone light armor, both shoulders armored, heavy boots. He now wields a black scythe with a curved blade glowing with green ghost-fire. Powerful build. Spectral skulls orbit around him.
 ```
 
-**H12 — La cape**
+**H12 — La cape déchirée**
 ```text
-Same character, same face and same messy black hair, glowing cyan eyes, small scar. Black-and-silver armor, a tattered dark cape, glowing cyan energy veins running along his forearms, two long glowing cyan blades. Crystal shards orbit around him.
+Same character, same face and same messy brown hair, glowing emerald eyes, small scar. Dark metal and bone armor, a tattered black cape whose bottom dissolves into shadow smoke, glowing green veins along his forearms, black scythe with ghost-fire blade. Spectral skulls orbit around him.
 ```
 
-**H13 — Foudre azur**
+**H13 — Les gantelets**
 ```text
-Same character, same face and same messy black hair, glowing cyan eyes, small scar. Black-and-silver armor, armored gauntlets, tattered dark cape, cyan energy veins on the arms. His two long blades crackle with small cyan lightning bolts. Crystal shards and tiny sparks float around him.
+Same character, same face and same messy brown hair, glowing emerald eyes, small scar. Dark armor with bone details, clawed black gauntlets, tattered shadow cape, green veins on the arms. Black scythe wreathed in green ghost-fire. Spectral skeletal hands rise from the shadow pool, spectral skulls float around him.
 ```
 
-**H14 — Flammes de givre**
+**H14 — Les flammes spectrales**
 ```text
-Same character, same face and same messy black hair, glowing cyan eyes, small scar. Heavier black-and-silver armor, armored gauntlets, dark cape. Small pale cyan frost flames burn on both shoulder pads. Two long blades crackling with cyan lightning. Crystal shards orbit around him.
+Same character, same face and same messy brown hair, blazing emerald eyes with thin green wisps at the corners, small scar. Heavier dark armor with bone details, clawed gauntlets, shadow cape. Green ghost-fire burns on both shoulder pads. Black scythe with ghost-fire blade. Spectral skulls orbit around him.
 ```
 
-**H15 — Rang S**
+**H15 — Le seigneur des tombes**
 ```text
-Same character, same face and same messy black hair, intense glowing cyan eyes, small scar. Full black-and-silver armor with glowing cyan lines, long dark cape with cyan inner lining, frost flames on the shoulders, one long glowing cyan sword. Imposing, powerful build. A ring of ice-blue crystal shards floats behind his back.
+Same character, same face and same messy brown hair, blazing emerald eyes with green wisps, small scar. Full dark armor with bone ornaments and glowing green runes, long shadow cape, ghost-fire on the shoulders, large black scythe. Imposing, powerful build. A ring of floating green-eyed spectral skulls behind his back.
 ```
 
-### Acte IV — le Souverain d'Azur
+### Acte IV — le Souverain des Tombes
 
 **H16 — L'armure gravée**
 ```text
-Same character, same face and same messy black hair, intense glowing cyan eyes, small scar. Ornate black armor with engraved silver patterns and glowing cyan lines, long cape with cyan lining, frost flames on the shoulders, long glowing cyan sword. A ring of crystal shards floats behind him.
+Same character, same face and same messy brown hair, blazing emerald eyes with green wisps, small scar. Ornate dark armor engraved with bone-white patterns and glowing green runes, long shadow cape, ghost-fire on the shoulders, large black scythe. A ring of spectral skulls floats behind him.
 ```
 
-**H17 — La mèche d'argent**
+**H17 — La mèche blanche**
 ```text
-Same character, same face, messy black hair now with a bright silver-white streak, intense glowing cyan eyes, small scar. Ornate engraved black-and-silver armor, long cape, frost flames on the shoulders, long glowing cyan sword. Tiny cyan particles rise around him; a ring of crystal shards floats behind him.
+Same character, same face, messy brown hair now with a bone-white streak, blazing emerald eyes with green wisps, small scar. Ornate engraved dark armor, long shadow cape, ghost-fire on the shoulders, large black scythe. Shadow smoke rises around him, a ring of spectral skulls floats behind him.
 ```
 
-**H18 — La grande lame**
+**H18 — La faux des âmes**
 ```text
-Same character, same face, black hair with a silver-white streak, intense glowing cyan eyes, small scar. Ornate engraved black-and-silver armor, long cape. Wields a large two-handed greatsword made of glowing ice-blue energy. A circle of floating cyan runes surrounds him.
+Same character, same face, brown hair with a bone-white streak, blazing emerald eyes with green wisps, small scar. Ornate dark armor, long shadow cape. Wields a huge scythe whose blade is made of solid green ghost-fire. A circle of floating green necromantic runes surrounds him, spectral skeletal hands rise from the shadows at his feet.
 ```
 
-**H19 — L'or apparaît**
+**H19 — La couronne d'os**
 ```text
-Same character, same face, black hair with a silver-white streak, intense glowing cyan eyes, small scar. Ornate black armor with silver and first gold engravings, long cape with cyan lining and gold trim, large ice-blue energy greatsword. Floating runes and a small halo of crystal shards above his head.
+Same character, same face, brown hair with a bone-white streak, incandescent emerald eyes with white-hot core, small scar. Ornate dark armor with bone and dark gold engravings, shadow cape with a torn edge of green ghost-fire, huge ghost-fire scythe. A thin crown of bone on his head. Floating runes and spectral skulls around him.
 ```
 
-**H20 — Le Souverain d'Azur**
+**H20 — Le Souverain des Tombes**
 ```text
-Same character, same face, black hair with a silver-white streak, blazing cyan eyes with a gold glint, small scar. Majestic black armor with silver and gold engravings, long royal cape with cyan lining and gold trim. A crown of floating ice-blue crystal shards above his head, a pair of large spectral wings made of cyan energy behind his back, huge ice-blue energy greatsword. Regal, overwhelming presence.
+Same character, same face, brown hair with a bone-white streak, incandescent emerald eyes with white-hot core, small scar. Majestic dark armor with bone and dark gold engravings, a crown of bone wreathed in green ghost-fire. Huge wings made of black shadow smoke and green ghost-fire behind his back, a massive ghost-fire scythe. Spectral skulls and skeletal hands rise from a vast shadow pool at his feet. Regal, terrifying presence.
 ```
 
 ---
@@ -342,7 +357,7 @@ rotation au doigt utilise les 8 images fixes de l'état, pas besoin d'animer les
 |---|---|---|---|
 | **idle** (boucle) | tout le temps | `breathing idle, subtle chest movement, cape and hair sway slightly, floating effects gently bob, seamless loop` | `cute breathing idle, slow blink, tail swaying, ears twitch, floating effects gently bob, seamless loop` |
 | **content** | journée dans la cible | `confident nod and small fist pump, eyes glow brighter, returns to idle pose` | `happy hop in place, eyes closed smiling, tail wiggles, returns to idle pose` |
-| **level up** | montée de niveau / nouvelle étape | `power-up: raises weapon, burst of cyan energy sparks around him, returns to idle pose` | `jumps up joyfully, burst of amber sparkles and hearts, lands back in idle pose` |
+| **level up** | montée de niveau / nouvelle étape | `power-up: raises weapon, shadows surge from the ground, burst of green ghost-fire, eyes flare, returns to idle pose` | `jumps up joyfully, burst of amber sparkles and hearts, lands back in idle pose` |
 | **fatigué** | série cassée | `shoulders drop, head lowers, sighs, effects dim, slowly straightens back` | `ears flatten, sad pout, sits down, tail curls, then looks up hopeful` |
 | **miam** | après une analyse de repas | `takes a bite of a small food item, satisfied expression, returns to idle` | `happily munches a tiny fish snack, cheeks puffed, returns to idle` |
 
@@ -398,7 +413,6 @@ deux à trois ans : c'est la longévité voulue.
 ## Reste à faire
 
 - [ ] Recevoir la **photo du chat** → remplacer `{CHAT}` dans les prompts C1-C20
-- [ ] Confirmer le look de départ de l'humain (hypothèse : jeune homme, cheveux noirs)
 - [ ] Générer H1 + C1 et les tester dans l'app
 - [ ] Code : choix du perso à l'onboarding (persisté dans `stockage.js`, non modifiable ensuite)
 - [ ] Code : `PALIERS_PERSO` (20 étapes) dans `jeu.js`, composant d'affichage
