@@ -62,13 +62,14 @@ jusqu'au bout.
 
 | Réglage | Valeur |
 |---|---|
-| Taille du canevas | **128 × 128**, comme *Slayer Legend* (le perso fait ~90 px de haut). Plan B si c'est encore trop détaillé : générer en **64 × 64** et agrandir ×2 → 128 × 128 avec des pixels deux fois plus gros |
+| Taille du canevas | **120 × 120**, perso d'environ **60 px** de haut (la moitié), le reste en marge |
 | Vue | **low top-down** |
 | Directions | **8** (pour la rotation au doigt) |
-| Proportions | **chibi** (à vérifier dans les options : la 1ʳᵉ génération n'était pas chibi) |
+| Proportions | **chibi** |
 | Contour | **contour noir** (single color black outline) |
-| Ombrage | **basique** (2 tons par couleur, pas de dégradé) |
-| Détail | **faible** |
+| Ombrage | **basique** : ombrage net, pas de dégradé |
+| Détail | **moyen** |
+| Modèle | **mannequin** (template PixelLab de l'ancien sprite de référence) |
 | Fond | transparent |
 | Frames par animation | **8** |
 
@@ -82,42 +83,57 @@ Avec l'ancien système, le perso rapetissait à chaque étape. La cause n'était
 les effets, mais le recadrage automatique sur les pixels visibles. Deux règles
 pour cette fois :
 
-1. **Le code affichera toujours le canevas 128 × 128 entier, sans recadrage**,
+1. **Le code affichera toujours le canevas 120 × 120 entier, sans recadrage**,
    agrandi en « plus proche voisin » (pixels nets, jamais flous).
-2. **Le perso garde la même hauteur à toutes les étapes.** Chaque prompt le
-   rappelle (`character fills about 70% of the canvas height`). Les effets
+2. **Le perso garde la même hauteur à toutes les étapes.** Le bloc de cadrage le
+   rappelle (`same size as the previous state`). Les effets
    flottants vont dans la marge autour, sans jamais sortir du cadre.
 
 Si une étape sort plus petite ou plus grande que la précédente, on la régénère
 plutôt que de la corriger en code.
 
-## Style visuel : gros pixels, à la *Slayer Legend*
+## Style visuel : le « Same young character » de l'ancien système
 
-**Premier essai (H1, 120 × 120) refusé** : trop détaillé, trop lisse, ombrage
-dégradé, proportions presque réalistes, perso collé aux bords du canevas.
+**Référence validée** : le sprite PixelLab « Same young character » de
+l'ancien système (hoodie bleu, cheveux noirs, yeux violet-bleu), en
+**120 × 120 avec le perso sur ~60 px**. Ses réglages et son prompt exacts sont
+dans `git show cb40e35:assets/hero/niveau4-src/metadata.json`.
 
-Ce qu'on vise, façon *Slayer Legend* (RPG mobile idle) :
+Pourquoi c'est lui qui marche :
 
-- **canevas 128 × 128**, mais un rendu **« gros pixels »** : peu de détails,
-  des formes simples, pas de lissage ;
-- **super-déformé** : la tête fait à peu près **la moitié de la hauteur**, un
-  petit corps, des jambes courtes ;
-- **visage minimal** : yeux de 2-3 pixels, bouche d'1 pixel ou absente ;
-- **palette réduite** : ~12-16 couleurs au total, des aplats ;
-- **ombrage simple** : un seul ton plus sombre par couleur, pas de dégradé ;
-- **contour sombre d'un pixel**, formes simples et lisibles ;
-- **peu de détails** : les étapes se distinguent par la **silhouette** et les
-  **couleurs** (manteau, arme, effets), pas par des petits détails qu'on ne
-  verrait pas une fois l'image réduite sur l'écran du téléphone.
+- **le perso ne prend que la moitié du canevas** : à l'écran il est agrandi,
+  donc chaque pixel est plus gros → le rendu « pixelisé » voulu, avec peu de
+  détails et des formes simples ;
+- **la marge autour est déjà là** pour les effets flottants (ombre, crânes,
+  flammes, ailes) sans que le perso rétrécisse ;
+- **chibi marqué**, grands yeux avec reflet, petit sourire, joues rosées ;
+- **couleurs franches** avec une couleur d'accent, vêtements propres ;
+- **contour noir franc**, ombrage net sans dégradé.
 
-## Bloc commun (à coller à la fin de CHAQUE prompt d'étape)
+Essais refusés, pour mémoire : 1ᵉʳ H1 (128 × 128, quasi réaliste, trop
+détaillé) ; 2ᵉ H1 (chibi mais terne, sale, boudeur, et collé aux bords) ;
+l'ancien `niveau1.gif` (joli, mais perso sur 92 % du canevas : trop fin et
+aucune place pour les effets).
+
+## Bloc de style (à coller au DÉBUT de CHAQUE prompt d'étape)
+
+C'est la formulation du sprite de référence (métadonnées d'export PixelLab),
+adaptée au fond transparent :
 
 ```text
-Low-resolution retro pixel art in the style of a mobile idle RPG like Slayer Legend. Big chunky visible pixels, small sprite. Super-deformed chibi: head about half of the total height, tiny body, short legs, simple big eyes of 2-3 pixels. Very limited palette (about 12-16 colors), flat colors with one darker tone for shading, no gradients, no soft shading. 1-pixel dark outline, simple bold shapes, minimal details. Low top-down view. Character centered, fills about 70% of the canvas height with empty margin around, same size as the previous state. Floating effects stay inside the canvas margins. Transparent background. Single character only.
+Chibi pixel art character sprite, 16-bit RPG style, big head and small body, bold clean black outline, crisp deliberate pixel shading, limited palette, vivid saturated colors, clean clothes.
 ```
 
-Si PixelLab refuse ou ignore la référence au jeu, retirer `in the style of a
-mobile idle RPG like Slayer Legend` : le reste du bloc décrit le style seul.
+## Bloc de cadrage (à coller à la FIN de CHAQUE prompt d'étape)
+
+```text
+Full body, facing forward, static neutral pose, centered with generous empty margin, not touching the edges, same size as the previous state. Floating effects stay inside the canvas. Transparent background, no ground shadow unless described. Single character only.
+```
+
+Un prompt complet = **bloc de style + prompt de l'étape + bloc de cadrage**.
+
+Contrôle à chaque étape : le perso doit rester autour de **60 px de haut**
+sur 120. S'il grandit ou rétrécit nettement, régénérer.
 
 ---
 
@@ -145,12 +161,12 @@ pourquoi chaque prompt redonne leur couleur.
 
 **H1 — L'inconnu**
 ```text
-A young man in his twenties, ordinary and a bit tired but determined look, messy brown hair, normal brown eyes. Plain dark grey hoodie, dark jeans, worn sneakers, hands empty. Slim build, slightly hunched posture. No weapon, no armor, no effects.
+A cheerful young man in his twenties, ordinary student: messy short brown hair, large expressive brown eyes, friendly and determined expression with a small smile. Dark charcoal grey hoodie with an emerald green inner collar, dark jeans, white sneakers. No weapon, no armor, no powers, a beginner with relaxed hands.
 ```
 
 **H2 — L'ombre qui bouge**
 ```text
-Same character, same face and same messy brown hair, normal brown eyes. Same dark grey hoodie and jeans, now with black fingerless gloves and a cheap short knife on the belt. Standing a little straighter. His shadow on the ground is slightly too dark and a small black wisp rises from it.
+Same character, same face and same messy brown hair, normal brown eyes. Same charcoal hoodie with green inner collar and jeans, now with black fingerless gloves and a cheap short knife on the belt. Standing a little straighter. His shadow on the ground is slightly too dark and a small black wisp rises from it.
 ```
 
 **H3 — L'éveil**
