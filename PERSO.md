@@ -56,7 +56,7 @@ jusqu'au bout.
 | Perso | Base | Accents | Fin de progression |
 |---|---|---|---|
 | Humain | noir, ombre fumée, blanc os | **vert émeraude** (flamme spectrale) | + touches d'**or sombre** aux étapes 19-20 |
-| Chat | pelage de la photo | **ambre / or**, crème, rose pâle | flammes ambre + or, gemmes roses |
+| Chat | tigré brun et blanc (photo) | **ambre / or**, crème, rose pâle | flammes ambre + or, gemmes roses |
 
 ## Réglages PixelLab (communs aux deux persos)
 
@@ -230,60 +230,73 @@ Same character, same face, brown hair with a bone-white streak, incandescent eme
 
 ## Chat — le Chat céleste (mignon / kawaii)
 
-⚠️ **En attente de la photo du chat.** Chaque prompt contient `{CHAT}` : on le
-remplacera par la description du pelage (couleur, motifs, yeux, particularités)
-une fois la photo reçue. Le reste est prêt.
+Inspiré d'un vrai chat (deux photos reçues) : **tigré brun et blanc**.
+
+| Zone | Pelage |
+|---|---|
+| Dessus de la tête, oreilles, dos, flancs | tigré brun-gris à rayures sombres |
+| Front | **fine bande blanche** qui monte au milieu, entre les yeux |
+| Museau | blanc, avec une **tache tigrée brune autour du nez rose** |
+| Menton, poitrail, ventre, pattes avant | blanc, **pattes blanches** |
+| Queue | tigrée, plus sombre au bout |
+| Yeux | **verts** (virent à l'ambre lumineux à partir de C10) |
+| Oreilles | intérieur rose |
+
+Les signes distinctifs à ne pas perdre d'une étape à l'autre : **la bande
+blanche du front, le plastron blanc et les pattes blanches.** Si PixelLab les
+oublie, régénérer.
 
 Pour tous les prompts après le 1 : ils commencent par
 `Same cat, same fur pattern and same face.`
+C2 à C9 gardent ses yeux verts ; à partir de C10 ils brillent d'ambre.
 
 ### Acte I — le Chaton
 
 **C1 — Le chaton**
 ```text
-A tiny cute kitten, {CHAT}. Huge sparkly eyes, round face, small pink nose, sitting, happy expression. No accessories, no effects. Kawaii style.
+A tiny cute kitten, brown tabby and white bicolor: brown-grey tabby with dark stripes on the top of the head, ears, back, sides and tail; a thin white stripe running up the middle of the forehead between the eyes; white muzzle with a small brown tabby patch around the pink nose; white chin, chest, belly and front legs with white paws; pink inner ears; darker tail tip. Huge sparkly green eyes, round face, small pink nose, sitting, happy expression. No accessories, no effects. Kawaii style.
 ```
 
 **C2 — Le grelot**
 ```text
-Same cat, same fur pattern and same face. Tiny cute kitten wearing a red collar with a small golden bell. Huge sparkly eyes, happy expression. Kawaii style.
+Same cat, same fur pattern and same face. Tiny cute kitten wearing a red collar with a small golden bell. Huge sparkly green eyes, happy expression. Kawaii style.
 ```
 
 **C3 — L'écharpe**
 ```text
-Same cat, same fur pattern and same face. Cute kitten, slightly bigger, wearing a small cream scarf and the collar with golden bell. Huge sparkly eyes, playful expression. A tiny amber sparkle floats next to it. Kawaii style.
+Same cat, same fur pattern and same face. Cute kitten, slightly bigger, wearing a small cream scarf and the collar with golden bell. Huge sparkly green eyes, playful expression. A tiny amber sparkle floats next to it. Kawaii style.
 ```
 
 **C4 — Première étincelle**
 ```text
-Same cat, same fur pattern and same face. Cute young kitten with a cream scarf and golden bell collar. The tip of its tail glows with a tiny amber light. Two small amber sparkles float around it. Kawaii style.
+Same cat, same fur pattern and same face, big green eyes. Cute young kitten with a cream scarf and golden bell collar. The tip of its tail glows with a tiny amber light. Two small amber sparkles float around it. Kawaii style.
 ```
 
 **C5 — La petite cape**
 ```text
-Same cat, same fur pattern and same face. Cute young cat wearing a tiny adventurer cape in cream and amber, golden bell collar that now glows softly. Tail tip glowing amber. A few amber sparkles float around it. Proud, adorable expression. Kawaii style.
+Same cat, same fur pattern and same face, big green eyes. Cute young cat wearing a tiny adventurer cape in cream and amber, golden bell collar that now glows softly. Tail tip glowing amber. A few amber sparkles float around it. Proud, adorable expression. Kawaii style.
 ```
 
 ### Acte II — l'Apprenti
 
 **C6 — Le harnais**
 ```text
-Same cat, same fur pattern and same face. Cute young cat wearing a small brown leather harness with a tiny pouch, tiny cream-and-amber cape, glowing golden bell. Tail tip glowing amber. Amber sparkles float around it. Kawaii style.
+Same cat, same fur pattern and same face, big green eyes. Cute young cat wearing a small brown leather harness with a tiny pouch, tiny cream-and-amber cape, glowing golden bell. Tail tip glowing amber. Amber sparkles float around it. Kawaii style.
 ```
 
 **C7 — La flamme de la queue**
 ```text
-Same cat, same fur pattern and same face. Cute cat with leather harness, tiny cape, glowing golden bell. The tip of its tail now burns with a small cute amber spirit flame. Amber sparkles float around it. Kawaii style.
+Same cat, same fur pattern and same face, big green eyes. Cute cat with leather harness, tiny cape, glowing golden bell. The tip of its tail now burns with a small cute amber spirit flame. Amber sparkles float around it. Kawaii style.
 ```
 
 **C8 — Le plastron**
 ```text
-Same cat, same fur pattern and same face. Cute cat wearing a tiny golden chest plate over its harness, small cape, glowing bell. Amber spirit flame at the tail tip. Amber sparkles float around it. Brave, adorable expression. Kawaii style.
+Same cat, same fur pattern and same face, big green eyes. Cute cat wearing a tiny golden chest plate over its harness, small cape, glowing bell. Amber spirit flame at the tail tip. Amber sparkles float around it. Brave, adorable expression. Kawaii style.
 ```
 
 **C9 — Les runes-pattes**
 ```text
-Same cat, same fur pattern and same face. Cute cat with tiny golden chest plate, small cape, glowing bell, amber spirit flame at the tail tip. Small glowing amber paw-print runes float around it. Kawaii style.
+Same cat, same fur pattern and same face, big green eyes. Cute cat with tiny golden chest plate, small cape, glowing bell, amber spirit flame at the tail tip. Small glowing amber paw-print runes float around it. Kawaii style.
 ```
 
 **C10 — Les yeux ambre**
@@ -412,7 +425,6 @@ deux à trois ans : c'est la longévité voulue.
 
 ## Reste à faire
 
-- [ ] Recevoir la **photo du chat** → remplacer `{CHAT}` dans les prompts C1-C20
 - [ ] Générer H1 + C1 et les tester dans l'app
 - [ ] Code : choix du perso à l'onboarding (persisté dans `stockage.js`, non modifiable ensuite)
 - [ ] Code : `PALIERS_PERSO` (20 étapes) dans `jeu.js`, composant d'affichage
