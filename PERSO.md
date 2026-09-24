@@ -73,9 +73,21 @@ jusqu'au bout.
 | Fond | transparent |
 | Frames par animation | **8** |
 
-Méthode : **un personnage PixelLab par perso, un état (state) par étape.**
-L'étape 1 crée le personnage ; chaque étape suivante est un nouvel état créé à
-partir du précédent.
+Méthode : **un personnage PixelLab par perso, un état (state) par étape**,
+chaque état créé à partir du précédent.
+
+**Ce qui a marché pour H1 (validé)** : ne pas créer un nouveau personnage,
+mais un **nouvel état de l'ancien « Same young character »** (celui de la
+référence, toujours dans le compte PixelLab). Le résultat garde exactement le
+même style et la même taille : 120 × 120, perso de **60 px** de haut
+(boîte 39,30 → 79,90, identique à la référence), 33 couleurs.
+Fichier : `assets/perso/humain/h1.gif`.
+
+Créer un nouveau personnage de zéro, même avec « generous empty margin », a
+donné deux fois de suite un perso de ~120 px qui remplit tout le canevas :
+trop fin, pas le style voulu. **Pour le chat**, il faudra donc un nouveau
+personnage (on ne peut pas partir d'un humain) : le créer en 120 × 120 et
+vérifier qu'il fait bien ~60 px de haut avant d'aller plus loin.
 
 ### Règle de cadrage (la leçon de l'ancien système)
 
@@ -154,12 +166,18 @@ changent de couleur avec son pouvoir :
 
 Pour tous les prompts après le 1 : ils commencent par
 `Same character, same face and same messy brown hair.` pour garder le même
-visage d'un état à l'autre. **Seuls les yeux changent de couleur** : c'est
+visage d'un état à l'autre. Comme ce sont des **états** (pas de nouveaux
+personnages), les blocs de style et de cadrage sont inutiles : ajouter
+seulement `Same style and same size.` au début. **Seuls les yeux changent de couleur** : c'est
 pourquoi chaque prompt redonne leur couleur.
 
 ### Acte I — l'Éveil
 
-**H1 — L'inconnu**
+**H1 — L'inconnu** ✅ validé : nouvel état de l'ancien « Same young character » avec ce texte :
+```text
+Same character, same style and same size. Now messy brown hair, brown eyes, dark charcoal grey hoodie with an emerald green inner collar, dark jeans, white sneakers, no backpack.
+```
+Description complète du perso, pour mémoire :
 ```text
 A cheerful young man in his twenties, ordinary student: messy short brown hair, large expressive brown eyes, friendly and determined expression with a small smile. Dark charcoal grey hoodie with an emerald green inner collar, dark jeans, white sneakers. No weapon, no armor, no powers, a beginner with relaxed hands.
 ```
@@ -464,7 +482,10 @@ deux à trois ans : c'est la longévité voulue.
 
 ## Reste à faire
 
-- [ ] Générer H1 + C1 et les tester dans l'app
+- [x] H1 validé (`assets/perso/humain/h1.gif`)
+- [ ] H2 → H20, chacun en nouvel état du précédent, en vérifiant ~60 px de haut
+- [ ] C1 : nouveau personnage 120 × 120, vérifier ~60 px de haut
+- [ ] Tester H1 dans l'app (affichage agrandi, pixels nets)
 - [ ] Code : choix du perso à l'onboarding (persisté dans `stockage.js`, non modifiable ensuite)
 - [ ] Code : `PALIERS_PERSO` (20 étapes) dans `jeu.js`, composant d'affichage
       (rotation + animations + réactions) dans `App.js`
