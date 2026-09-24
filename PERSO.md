@@ -172,7 +172,7 @@ pourquoi chaque prompt redonne leur couleur.
 A young man in his twenties, ordinary student: spiky messy brown hair, big bright warm brown eyes with a large white highlight, fully visible under the bangs, confident determined smirk. Dark charcoal grey hoodie with a vivid emerald green inner collar and drawstrings, dark jeans, white sneakers. No weapon, no armor, no powers.
 ```
 
-**H2 — L'ombre qui bouge**
+**H2 — L'ombre qui bouge** ✅ `assets/perso/humain/h2.gif` (nouvel état de H1 ; gants et ombre au sol OK, couteau et volute peu visibles)
 ```text
 Same character, same face and same messy brown hair, normal brown eyes. Same charcoal hoodie with green inner collar and jeans, now with black fingerless gloves and a cheap short knife on the belt. Standing a little straighter. His shadow on the ground is slightly too dark and a small black wisp rises from it.
 ```
@@ -473,9 +473,11 @@ deux à trois ans : c'est la longévité voulue.
 ## Reste à faire
 
 - [x] H1 validé (`assets/perso/humain/h1.gif`)
-- [ ] H2 → H20, chacun en nouvel état du précédent
+- [x] H2
+- [ ] H3 → H20, chacun en nouvel état du précédent
 - [ ] Dans l'app : raviver un peu la saturation du sprite si besoin (PixelLab rend des couleurs ternes)
-- [ ] H2 → H20, chacun en nouvel état du précédent, en vérifiant ~60 px de haut
+- [x] H2
+- [ ] H3 → H20, chacun en nouvel état du précédent, en vérifiant ~60 px de haut
 - [ ] C1 : nouveau personnage 120 × 120, vérifier ~60 px de haut
 - [ ] Tester H1 dans l'app (affichage agrandi, pixels nets)
 - [ ] Code : choix du perso à l'onboarding (persisté dans `stockage.js`, non modifiable ensuite)
