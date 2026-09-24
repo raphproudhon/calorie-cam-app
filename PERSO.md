@@ -15,7 +15,7 @@ personnages, 20 étapes.
 | Paliers | on garde les 10 paliers existants et on en intercale 10 (voir plus bas) |
 | Couleurs | **palette propre** à chaque perso ; le thème de l'app reste piloté par le niveau (`accentPourNiveau`) |
 | Où il apparaît | partout où c'est légitime (Progression, Bilan, fin d'analyse, montée de niveau…) |
-| Affichage | **rotation au doigt** (8 directions) **+ animations** |
+| Affichage | **animations**, vue de profil (la rotation 8 directions est à confirmer avec le style *Slayer Legend*) |
 | Réactions | oui : content, montée de niveau, fatigué, miam |
 | Inspiration (humain) | *Solo Leveling* : **ombre et nécromancie**, jeune homme ordinaire qui s'éveille et devient un souverain. **Sans plagiat** : flamme verte et non violette, faux, crânes et mains spectrales au lieu d'une armée de soldats d'ombre |
 | Effets flottants | **autorisés** (runes, étincelles, éclats…), à condition de rester dans le canevas |
@@ -62,33 +62,24 @@ jusqu'au bout.
 
 | Réglage | Valeur |
 |---|---|
-| Taille du canevas | **120 × 120**, perso d'environ **60 px** de haut (la moitié), le reste en marge |
-| Vue | **low top-down** |
-| Directions | **8** (pour la rotation au doigt) |
+| Taille du canevas | **64 × 64** : peu de pixels = gros pixels à l'écran (le style *Slayer Legend*) |
+| Vue | **side (de profil)**, tourné vers la droite, comme dans *Slayer Legend* |
+| Directions | **1 à 2** (droite ; la gauche = image retournée en code). À confirmer : remplace la rotation 8 directions |
 | Proportions | **chibi** |
-| Contour | **contour noir** (single color black outline) |
-| Ombrage | **basique** : ombrage net, pas de dégradé |
-| Détail | **moyen** |
-| Modèle | **mannequin** (template PixelLab de l'ancien sprite de référence) |
+| Contour | **contour noir épais** (single color black outline) |
+| Ombrage | **basique** : 2 tons par couleur, fort contraste, pas de dégradé |
+| Détail | **faible** |
 | Fond | transparent |
 | Frames par animation | **8** |
 
 Méthode : **un personnage PixelLab par perso, un état (state) par étape**,
 chaque état créé à partir du précédent.
 
-**Décision : on repart de zéro, sans rien reprendre de l'ancien perso.**
-Un essai « nouvel état de l'ancien *Same young character* » donnait le bon
-rendu (`assets/perso/humain/h1.gif`, gardé comme **cible de taille** : perso
-de 60 px de haut dans 120 × 120), mais il héritait de l'ancien prompt : refusé.
-
-Le piège : créé de zéro, PixelLab a deux fois dessiné un perso de ~120 px qui
-remplit tout le canevas (trop fin, pas le style voulu). Ordre des essais :
-
-1. nouveau personnage, **120 × 120, template « mannequin »** (celui de
-   l'ancien sprite) → viser ~60 px de haut ;
-2. sinon **64 × 64** : PixelLab remplit le canevas, donc ~60 px de haut, la
-   même taille de pixels que la cible. Les effets flottants auront moins de
-   place ; l'app ajoutera la marge autour.
+**On repart de zéro, sans rien reprendre de l'ancien perso.** Créé de zéro,
+PixelLab remplit tout le canevas : c'est donc **la taille du canevas qui fixe
+la taille des pixels**. D'où le **64 × 64** : le perso fait ~55-60 px, et à
+l'écran chaque pixel est gros, comme dans *Slayer Legend*. Les effets
+flottants ont peu de place dans le canevas : l'app ajoutera la marge autour.
 
 ### Règle de cadrage (la leçon de l'ancien système)
 
@@ -96,7 +87,7 @@ Avec l'ancien système, le perso rapetissait à chaque étape. La cause n'était
 les effets, mais le recadrage automatique sur les pixels visibles. Deux règles
 pour cette fois :
 
-1. **Le code affichera toujours le canevas 120 × 120 entier, sans recadrage**,
+1. **Le code affichera toujours le canevas 64 × 64 entier, sans recadrage**,
    agrandi en « plus proche voisin » (pixels nets, jamais flous).
 2. **Le perso garde la même hauteur à toutes les étapes.** Le bloc de cadrage le
    rappelle (`same size as the previous state`). Les effets
@@ -105,50 +96,53 @@ pour cette fois :
 Si une étape sort plus petite ou plus grande que la précédente, on la régénère
 plutôt que de la corriger en code.
 
-## Style visuel : le « Same young character » de l'ancien système
+## Style visuel : *Slayer Legend*
 
-**Référence validée** : le sprite PixelLab « Same young character » de
-l'ancien système (hoodie bleu, cheveux noirs, yeux violet-bleu), en
-**120 × 120 avec le perso sur ~60 px**. Ses réglages et son prompt exacts sont
-dans `git show cb40e35:assets/hero/niveau4-src/metadata.json`.
+**Référence imposée : le style graphique de *Slayer Legend*** (RPG mobile idle,
+icône de l'app : héros aux cheveux argentés, écharpe rouge, en pleine course).
+On reprend le **style**, pas le personnage : pas de cheveux argentés, pas
+d'yeux rouges, pas d'écharpe rouge.
 
-Pourquoi c'est lui qui marche :
+Ce qui fait ce style :
 
-- **le perso ne prend que la moitié du canevas** : à l'écran il est agrandi,
-  donc chaque pixel est plus gros → le rendu « pixelisé » voulu, avec peu de
-  détails et des formes simples ;
-- **la marge autour est déjà là** pour les effets flottants (ombre, crânes,
-  flammes, ailes) sans que le perso rétrécisse ;
-- **chibi marqué**, grands yeux avec reflet, petit sourire, joues rosées ;
-- **couleurs franches** avec une couleur d'accent, vêtements propres ;
-- **contour noir franc**, ombrage net sans dégradé.
+- **très basse résolution** : de gros pixels bien visibles (perso dessiné sur
+  ~50-60 px de haut) ;
+- **super-déformé** : la **tête fait plus de la moitié de la hauteur**, petit
+  corps, jambes très courtes ;
+- **visage d'anime** : grands yeux colorés avec un reflet, sourcils marqués,
+  nez absent, petite bouche ;
+- **cheveux en mèches pointues** bien découpées ;
+- **contour noir épais**, formes simples ;
+- **couleurs très saturées et contrastées** : une tenue sombre + **un accent
+  vif** qui ressort (chez eux l'écharpe rouge) ;
+- **ombrage à 2 tons**, sans dégradé ;
+- **vue de profil**, perso tourné vers la droite, **posture dynamique**
+  (course, arme en main, tissu qui flotte) ;
+- **effets flashy** autour (traînées de feu, étincelles) : ça colle avec nos
+  effets flottants.
 
-Essais refusés, pour mémoire : 1ᵉʳ H1 (128 × 128, quasi réaliste, trop
-détaillé) ; 2ᵉ H1 (chibi mais terne, sale, boudeur, et collé aux bords) ;
-l'ancien `niveau1.gif` (joli, mais perso sur 92 % du canevas : trop fin et
-aucune place pour les effets).
+Essais refusés, pour mémoire : trois H1 en 120-128 px (trop fins, trop
+détaillés), et un nouvel état de l'ancien perso (bon rendu, mais il héritait
+de l'ancien prompt). `assets/perso/humain/h1.gif` est gardé seulement comme
+repère de taille de pixels.
 
-## Bloc de style (à coller au DÉBUT de CHAQUE prompt d'étape)
-
-C'est la formulation du sprite de référence (métadonnées d'export PixelLab),
-adaptée au fond transparent :
-
-```text
-Chibi pixel art character sprite, 16-bit RPG style, big head and small body, bold clean black outline, crisp deliberate pixel shading, limited palette, vivid saturated colors, clean clothes.
-```
-
-## Bloc de cadrage (à coller à la FIN de CHAQUE prompt d'étape)
+## Bloc de style (à coller au DÉBUT de chaque prompt de création)
 
 ```text
-Full body, facing forward, static neutral pose, centered with generous empty margin, not touching the edges, same size as the previous state. Floating effects stay inside the canvas. Transparent background, no ground shadow unless described. Single character only.
+Pixel art in the style of the mobile game Slayer Legend. Low resolution, big chunky pixels. Super-deformed chibi: huge head bigger than half of the total height, tiny body, very short legs. Anime face with big bright eyes with a white highlight, sharp eyebrows, no nose. Spiky, sharply cut hair strands. Thick black outline, simple bold shapes. Very saturated high-contrast colors, dark outfit with one vivid accent color. Two-tone cel shading, no gradients. Side view, facing right, dynamic pose.
 ```
 
-Un prompt complet = **bloc de style + prompt de l'étape + bloc de cadrage**.
+## Bloc de cadrage (à coller à la FIN de chaque prompt de création)
 
-Contrôle à chaque étape : le perso doit rester autour de **60 px de haut**
-sur 120. S'il grandit ou rétrécit nettement, régénérer.
+```text
+Full body, centered. Transparent background. Single character only.
+```
 
----
+Si PixelLab ignore la mention du jeu, retirer `in the style of the mobile game
+Slayer Legend` : le reste du bloc décrit le style seul.
+
+Pour les étapes suivantes (nouvel **état** de l'étape d'avant), pas besoin
+des blocs : commencer par `Same character, same style and same size.`
 
 ## Humain — le Nécromancien (épique / badass)
 
@@ -176,7 +170,7 @@ pourquoi chaque prompt redonne leur couleur.
 
 **H1 — L'inconnu** (à générer de zéro : bloc de style + ce texte + bloc de cadrage)
 ```text
-A cheerful young man in his twenties, ordinary student: messy short brown hair, large expressive brown eyes, friendly and determined expression with a small smile. Dark charcoal grey hoodie with an emerald green inner collar, dark jeans, white sneakers. No weapon, no armor, no powers, a beginner with relaxed hands.
+A young man in his twenties, ordinary student: spiky messy brown hair, big brown eyes, determined expression. Dark charcoal grey hoodie with a vivid emerald green inner collar and drawstrings, dark jeans, white sneakers. No weapon, no armor, no powers. Standing in a ready stance, slightly leaning forward.
 ```
 
 **H2 — L'ombre qui bouge**
@@ -479,7 +473,8 @@ deux à trois ans : c'est la longévité voulue.
 
 ## Reste à faire
 
-- [ ] H1 de zéro (nouveau personnage), ~60 px de haut comme `assets/perso/humain/h1.gif`
+- [ ] H1 de zéro, style *Slayer Legend*, 64 × 64, vue de profil
+- [ ] Confirmer : vue de profil sans rotation 8 directions ?
 - [ ] H2 → H20, chacun en nouvel état du précédent, en vérifiant ~60 px de haut
 - [ ] C1 : nouveau personnage 120 × 120, vérifier ~60 px de haut
 - [ ] Tester H1 dans l'app (affichage agrandi, pixels nets)
