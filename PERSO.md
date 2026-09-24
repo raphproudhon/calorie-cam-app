@@ -15,7 +15,7 @@ personnages, 20 étapes.
 | Paliers | on garde les 10 paliers existants et on en intercale 10 (voir plus bas) |
 | Couleurs | **palette propre** à chaque perso ; le thème de l'app reste piloté par le niveau (`accentPourNiveau`) |
 | Où il apparaît | partout où c'est légitime (Progression, Bilan, fin d'analyse, montée de niveau…) |
-| Affichage | **animations**, vue de profil (la rotation 8 directions est à confirmer avec le style *Slayer Legend*) |
+| Affichage | **rotation au doigt** (8 directions) **+ animations** |
 | Réactions | oui : content, montée de niveau, fatigué, miam |
 | Inspiration (humain) | *Solo Leveling* : **ombre et nécromancie**, jeune homme ordinaire qui s'éveille et devient un souverain. **Sans plagiat** : flamme verte et non violette, faux, crânes et mains spectrales au lieu d'une armée de soldats d'ombre |
 | Effets flottants | **autorisés** (runes, étincelles, éclats…), à condition de rester dans le canevas |
@@ -63,8 +63,8 @@ jusqu'au bout.
 | Réglage | Valeur |
 |---|---|
 | Taille du canevas | **64 × 64** : peu de pixels = gros pixels à l'écran (le style *Slayer Legend*) |
-| Vue | **side (de profil)**, tourné vers la droite, comme dans *Slayer Legend* |
-| Directions | **1 à 2** (droite ; la gauche = image retournée en code). À confirmer : remplace la rotation 8 directions |
+| Vue | **low top-down**, de face (même pose qu'avant) |
+| Directions | **8** (pour la rotation au doigt) |
 | Proportions | **chibi** |
 | Contour | **contour noir épais** (single color black outline) |
 | Ombrage | **basique** : 2 tons par couleur, fort contraste, pas de dégradé |
@@ -116,8 +116,8 @@ Ce qui fait ce style :
 - **couleurs très saturées et contrastées** : une tenue sombre + **un accent
   vif** qui ressort (chez eux l'écharpe rouge) ;
 - **ombrage à 2 tons**, sans dégradé ;
-- **vue de profil**, perso tourné vers la droite, **posture dynamique**
-  (course, arme en main, tissu qui flotte) ;
+- ⚠️ **on ne reprend PAS leur pose** (profil en pleine course) : notre perso
+  reste **de face, pose neutre**, avec la rotation 8 directions ;
 - **effets flashy** autour (traînées de feu, étincelles) : ça colle avec nos
   effets flottants.
 
@@ -129,13 +129,13 @@ repère de taille de pixels.
 ## Bloc de style (à coller au DÉBUT de chaque prompt de création)
 
 ```text
-Pixel art in the style of the mobile game Slayer Legend. Low resolution, big chunky pixels. Super-deformed chibi: huge head bigger than half of the total height, tiny body, very short legs. Anime face with big bright eyes with a white highlight, sharp eyebrows, no nose. Spiky, sharply cut hair strands. Thick black outline, simple bold shapes. Very saturated high-contrast colors, dark outfit with one vivid accent color. Two-tone cel shading, no gradients. Side view, facing right, dynamic pose.
+Pixel art in the style of the mobile game Slayer Legend. Low resolution, big chunky pixels. Super-deformed chibi: huge head bigger than half of the total height, tiny body, very short legs. Anime face with big bright eyes with a white highlight, sharp eyebrows, no nose. Spiky, sharply cut hair strands. Thick black outline, simple bold shapes. Very saturated high-contrast colors, dark outfit with one vivid accent color. Two-tone cel shading, no gradients.
 ```
 
 ## Bloc de cadrage (à coller à la FIN de chaque prompt de création)
 
 ```text
-Full body, centered. Transparent background. Single character only.
+Full body, facing forward, static neutral pose, standing straight, arms relaxed at the sides, centered. Transparent background. Single character only.
 ```
 
 Si PixelLab ignore la mention du jeu, retirer `in the style of the mobile game
@@ -170,7 +170,7 @@ pourquoi chaque prompt redonne leur couleur.
 
 **H1 — L'inconnu** (à générer de zéro : bloc de style + ce texte + bloc de cadrage)
 ```text
-A young man in his twenties, ordinary student: spiky messy brown hair, big brown eyes, determined expression. Dark charcoal grey hoodie with a vivid emerald green inner collar and drawstrings, dark jeans, white sneakers. No weapon, no armor, no powers. Standing in a ready stance, slightly leaning forward.
+A young man in his twenties, ordinary student: spiky messy brown hair, big brown eyes, determined expression. Dark charcoal grey hoodie with a vivid emerald green inner collar and drawstrings, dark jeans, white sneakers. No weapon, no armor, no powers.
 ```
 
 **H2 — L'ombre qui bouge**
@@ -473,8 +473,7 @@ deux à trois ans : c'est la longévité voulue.
 
 ## Reste à faire
 
-- [ ] H1 de zéro, style *Slayer Legend*, 64 × 64, vue de profil
-- [ ] Confirmer : vue de profil sans rotation 8 directions ?
+- [ ] H1 de zéro, style *Slayer Legend*, 64 × 64, de face (low top-down, 8 directions)
 - [ ] H2 → H20, chacun en nouvel état du précédent, en vérifiant ~60 px de haut
 - [ ] C1 : nouveau personnage 120 × 120, vérifier ~60 px de haut
 - [ ] Tester H1 dans l'app (affichage agrandi, pixels nets)
