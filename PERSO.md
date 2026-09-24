@@ -76,18 +76,19 @@ jusqu'au bout.
 Méthode : **un personnage PixelLab par perso, un état (state) par étape**,
 chaque état créé à partir du précédent.
 
-**Ce qui a marché pour H1 (validé)** : ne pas créer un nouveau personnage,
-mais un **nouvel état de l'ancien « Same young character »** (celui de la
-référence, toujours dans le compte PixelLab). Le résultat garde exactement le
-même style et la même taille : 120 × 120, perso de **60 px** de haut
-(boîte 39,30 → 79,90, identique à la référence), 33 couleurs.
-Fichier : `assets/perso/humain/h1.gif`.
+**Décision : on repart de zéro, sans rien reprendre de l'ancien perso.**
+Un essai « nouvel état de l'ancien *Same young character* » donnait le bon
+rendu (`assets/perso/humain/h1.gif`, gardé comme **cible de taille** : perso
+de 60 px de haut dans 120 × 120), mais il héritait de l'ancien prompt : refusé.
 
-Créer un nouveau personnage de zéro, même avec « generous empty margin », a
-donné deux fois de suite un perso de ~120 px qui remplit tout le canevas :
-trop fin, pas le style voulu. **Pour le chat**, il faudra donc un nouveau
-personnage (on ne peut pas partir d'un humain) : le créer en 120 × 120 et
-vérifier qu'il fait bien ~60 px de haut avant d'aller plus loin.
+Le piège : créé de zéro, PixelLab a deux fois dessiné un perso de ~120 px qui
+remplit tout le canevas (trop fin, pas le style voulu). Ordre des essais :
+
+1. nouveau personnage, **120 × 120, template « mannequin »** (celui de
+   l'ancien sprite) → viser ~60 px de haut ;
+2. sinon **64 × 64** : PixelLab remplit le canevas, donc ~60 px de haut, la
+   même taille de pixels que la cible. Les effets flottants auront moins de
+   place ; l'app ajoutera la marge autour.
 
 ### Règle de cadrage (la leçon de l'ancien système)
 
@@ -173,11 +174,7 @@ pourquoi chaque prompt redonne leur couleur.
 
 ### Acte I — l'Éveil
 
-**H1 — L'inconnu** ✅ validé : nouvel état de l'ancien « Same young character » avec ce texte :
-```text
-Same character, same style and same size. Now messy brown hair, brown eyes, dark charcoal grey hoodie with an emerald green inner collar, dark jeans, white sneakers, no backpack.
-```
-Description complète du perso, pour mémoire :
+**H1 — L'inconnu** (à générer de zéro : bloc de style + ce texte + bloc de cadrage)
 ```text
 A cheerful young man in his twenties, ordinary student: messy short brown hair, large expressive brown eyes, friendly and determined expression with a small smile. Dark charcoal grey hoodie with an emerald green inner collar, dark jeans, white sneakers. No weapon, no armor, no powers, a beginner with relaxed hands.
 ```
@@ -482,7 +479,7 @@ deux à trois ans : c'est la longévité voulue.
 
 ## Reste à faire
 
-- [x] H1 validé (`assets/perso/humain/h1.gif`)
+- [ ] H1 de zéro (nouveau personnage), ~60 px de haut comme `assets/perso/humain/h1.gif`
 - [ ] H2 → H20, chacun en nouvel état du précédent, en vérifiant ~60 px de haut
 - [ ] C1 : nouveau personnage 120 × 120, vérifier ~60 px de haut
 - [ ] Tester H1 dans l'app (affichage agrandi, pixels nets)
