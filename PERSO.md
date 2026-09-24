@@ -172,9 +172,9 @@ pourquoi chaque prompt redonne leur couleur.
 A young man in his twenties, ordinary student: spiky messy brown hair, big bright warm brown eyes with a large white highlight, fully visible under the bangs, confident determined smirk. Dark charcoal grey hoodie with a vivid emerald green inner collar and drawstrings, dark jeans, white sneakers. No weapon, no armor, no powers.
 ```
 
-**H2 — L'ombre qui bouge** (à refaire : couteau plus visible, d'une autre couleur ; nouvel état de H1)
+**H2 — L'ombre qui bouge** (nouvel état de H1 ; 2ᵉ essai : couteau bien visible mais lame rouge, ombre coupée en bas → 3ᵉ essai)
 ```text
-Same character, same style and same size. Same face, same spiky messy brown hair, same brown eyes, same confident smirk. Same charcoal hoodie with emerald green inner collar and dark jeans, now with black fingerless gloves. He holds a short knife in his right hand, blade pointing down, clearly visible against the dark hoodie: bright shiny silver blade and a vivid red handle. Standing a little straighter. A small dark shadow on the ground under his feet, staying inside the canvas, with a tiny black wisp of shadow rising from it.
+Same character, same style and same size. Same face, same spiky messy brown hair, same brown eyes, same confident smirk. Same charcoal hoodie with emerald green inner collar and dark jeans, now with black fingerless gloves. He holds a short knife in his right hand, blade pointing down, clearly visible against the dark hoodie: the blade is entirely bright shiny silver, no red anywhere, with a dark handle wrapped in a small touch of emerald green. Standing a little straighter. Under his feet, only a thin flat dark shadow, no wider than his shoulders, that does not go below his shoes and never touches the bottom edge of the canvas. A tiny black wisp of shadow rises from it beside his legs.
 ```
 
 **H3 — L'éveil**
