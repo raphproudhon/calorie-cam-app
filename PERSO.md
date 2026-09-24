@@ -123,13 +123,12 @@ Ce qui fait ce style :
 
 Essais refusés, pour mémoire : trois H1 en 120-128 px (trop fins, trop
 détaillés), et un nouvel état de l'ancien perso (bon rendu, mais il héritait
-de l'ancien prompt). `assets/perso/humain/h1.gif` est gardé seulement comme
-repère de taille de pixels.
+de l'ancien prompt).
 
 ## Bloc de style (à coller au DÉBUT de chaque prompt de création)
 
 ```text
-Pixel art in the style of the mobile game Slayer Legend. Low resolution, big chunky pixels. Super-deformed chibi: huge head bigger than half of the total height, tiny body, very short legs. Anime face with big bright eyes with a white highlight, sharp eyebrows, no nose. Spiky, sharply cut hair strands. Thick black outline, simple bold shapes. Very saturated high-contrast colors, dark outfit with one vivid accent color. Two-tone cel shading, no gradients.
+Pixel art in the style of the mobile game Slayer Legend. Low resolution, big chunky pixels. Super-deformed chibi: huge head bigger than half of the total height, tiny body, very short legs. Anime face with big bright eyes with a white highlight, sharp eyebrows, no nose. Spiky, sharply cut hair strands. Thick black outline, simple bold shapes. Very saturated high-contrast colors, rich warm browns, deep charcoal, bright emerald green, dark outfit with one vivid accent color. Two-tone cel shading, no gradients.
 ```
 
 ## Bloc de cadrage (à coller à la FIN de chaque prompt de création)
@@ -168,9 +167,9 @@ pourquoi chaque prompt redonne leur couleur.
 
 ### Acte I — l'Éveil
 
-**H1 — L'inconnu** (à générer de zéro : bloc de style + ce texte + bloc de cadrage)
+**H1 — L'inconnu** ✅ validé : `assets/perso/humain/h1.gif` (64 × 64, perso de 58 px, 31 couleurs). Nouveau personnage, bloc de style + ce texte + bloc de cadrage :
 ```text
-A young man in his twenties, ordinary student: spiky messy brown hair, big brown eyes, determined expression. Dark charcoal grey hoodie with a vivid emerald green inner collar and drawstrings, dark jeans, white sneakers. No weapon, no armor, no powers.
+A young man in his twenties, ordinary student: spiky messy brown hair, big bright warm brown eyes with a large white highlight, fully visible under the bangs, confident determined smirk. Dark charcoal grey hoodie with a vivid emerald green inner collar and drawstrings, dark jeans, white sneakers. No weapon, no armor, no powers.
 ```
 
 **H2 — L'ombre qui bouge**
@@ -473,7 +472,9 @@ deux à trois ans : c'est la longévité voulue.
 
 ## Reste à faire
 
-- [ ] H1 de zéro, style *Slayer Legend*, 64 × 64, de face (low top-down, 8 directions)
+- [x] H1 validé (`assets/perso/humain/h1.gif`)
+- [ ] H2 → H20, chacun en nouvel état du précédent
+- [ ] Dans l'app : raviver un peu la saturation du sprite si besoin (PixelLab rend des couleurs ternes)
 - [ ] H2 → H20, chacun en nouvel état du précédent, en vérifiant ~60 px de haut
 - [ ] C1 : nouveau personnage 120 × 120, vérifier ~60 px de haut
 - [ ] Tester H1 dans l'app (affichage agrandi, pixels nets)
