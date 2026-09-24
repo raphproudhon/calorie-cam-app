@@ -172,14 +172,14 @@ pourquoi chaque prompt redonne leur couleur.
 A young man in his twenties, ordinary student: spiky messy brown hair, big bright warm brown eyes with a large white highlight, fully visible under the bangs, confident determined smirk. Dark charcoal grey hoodie with a vivid emerald green inner collar and drawstrings, dark jeans, white sneakers. No weapon, no armor, no powers.
 ```
 
-**H2 — L'ombre qui bouge** (nouvel état de H1 ; 2ᵉ essai : couteau bien visible mais lame rouge, ombre coupée en bas → 3ᵉ essai)
+**H2 — L'ombre qui bouge** ✅ `assets/perso/humain/h2.gif` (3ᵉ essai, nouvel état de H1 : lame argent, manche vert ; l'ombre au sol n'est pas sortie, il reste une petite volute)
 ```text
 Same character, same style and same size. Same face, same spiky messy brown hair, same brown eyes, same confident smirk. Same charcoal hoodie with emerald green inner collar and dark jeans, now with black fingerless gloves. He holds a short knife in his right hand, blade pointing down, clearly visible against the dark hoodie: the blade is entirely bright shiny silver, no red anywhere, with a dark handle wrapped in a small touch of emerald green. Standing a little straighter. Under his feet, only a thin flat dark shadow, no wider than his shoulders, that does not go below his shoes and never touches the bottom edge of the canvas. A tiny black wisp of shadow rises from it beside his legs.
 ```
 
 **H3 — L'éveil**
 ```text
-Same character, same face and same messy brown hair, brown eyes with a faint green glint. Dark grey hoodie, black cargo pants, combat boots, fingerless gloves. Holds a short steel dagger. A small pool of living black shadow at his feet, one tiny green ghost-fire wisp floating near his hand.
+Same character, same face and same messy brown hair, brown eyes with a faint green glint. Dark grey hoodie, black cargo pants, combat boots, fingerless gloves. Holds a short steel dagger. Two or three small wisps of black shadow curl up beside his legs, not under his feet (no ground shadow, the feet are too close to the bottom edge), one tiny green ghost-fire wisp floating near his hand.
 ```
 
 **H4 — Le blouson**
