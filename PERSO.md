@@ -182,14 +182,16 @@ Same character, same style and same size. Same face, same spiky messy brown hair
 Same character, same face and same messy brown hair, brown eyes with a faint green glint. Dark grey hoodie, black cargo pants, combat boots, fingerless gloves. Holds a short steel dagger. Two or three small wisps of black shadow curl up beside his legs, not under his feet (no ground shadow, the feet are too close to the bottom edge), one tiny green ghost-fire wisp floating near his hand.
 ```
 
-**H4 — Le blouson** (nouvel état de H3)
+**H4 — Le blouson** ✅ `assets/perso/humain/h4.gif` (2ᵉ essai ; le 1ᵉʳ avait tourné la tête et perdu les yeux verts)
 ```text
-Same character, same style and same size, feet at the same height as before. Same face, same spiky messy brown hair, same confident smirk, same green-glinting eyes. Now a black bomber jacket worn open over the charcoal hoodie with the emerald green collar, black cargo pants, black combat boots, black fingerless gloves, same silver knife with green-wrapped handle in his right hand. Slightly broader shoulders, confident stance. The emerald green ghost-fire flame now floats above his open left palm, and two tiny green sparks float around him.
+Same character, same style and same size, feet at the same height as before. Keep the head, face and eyes exactly as before: facing forward, looking straight at the viewer, both eyes fully visible and glowing emerald green, same spiky messy brown hair, same confident smirk. Same silver knife with green-wrapped handle in his right hand, blade pointing down, sharp and clean. New: a black leather bomber jacket worn open over the charcoal hoodie, with a clearly visible emerald green lining and green cuffs so it stands out from the hoodie. Slightly broader shoulders. His left hand is raised to chest height, palm up, with the emerald green ghost-fire flame floating above it. Two tiny green sparks float around him.
 ```
 
-**H5 — Premier appel**
+Leçon : toujours écrire « keep the head, face and eyes exactly as before: facing forward… », sinon PixelLab tourne la tête.
+
+**H5 — Premier appel** (nouvel état de H4)
 ```text
-Same character, same face and same messy brown hair, brown eyes with a green glint. Black hooded jacket with torn edges, cargo pants, combat boots, a short dagger in each hand held backwards. Athletic build. A tiny floating spectral skull with green glowing eye sockets hovers beside him. Black shadow pool at his feet.
+Same character, same style and same size, feet at the same height as before. Keep the head, face and eyes exactly as before: facing forward, looking straight at the viewer, both eyes fully visible and glowing emerald green, same spiky messy brown hair, same confident smirk. Same open black bomber jacket with emerald green lining over the charcoal hoodie, same silver knife with green-wrapped handle in his right hand. New: the jacket now has a hood hanging on his back with torn, ragged edges, and a second identical silver knife in his left hand, both held in reverse grip. Athletic build. His first summon: a tiny white spectral skull with glowing emerald green eye sockets floats next to his head, with a faint green wisp trailing under it.
 ```
 
 ### Acte II — l'Adepte des ombres
@@ -475,11 +477,13 @@ deux à trois ans : c'est la longévité voulue.
 - [x] H1 validé (`assets/perso/humain/h1.gif`)
 - [x] H2
 - [x] H3
-- [ ] H4 → H20, chacun en nouvel état du précédent
+- [x] H4
+- [ ] H5 → H20, chacun en nouvel état du précédent
 - [ ] Dans l'app : raviver un peu la saturation du sprite si besoin (PixelLab rend des couleurs ternes)
 - [x] H2
 - [x] H3
-- [ ] H4 → H20, chacun en nouvel état du précédent, en vérifiant ~60 px de haut
+- [x] H4
+- [ ] H5 → H20, chacun en nouvel état du précédent, en vérifiant ~60 px de haut
 - [ ] C1 : nouveau personnage 120 × 120, vérifier ~60 px de haut
 - [ ] Tester H1 dans l'app (affichage agrandi, pixels nets)
 - [ ] Code : choix du perso à l'onboarding (persisté dans `stockage.js`, non modifiable ensuite)
