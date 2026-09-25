@@ -301,7 +301,7 @@ C2 à C9 gardent ses yeux verts ; à partir de C10 ils brillent d'ambre.
 
 **C1 — Le chaton**
 ```text
-A tiny cute kitten, brown tabby and white bicolor: brown-grey tabby with dark stripes on the top of the head, ears, back, sides and tail; a thin white stripe running up the middle of the forehead between the eyes; white muzzle with a small brown tabby patch around the pink nose; white chin, chest, belly and front legs with white paws; pink inner ears; darker tail tip. Huge sparkly green eyes, round face, small pink nose, sitting, happy expression. No accessories, no effects. Kawaii style.
+A tiny cute kitten, brown tabby and white bicolor: brown-grey tabby with dark stripes on the top of the head, ears, back, sides and tail; a thin white stripe running up the middle of the forehead between the eyes; white muzzle, but the pink nose sits inside a clearly visible brown tabby patch (the tabby color comes down around the nose, the white is only on the cheeks, mouth and chin); white chin, chest, belly and front legs with white paws; pink inner ears; darker tail tip. Huge sparkly green eyes, round face, small pink nose, sitting, happy expression. No accessories, no effects. Kawaii style.
 ```
 
 **C2 — Le grelot**
