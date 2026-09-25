@@ -189,16 +189,16 @@ Same character, same style and same size, feet at the same height as before. Kee
 
 Leçon : toujours écrire « keep the head, face and eyes exactly as before: facing forward… », sinon PixelLab tourne la tête.
 
-**H5 — Premier appel** (nouvel état de H4)
+**H5 — Premier appel** ✅ `assets/perso/humain/h5.gif` (nouvel état de H4 ; deux couteaux, crâne spectral ; le crâne et un couteau touchent les bords gauche/droit)
 ```text
 Same character, same style and same size, feet at the same height as before. Keep the head, face and eyes exactly as before: facing forward, looking straight at the viewer, both eyes fully visible and glowing emerald green, same spiky messy brown hair, same confident smirk. Same open black bomber jacket with emerald green lining over the charcoal hoodie, same silver knife with green-wrapped handle in his right hand. New: the jacket now has a hood hanging on his back with torn, ragged edges, and a second identical silver knife in his left hand, both held in reverse grip. Athletic build. His first summon: a tiny white spectral skull with glowing emerald green eye sockets floats next to his head, with a faint green wisp trailing under it.
 ```
 
 ### Acte II — l'Adepte des ombres
 
-**H6 — Le long manteau**
+**H6 — Le long manteau** (nouvel état de H5)
 ```text
-Same character, same face and same messy brown hair, hazel-green eyes with a faint glow. Knee-length black coat with bone-white buckles, black pants, boots, one curved dagger. Athletic build. Black shadow tendrils curl around his boots, one small floating spectral skull with green eyes.
+Same character, same style and same size, feet at the same height as before. Keep the head, face and eyes exactly as before: facing forward, looking straight at the viewer, both eyes fully visible and glowing emerald green, same spiky messy brown hair, same confident smirk. Same two silver knives with green-wrapped handles, one in each hand, held close to the body, blades pointing down. Same small white spectral skull with green eye sockets floating next to his head, but closer to him. New: the bomber jacket is replaced by a long black coat reaching his knees, open at the front over the charcoal hoodie, with emerald green lining and small bone-white buckles on the chest. Everything, including the skull and the knives, stays at least 3 pixels away from the edges of the canvas.
 ```
 
 **H7 — Le harnais d'os**
@@ -478,12 +478,14 @@ deux à trois ans : c'est la longévité voulue.
 - [x] H2
 - [x] H3
 - [x] H4
-- [ ] H5 → H20, chacun en nouvel état du précédent
+- [x] H5 (fin de l'acte I)
+- [ ] H6 → H20, chacun en nouvel état du précédent
 - [ ] Dans l'app : raviver un peu la saturation du sprite si besoin (PixelLab rend des couleurs ternes)
 - [x] H2
 - [x] H3
 - [x] H4
-- [ ] H5 → H20, chacun en nouvel état du précédent, en vérifiant ~60 px de haut
+- [x] H5 (fin de l'acte I)
+- [ ] H6 → H20, chacun en nouvel état du précédent, en vérifiant ~60 px de haut
 - [ ] C1 : nouveau personnage 120 × 120, vérifier ~60 px de haut
 - [ ] Tester H1 dans l'app (affichage agrandi, pixels nets)
 - [ ] Code : choix du perso à l'onboarding (persisté dans `stockage.js`, non modifiable ensuite)
