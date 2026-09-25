@@ -177,14 +177,14 @@ A young man in his twenties, ordinary student: spiky messy brown hair, big brigh
 Same character, same style and same size. Same face, same spiky messy brown hair, same brown eyes, same confident smirk. Same charcoal hoodie with emerald green inner collar and dark jeans, now with black fingerless gloves. He holds a short knife in his right hand, blade pointing down, clearly visible against the dark hoodie: the blade is entirely bright shiny silver, no red anywhere, with a dark handle wrapped in a small touch of emerald green. Standing a little straighter. Under his feet, only a thin flat dark shadow, no wider than his shoulders, that does not go below his shoes and never touches the bottom edge of the canvas. A tiny black wisp of shadow rises from it beside his legs.
 ```
 
-**H3 — L'éveil**
+**H3 — L'éveil** ✅ `assets/perso/humain/h3.gif` (yeux verts, flamme verte ; les volutes d'ombre ne sont pas sorties, bottes au ras du bas)
 ```text
 Same character, same face and same messy brown hair, brown eyes with a faint green glint. Dark grey hoodie, black cargo pants, combat boots, fingerless gloves. Holds a short steel dagger. Two or three small wisps of black shadow curl up beside his legs, not under his feet (no ground shadow, the feet are too close to the bottom edge), one tiny green ghost-fire wisp floating near his hand.
 ```
 
-**H4 — Le blouson**
+**H4 — Le blouson** (nouvel état de H3)
 ```text
-Same character, same face and same messy brown hair, brown eyes with a green glint. Black bomber jacket over the hoodie, cargo pants, combat boots, short dagger. Slightly broader shoulders, confident stance. Black shadow pool at his feet, two small green ghost-fire wisps floating around him.
+Same character, same style and same size, feet at the same height as before. Same face, same spiky messy brown hair, same confident smirk, same green-glinting eyes. Now a black bomber jacket worn open over the charcoal hoodie with the emerald green collar, black cargo pants, black combat boots, black fingerless gloves, same silver knife with green-wrapped handle in his right hand. Slightly broader shoulders, confident stance. The emerald green ghost-fire flame now floats above his open left palm, and two tiny green sparks float around him.
 ```
 
 **H5 — Premier appel**
@@ -474,10 +474,12 @@ deux à trois ans : c'est la longévité voulue.
 
 - [x] H1 validé (`assets/perso/humain/h1.gif`)
 - [x] H2
-- [ ] H3 → H20, chacun en nouvel état du précédent
+- [x] H3
+- [ ] H4 → H20, chacun en nouvel état du précédent
 - [ ] Dans l'app : raviver un peu la saturation du sprite si besoin (PixelLab rend des couleurs ternes)
 - [x] H2
-- [ ] H3 → H20, chacun en nouvel état du précédent, en vérifiant ~60 px de haut
+- [x] H3
+- [ ] H4 → H20, chacun en nouvel état du précédent, en vérifiant ~60 px de haut
 - [ ] C1 : nouveau personnage 120 × 120, vérifier ~60 px de haut
 - [ ] Tester H1 dans l'app (affichage agrandi, pixels nets)
 - [ ] Code : choix du perso à l'onboarding (persisté dans `stockage.js`, non modifiable ensuite)
