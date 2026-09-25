@@ -196,14 +196,14 @@ Same character, same style and same size, feet at the same height as before. Kee
 
 ### Acte II — l'Adepte des ombres
 
-**H6 — Le long manteau** (nouvel état de H5)
+**H6 — Le long manteau** ✅ `assets/perso/humain/h6.gif` (nouvel état de H5 ; la marge de 3 px a été ignorée, le crâne touche encore le bord droit)
 ```text
 Same character, same style and same size, feet at the same height as before. Keep the head, face and eyes exactly as before: facing forward, looking straight at the viewer, both eyes fully visible and glowing emerald green, same spiky messy brown hair, same confident smirk. Same two silver knives with green-wrapped handles, one in each hand, held close to the body, blades pointing down. Same small white spectral skull with green eye sockets floating next to his head, but closer to him. New: the bomber jacket is replaced by a long black coat reaching his knees, open at the front over the charcoal hoodie, with emerald green lining and small bone-white buckles on the chest. Everything, including the skull and the knives, stays at least 3 pixels away from the edges of the canvas.
 ```
 
-**H7 — Le harnais d'os**
+**H7 — Le harnais d'os** (nouvel état de H6)
 ```text
-Same character, same face and same messy brown hair, glowing hazel-green eyes. Long black coat open over a dark leather harness decorated with small bone ornaments, bone-white bracers, two curved daggers. Stronger, more muscular build. Shadow tendrils at his feet, green ghost-fire wisps float around the blades.
+Same character, same style and same size, feet at the same height as before. Keep the head, face and eyes exactly as before: facing forward, looking straight at the viewer, both eyes fully visible and glowing emerald green, same spiky messy brown hair, same confident smirk. Same long black coat with emerald green lining, same two silver knives with green-wrapped handles, same small white spectral skull with green eye sockets. New: under the open coat, the hoodie is replaced by a dark leather chest harness decorated with small bone ornaments, and bone-white bracers on both forearms. Slightly stronger, more muscular build. Tiny emerald green ghost-fire wisps flicker along both knife blades. The skull floats a little closer to his shoulder.
 ```
 
 **H8 — Les mains de l'ombre**
@@ -479,13 +479,15 @@ deux à trois ans : c'est la longévité voulue.
 - [x] H3
 - [x] H4
 - [x] H5 (fin de l'acte I)
-- [ ] H6 → H20, chacun en nouvel état du précédent
+- [x] H6
+- [ ] H7 → H20, chacun en nouvel état du précédent
 - [ ] Dans l'app : raviver un peu la saturation du sprite si besoin (PixelLab rend des couleurs ternes)
 - [x] H2
 - [x] H3
 - [x] H4
 - [x] H5 (fin de l'acte I)
-- [ ] H6 → H20, chacun en nouvel état du précédent, en vérifiant ~60 px de haut
+- [x] H6
+- [ ] H7 → H20, chacun en nouvel état du précédent, en vérifiant ~60 px de haut
 - [ ] C1 : nouveau personnage 120 × 120, vérifier ~60 px de haut
 - [ ] Tester H1 dans l'app (affichage agrandi, pixels nets)
 - [ ] Code : choix du perso à l'onboarding (persisté dans `stockage.js`, non modifiable ensuite)
