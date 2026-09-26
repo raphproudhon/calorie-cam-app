@@ -303,7 +303,7 @@ Same character, same style and same pixel size, feet at the same height as befor
 Same character, same style and same pixel size, feet at the same height as before, do not enlarge him to fill the canvas. IMPORTANT: his face must stay fully visible and lit inside the hood, exactly as before: same pale skin, same confident smirk, same glowing emerald green eyes, same dark brown hair with one golden blonde strand, never a dark empty hood. Same black hood with glowing green outline, same ornate engraved dark armor, same long black cape with green lining, same black clawed gauntlets, same green flames on the skull shoulder pads, same two spectral green skeletal hands, same two floating skulls, same double scythe with blades of green ghost-fire and its black shaft clearly visible, same runes. New: a thin crown of bone-white spikes sits on top of his hood, and his armor now has dark gold engravings along with the green runes. The edge of his cape burns with a thin line of green ghost-fire. Nothing touches the edges of the canvas.
 ```
 
-**H20 — Le Souverain des Tombes** (nouvel état de H19, forme finale)
+**H20 — Le Souverain des Tombes** ✅ `assets/perso/humain/h20.gif` (forme finale : ailes d'ombre et de flamme verte vers le haut ; rien ne touche les bords en 128 × 128)
 ```text
 Same character, same style and same pixel size, feet at the same height as before, do not enlarge him to fill the canvas. IMPORTANT: his face must stay fully visible and lit inside the hood, exactly as before: same pale skin, same confident smirk, same dark brown hair with one golden blonde strand, never a dark empty hood; his emerald green eyes now blaze with a white-hot core. Same crown of bone spikes on the hood, same black hood with glowing green outline, same ornate dark armor with gold engravings, same cape, same black clawed gauntlets, same green flames on the skull shoulder pads, same two floating white skulls, same double scythe with blades of green ghost-fire. New: a pair of large wings made of black shadow smoke and emerald green ghost-fire rises from his back, pointing UPWARD above his shoulders (not spread sideways), staying inside the canvas. Regal, overwhelming presence. Nothing touches the edges of the canvas.
 ```
@@ -528,7 +528,8 @@ deux à trois ans : c'est la longévité voulue.
 - [x] H17
 - [x] H18
 - [x] H19
-- [ ] H20
+- [x] H20 — **les 20 étapes de l'humain sont faites** (rotations 8 directions)
+- [ ] Humain : animations (idle + réactions)
 - [ ] Dans l'app : entourer H1-H7 de 16 px transparents (64 → 96), chacun en nouvel état du précédent
 - [ ] Dans l'app : raviver un peu la saturation du sprite si besoin (PixelLab rend des couleurs ternes)
 - [x] H2
@@ -549,7 +550,8 @@ deux à trois ans : c'est la longévité voulue.
 - [x] H17
 - [x] H18
 - [x] H19
-- [ ] H20
+- [x] H20 — **les 20 étapes de l'humain sont faites** (rotations 8 directions)
+- [ ] Humain : animations (idle + réactions)
 - [ ] Dans l'app : entourer H1-H7 de 16 px transparents (64 → 96), chacun en nouvel état du précédent, en vérifiant ~60 px de haut
 - [ ] C1 : nouveau personnage 120 × 120, vérifier ~60 px de haut
 - [ ] Tester H1 dans l'app (affichage agrandi, pixels nets)
