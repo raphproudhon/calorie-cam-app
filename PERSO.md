@@ -251,14 +251,14 @@ Same character, same style and same pixel size, feet at the same height as befor
 Same character, same style and same pixel size, feet at the same height as before, do not enlarge him to fill the canvas. Same face under the raised black hood, same confident smirk, both eyes glowing emerald green. Same long black coat with emerald green lining and glowing green seams, same two bone-white skull shoulder pads, same bone-decorated harness, same two spectral green skeletal hands, same floating spectral skulls, same black scythe held diagonally across his body with both hands, with its large bright glowing emerald green blade on the right side, same two floating skulls above his shoulders. New: a tattered black cape hangs from his shoulders behind him, its ragged bottom edge dissolving into wisps of black smoke with a few green embers. Thin glowing emerald green veins now run along his forearms and hands. The cape stays close behind him and inside the canvas. Nothing touches the edges of the canvas.
 ```
 
-**H13 — Les gantelets** (nouvel état de H12)
+**H13 — Les gantelets** ✅ `assets/perso/humain/h13.gif` (gantelets noirs, manche en flamme verte, éclairs ; la peau est devenue plus pâle/grisâtre)
 ```text
 Same character, same style and same pixel size, feet at the same height as before, do not enlarge him to fill the canvas. Same face under the raised black hood, same confident smirk, both eyes glowing emerald green. Same long black coat with emerald green lining and glowing green seams, same two bone-white skull shoulder pads, same tattered black cape with green embers, same two spectral green skeletal hands, same two floating skulls above his shoulders, same black scythe held diagonally with both hands with its large bright green blade on the right. New: his hands now wear black clawed armored gauntlets with glowing emerald green knuckles and sharp claw tips. Emerald green ghost-fire now also runs along the whole scythe shaft, and small crackling green lightning sparks jump off the blade. Nothing touches the edges of the canvas.
 ```
 
-**H14 — Les flammes spectrales**
+**H14 — Les flammes spectrales** (nouvel état de H13)
 ```text
-Same character, same face and same messy brown hair, blazing emerald eyes with thin green wisps at the corners, small scar. Heavier dark armor with bone details, clawed gauntlets, shadow cape. Green ghost-fire burns on both shoulder pads. Black scythe with ghost-fire blade. Spectral skulls orbit around him.
+Same character, same style and same pixel size, feet at the same height as before, do not enlarge him to fill the canvas. Same face under the raised black hood, same pale skin, same confident smirk. His emerald green eyes now blaze brighter, with thin green wisps of light trailing from the corners of his eyes. Same long black coat with glowing green seams, same tattered black cape, same black clawed gauntlets, same two spectral green skeletal hands, same two floating skulls above his shoulders, same black scythe held diagonally with green ghost-fire along the shaft and its large bright green blade on the right. New: emerald green ghost-fire now burns on top of both bone-white skull shoulder pads, like two small green flames rising from the skulls. Nothing touches the edges of the canvas.
 ```
 
 > **Idée validée : la double faux à H15.** À la fin de l'acte III, la faux
@@ -510,7 +510,8 @@ deux à trois ans : c'est la longévité voulue.
 - [x] H10 (fin de l'acte II)
 - [x] H11
 - [x] H12
-- [ ] H13 → H20
+- [x] H13
+- [ ] H14 → H20
 - [ ] Dans l'app : entourer H1-H7 de 16 px transparents (64 → 96), chacun en nouvel état du précédent
 - [ ] Dans l'app : raviver un peu la saturation du sprite si besoin (PixelLab rend des couleurs ternes)
 - [x] H2
@@ -524,7 +525,8 @@ deux à trois ans : c'est la longévité voulue.
 - [x] H10 (fin de l'acte II)
 - [x] H11
 - [x] H12
-- [ ] H13 → H20
+- [x] H13
+- [ ] H14 → H20
 - [ ] Dans l'app : entourer H1-H7 de 16 px transparents (64 → 96), chacun en nouvel état du précédent, en vérifiant ~60 px de haut
 - [ ] C1 : nouveau personnage 120 × 120, vérifier ~60 px de haut
 - [ ] Tester H1 dans l'app (affichage agrandi, pixels nets)
