@@ -88,16 +88,16 @@ coupées aux bords), et il reste la faux, la cape, les ailes. Choix retenu :
 **agrandir le canevas** à partir de H8, par exemple **96 × 96**, plutôt que de
 tout rendre compact.
 
-- **Idéal** : agrandir le canevas du personnage existant *sans redessiner*
-  (mêmes pixels, juste plus de place autour). Si PixelLab le permet, c'est la
-  méthode à utiliser.
-- **Sinon** : créer un nouveau personnage 96 × 96 avec la description
-  complète (et H7 en image de référence si PixelLab l'accepte). Risque connu :
-  PixelLab remplit le canevas, donc le perso sera dessiné plus grand, avec des
-  pixels plus fins.
-- **Dans l'app** : chaque étape sera affichée pour que le **corps garde la
-  même taille à l'écran** d'une étape à l'autre (facteur d'échelle noté par
-  étape) ; seuls les effets prennent plus de place.
+**Méthode A validée** : H7 agrandi à 96 × 96 dans PixelLab *sans être
+redessiné*, puis H8 créé comme état de ce H7 agrandi. Résultat : perso de
+**60 px de haut, mêmes pixels que H1-H7**, centré (boîte 16,19 → 81,79), les
+mains spectrales à ~15 px des bords.
+
+- **Dans l'app** : H1 à H7 (64 × 64) seront entourés de **16 px transparents
+  de chaque côté** pour devenir 96 × 96. Les pieds tombent alors exactement au
+  même endroit que sur H8 (ligne 79) : aucun saut entre les étapes.
+- À refaire de la même façon si la place manque encore plus tard (ex. 128 × 128
+  pour les ailes de H20) : agrandir le canevas, jamais redessiner.
 
 ### Règle de cadrage (la leçon de l'ancien système)
 
@@ -224,14 +224,14 @@ Same character, same style and same size, feet at the same height as before. Kee
 Same character, same style and same size, feet at the same height as before. Keep the head, face and eyes exactly as before: facing forward, looking straight at the viewer, both eyes fully visible and glowing emerald green, same spiky messy brown hair, same confident smirk. Same long black coat with emerald green lining, same two silver knives with green-wrapped handles, same small white spectral skull with green eye sockets. New: under the open coat, the hoodie is replaced by a dark leather chest harness decorated with small bone ornaments, and bone-white bracers on both forearms. Slightly stronger, more muscular build. Tiny emerald green ghost-fire wisps flicker along both knife blades. Exactly ONE spectral skull in total, floating just above his left shoulder, the same single skull seen from every direction: never two skulls, including from the back.
 ```
 
-**H8 — Les mains de l'ombre** (nouvel état de H7)
+**H8 — Les mains de l'ombre** ✅ `assets/perso/humain/h8.gif` (**96 × 96**, état de H7 agrandi sans redessin)
 ```text
 Same character, same style and same size, feet at the same height as before. Keep the head, face and eyes exactly as before: facing forward, looking straight at the viewer, both eyes fully visible and glowing emerald green, same spiky messy brown hair, same confident smirk. Same long black coat with sleeves and emerald green lining, same bone-decorated leather harness, same bone-white bracers, same two silver knives with green ghost-fire at the tips, exactly one small white spectral skull above his left shoulder (never two, from any direction). New: the coat now has a tall high collar framing his jaw, and thin glowing emerald green seams running down the coat. Two small spectral skeletal hands made of translucent green light float on either side of his waist, fingers curled as if ready to grab.
 ```
 
-**H9 — L'épaulière crâne**
+**H9 — L'épaulière crâne** (nouvel état de H8, 96 × 96)
 ```text
-Same character, same face and same messy brown hair, glowing emerald green eyes. Long black coat with high collar, one dark armored shoulder pad shaped like a skull, bone-white bracers, two daggers with blades dripping green ghost-fire. Spectral skeletal hands rise from the shadow pool at his feet.
+Same character, same style and same pixel size, feet at the same height as before, do not enlarge him to fill the canvas. Keep the head, face and eyes exactly as before: facing forward, looking straight at the viewer, both eyes fully visible and glowing emerald green, same spiky messy brown hair, same confident smirk. Same long black coat with high collar, emerald green lining and glowing green seams, same bone-decorated harness, same bone-white bracers, same two spectral green skeletal hands at his waist, exactly one small white spectral skull above his left shoulder (never two, from any direction). New: a dark armored shoulder pad shaped like a skull on his right shoulder, with small glowing green eye sockets. Both silver knives now drip with emerald green ghost-fire along the whole blade. Nothing touches the edges of the canvas.
 ```
 
 **H10 — Le capuchon**
@@ -499,7 +499,9 @@ deux à trois ans : c'est la longévité voulue.
 - [x] H5 (fin de l'acte I)
 - [x] H6
 - [x] H7
-- [ ] H8 → H20, chacun en nouvel état du précédent
+- [x] H8 (canevas 96 × 96 à partir d'ici)
+- [ ] H9 → H20
+- [ ] Dans l'app : entourer H1-H7 de 16 px transparents (64 → 96), chacun en nouvel état du précédent
 - [ ] Dans l'app : raviver un peu la saturation du sprite si besoin (PixelLab rend des couleurs ternes)
 - [x] H2
 - [x] H3
@@ -507,7 +509,9 @@ deux à trois ans : c'est la longévité voulue.
 - [x] H5 (fin de l'acte I)
 - [x] H6
 - [x] H7
-- [ ] H8 → H20, chacun en nouvel état du précédent, en vérifiant ~60 px de haut
+- [x] H8 (canevas 96 × 96 à partir d'ici)
+- [ ] H9 → H20
+- [ ] Dans l'app : entourer H1-H7 de 16 px transparents (64 → 96), chacun en nouvel état du précédent, en vérifiant ~60 px de haut
 - [ ] C1 : nouveau personnage 120 × 120, vérifier ~60 px de haut
 - [ ] Tester H1 dans l'app (affichage agrandi, pixels nets)
 - [ ] Code : choix du perso à l'onboarding (persisté dans `stockage.js`, non modifiable ensuite)
