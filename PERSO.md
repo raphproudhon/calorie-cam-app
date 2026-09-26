@@ -275,14 +275,14 @@ Same character, same style and same pixel size, feet at the same height as befor
 
 ### Acte IV — le Souverain des Tombes
 
-**H16 — L'armure gravée** (nouvel état de H15, 128 × 128, début de l'acte IV)
+**H16 — L'armure gravée** ✅ `assets/perso/humain/h16.gif` (armure gravée blanc os et runes vertes, cape à doublure verte)
 ```text
 Same character, same style and same pixel size, feet at the same height as before, do not enlarge him to fill the canvas. IMPORTANT: his face must stay fully visible and lit inside the hood, exactly as before: same pale skin, same confident smirk, both blazing emerald green eyes with long green wisps at the corners, never a dark empty hood. Same raised black hood, same black clawed gauntlets, same green flames on the skull shoulder pads, same two spectral green skeletal hands, same two floating skulls, same double scythe held diagonally with its two large bright green blades. New: his coat becomes ornate dark armor engraved with bone-white patterns and glowing green runes, and the tattered cape becomes a long black cape with an emerald green inner lining, flowing behind him. Nothing touches the edges of the canvas.
 ```
 
-**H17 — La mèche blanche**
+**H17 — La mèche blanche** (nouvel état de H16)
 ```text
-Same character, same face, messy brown hair now with a bone-white streak, blazing emerald eyes with green wisps, small scar. Ornate engraved dark armor, long shadow cape, ghost-fire on the shoulders, large black scythe. Shadow smoke rises around him, a ring of spectral skulls floats behind him.
+Same character, same style and same pixel size, feet at the same height as before, do not enlarge him to fill the canvas. IMPORTANT: his face must stay fully visible and lit inside the hood, exactly as before: same pale skin, same confident smirk, both blazing emerald green eyes with long green wisps at the corners, never a dark empty hood. Same raised black hood, same ornate engraved dark armor with green runes, same long black cape with green lining, same black clawed gauntlets, same green flames on the skull shoulder pads, same two spectral green skeletal hands, same two floating skulls, same double scythe with its two large bright green blades. New: a clearly visible bone-white streak of hair falls from under the hood across his forehead, contrasting with his brown hair. Tiny emerald green particles slowly rise around his whole body like embers. Nothing touches the edges of the canvas.
 ```
 
 **H18 — La faux des âmes**
@@ -514,7 +514,8 @@ deux à trois ans : c'est la longévité voulue.
 - [x] H13
 - [x] H14
 - [x] H15 (canevas 128 × 128 à partir d'ici)
-- [ ] H16 → H20
+- [x] H16
+- [ ] H17 → H20
 - [ ] Dans l'app : entourer H1-H7 de 16 px transparents (64 → 96), chacun en nouvel état du précédent
 - [ ] Dans l'app : raviver un peu la saturation du sprite si besoin (PixelLab rend des couleurs ternes)
 - [x] H2
@@ -531,7 +532,8 @@ deux à trois ans : c'est la longévité voulue.
 - [x] H13
 - [x] H14
 - [x] H15 (canevas 128 × 128 à partir d'ici)
-- [ ] H16 → H20
+- [x] H16
+- [ ] H17 → H20
 - [ ] Dans l'app : entourer H1-H7 de 16 px transparents (64 → 96), chacun en nouvel état du précédent, en vérifiant ~60 px de haut
 - [ ] C1 : nouveau personnage 120 × 120, vérifier ~60 px de haut
 - [ ] Tester H1 dans l'app (affichage agrandi, pixels nets)
