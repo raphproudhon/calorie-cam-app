@@ -96,6 +96,7 @@ mains spectrales à ~15 px des bords.
 - **Dans l'app** : H1 à H7 (64 × 64) seront entourés de **16 px transparents
   de chaque côté** pour devenir 96 × 96. Les pieds tombent alors exactement au
   même endroit que sur H8 (ligne 79) : aucun saut entre les étapes.
+- **Deuxième agrandissement fait à H15** : H14 agrandi à **128 × 128** (centré, +16 px de chaque côté), H15 créé dessus. Dans l'app : H1-H7 +32 px de chaque côté, H8-H14 +16 px, H15+ tels quels → tous en 128 × 128, pieds alignés.
 - À refaire de la même façon si la place manque encore plus tard (ex. 128 × 128
   pour les ailes de H20) : agrandir le canevas, jamais redessiner.
 
@@ -267,16 +268,16 @@ Same character, same style and same pixel size, feet at the same height as befor
 > deviennent de la flamme verte pure. Prompts de H15 et H18 à adapter le
 > moment venu.
 
-**H15 — Le seigneur des tombes : la double faux** (nouvel état de H14, fin de l'acte III)
+**H15 — Le seigneur des tombes : la double faux** ✅ `assets/perso/humain/h15.gif` (**128 × 128** : H14 agrandi sans redessin, puis H15 ; rien ne touche les bords)
 ```text
 Same character, same style and same pixel size, feet at the same height as before, do not enlarge him to fill the canvas. IMPORTANT: his face must stay fully visible and lit inside the hood, exactly as before: same pale skin, same confident smirk, both blazing emerald green eyes with green wisps at the corners, never a dark empty hood. Same raised black hood, same tattered black cape, same black clawed gauntlets, same green flames on the skull shoulder pads, same two spectral green skeletal hands, same two floating skulls above his shoulders. New: his scythe becomes a DOUBLE scythe, still held diagonally with both hands: the same large bright green blade at the top right end of the shaft, plus a second identical bright green curved blade at the bottom left end of the shaft. His coat is now reinforced with dark armor plates on the chest, engraved with small glowing green runes. Nothing touches the edges of the canvas.
 ```
 
 ### Acte IV — le Souverain des Tombes
 
-**H16 — L'armure gravée**
+**H16 — L'armure gravée** (nouvel état de H15, 128 × 128, début de l'acte IV)
 ```text
-Same character, same face and same messy brown hair, blazing emerald eyes with green wisps, small scar. Ornate dark armor engraved with bone-white patterns and glowing green runes, long shadow cape, ghost-fire on the shoulders, large black scythe. A ring of spectral skulls floats behind him.
+Same character, same style and same pixel size, feet at the same height as before, do not enlarge him to fill the canvas. IMPORTANT: his face must stay fully visible and lit inside the hood, exactly as before: same pale skin, same confident smirk, both blazing emerald green eyes with long green wisps at the corners, never a dark empty hood. Same raised black hood, same black clawed gauntlets, same green flames on the skull shoulder pads, same two spectral green skeletal hands, same two floating skulls, same double scythe held diagonally with its two large bright green blades. New: his coat becomes ornate dark armor engraved with bone-white patterns and glowing green runes, and the tattered cape becomes a long black cape with an emerald green inner lining, flowing behind him. Nothing touches the edges of the canvas.
 ```
 
 **H17 — La mèche blanche**
@@ -512,7 +513,8 @@ deux à trois ans : c'est la longévité voulue.
 - [x] H12
 - [x] H13
 - [x] H14
-- [ ] H15 → H20
+- [x] H15 (canevas 128 × 128 à partir d'ici)
+- [ ] H16 → H20
 - [ ] Dans l'app : entourer H1-H7 de 16 px transparents (64 → 96), chacun en nouvel état du précédent
 - [ ] Dans l'app : raviver un peu la saturation du sprite si besoin (PixelLab rend des couleurs ternes)
 - [x] H2
@@ -528,7 +530,8 @@ deux à trois ans : c'est la longévité voulue.
 - [x] H12
 - [x] H13
 - [x] H14
-- [ ] H15 → H20
+- [x] H15 (canevas 128 × 128 à partir d'ici)
+- [ ] H16 → H20
 - [ ] Dans l'app : entourer H1-H7 de 16 px transparents (64 → 96), chacun en nouvel état du précédent, en vérifiant ~60 px de haut
 - [ ] C1 : nouveau personnage 120 × 120, vérifier ~60 px de haut
 - [ ] Tester H1 dans l'app (affichage agrandi, pixels nets)
