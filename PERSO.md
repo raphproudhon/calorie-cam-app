@@ -81,6 +81,24 @@ la taille des pixels**. D'où le **64 × 64** : le perso fait ~55-60 px, et à
 l'écran chaque pixel est gros, comme dans *Slayer Legend*. Les effets
 flottants ont peu de place dans le canevas : l'app ajoutera la marge autour.
 
+### Décision : canevas plus grand pour les étapes avancées (option 2)
+
+À H8, le perso remplit toute la largeur du 64 × 64 (les mains spectrales sont
+coupées aux bords), et il reste la faux, la cape, les ailes. Choix retenu :
+**agrandir le canevas** à partir de H8, par exemple **96 × 96**, plutôt que de
+tout rendre compact.
+
+- **Idéal** : agrandir le canevas du personnage existant *sans redessiner*
+  (mêmes pixels, juste plus de place autour). Si PixelLab le permet, c'est la
+  méthode à utiliser.
+- **Sinon** : créer un nouveau personnage 96 × 96 avec la description
+  complète (et H7 en image de référence si PixelLab l'accepte). Risque connu :
+  PixelLab remplit le canevas, donc le perso sera dessiné plus grand, avec des
+  pixels plus fins.
+- **Dans l'app** : chaque étape sera affichée pour que le **corps garde la
+  même taille à l'écran** d'une étape à l'autre (facteur d'échelle noté par
+  étape) ; seuls les effets prennent plus de place.
+
 ### Règle de cadrage (la leçon de l'ancien système)
 
 Avec l'ancien système, le perso rapetissait à chaque étape. La cause n'était pas
