@@ -234,16 +234,16 @@ Same character, same style and same size, feet at the same height as before. Kee
 Same character, same style and same pixel size, feet at the same height as before, do not enlarge him to fill the canvas. Keep the head, face and eyes exactly as before: facing forward, looking straight at the viewer, both eyes fully visible and glowing emerald green, same spiky messy brown hair, same confident smirk. Same long black coat with high collar, emerald green lining and glowing green seams, same bone-decorated harness, same bone-white bracers, same two spectral green skeletal hands at his waist, exactly one small white spectral skull above his left shoulder (never two, from any direction). New: a dark armored shoulder pad shaped like a skull on his right shoulder, with small glowing green eye sockets. Both silver knives now drip with emerald green ghost-fire along the whole blade. Nothing touches the edges of the canvas.
 ```
 
-**H10 — Le capuchon** (nouvel état de H9, fin de l'acte II)
+**H10 — Le capuchon** ✅ `assets/perso/humain/h10.gif` (capuche relevée, yeux verts dans l'ombre ; 2 crânes visibles de face au lieu de 3)
 ```text
 Same character, same style and same pixel size, feet at the same height as before, do not enlarge him to fill the canvas. Same face, same confident smirk, both eyes fully visible and glowing brighter emerald green. Same long black coat with emerald green lining and glowing green seams, same two bone-white skull shoulder pads with green eye sockets, same bone-decorated harness, same bone-white bracers, same two silver knives, same two spectral green skeletal hands at his waist. New: he now wears the coat's black hood raised over his head, a few spiky brown hair strands sticking out, his face still fully visible and lit by his glowing green eyes. Instead of one floating skull, exactly three small white spectral skulls with green eye sockets now float in a loose circle around his upper body, all inside the canvas. Nothing touches the edges of the canvas.
 ```
 
 ### Acte III — le Nécromancien
 
-**H11 — La faux**
+**H11 — La faux** (nouvel état de H10, début de l'acte III ; on garde la capuche)
 ```text
-Same character, same face and same messy brown hair, hood down, glowing emerald eyes, a small scar on the cheek. Dark metal and bone light armor, both shoulders armored, heavy boots. He now wields a black scythe with a curved blade glowing with green ghost-fire. Powerful build. Spectral skulls orbit around him.
+Same character, same style and same pixel size, feet at the same height as before, do not enlarge him to fill the canvas. Same face under the raised black hood, same confident smirk, both eyes glowing emerald green, plus a small scar on his cheek. Same long black coat with emerald green lining and glowing green seams, same two bone-white skull shoulder pads, same bone-decorated harness, same bone-white bracers, same two spectral green skeletal hands, same floating spectral skulls. New: the two knives are gone; instead he holds a black scythe upright in his right hand, the shaft standing vertically beside him, and the curved blade above his head glowing with emerald green ghost-fire. The whole scythe, blade included, stays inside the canvas. Nothing touches the edges of the canvas.
 ```
 
 **H12 — La cape déchirée**
@@ -501,7 +501,8 @@ deux à trois ans : c'est la longévité voulue.
 - [x] H7
 - [x] H8 (canevas 96 × 96 à partir d'ici)
 - [x] H9
-- [ ] H10 → H20
+- [x] H10 (fin de l'acte II)
+- [ ] H11 → H20
 - [ ] Dans l'app : entourer H1-H7 de 16 px transparents (64 → 96), chacun en nouvel état du précédent
 - [ ] Dans l'app : raviver un peu la saturation du sprite si besoin (PixelLab rend des couleurs ternes)
 - [x] H2
@@ -512,7 +513,8 @@ deux à trois ans : c'est la longévité voulue.
 - [x] H7
 - [x] H8 (canevas 96 × 96 à partir d'ici)
 - [x] H9
-- [ ] H10 → H20
+- [x] H10 (fin de l'acte II)
+- [ ] H11 → H20
 - [ ] Dans l'app : entourer H1-H7 de 16 px transparents (64 → 96), chacun en nouvel état du précédent, en vérifiant ~60 px de haut
 - [ ] C1 : nouveau personnage 120 × 120, vérifier ~60 px de haut
 - [ ] Tester H1 dans l'app (affichage agrandi, pixels nets)
