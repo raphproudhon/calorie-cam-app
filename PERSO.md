@@ -346,14 +346,14 @@ A tiny cute kitten, brown tabby and white bicolor: brown-grey tabby with dark st
 Same character, same style and same size. Same kitten, same pose, same fur pattern: same thin white stripe on the forehead, same brown tabby patch around the pink nose, same white chest and white paws, same huge sparkly green eyes, same happy expression. New: a small red collar around his neck with a shiny round golden bell hanging in front, clearly visible on the white chest. Nothing touches the edges of the canvas.
 ```
 
-**C3 — L'écharpe** (nouvel état de C2)
+**C3 — L'écharpe** ✅ `assets/perso/chat/c3.gif` (écharpe crème + grelot, étincelle ambrée ; l'étincelle frôle les bords sur 4 vues : 1 px touché)
 ```text
 Same character, same style and same size. Same kitten, same pose, same fur pattern: same thin white stripe on the forehead, same brown tabby patch around the pink nose, same white chest and white paws, same huge sparkly green eyes, same happy expression. New: the red collar is replaced by a small soft cream-colored scarf knotted around his neck, with the same shiny golden bell hanging from the knot. One tiny amber sparkle floats next to his head. Nothing touches the edges of the canvas.
 ```
 
-**C4 — Première étincelle**
+**C4 — Première étincelle** (nouvel état de C3 **agrandi à 96 × 96 sans redessin**, comme pour l'humain)
 ```text
-Same cat, same fur pattern and same face, big green eyes. Cute young kitten with a cream scarf and golden bell collar. The tip of its tail glows with a tiny amber light. Two small amber sparkles float around it. Kawaii style.
+Same character, same style and same pixel size, same position, do not enlarge him to fill the canvas. Same kitten, same pose, same fur pattern: same thin white stripe on the forehead, same brown tabby patch around the pink nose, same white chest and white paws, same huge sparkly green eyes, same happy expression, same cream scarf with golden bell. New: the tip of his tail now glows with a small warm amber light, and two tiny amber sparkles float around him, close to his body. Nothing touches the edges of the canvas.
 ```
 
 **C5 — La petite cape**
@@ -555,7 +555,8 @@ deux à trois ans : c'est la longévité voulue.
 - [ ] Dans l'app : entourer H1-H7 de 16 px transparents (64 → 96), chacun en nouvel état du précédent, en vérifiant ~60 px de haut
 - [x] C1 (`assets/perso/chat/c1.gif`)
 - [x] C2
-- [ ] C3 → C20
+- [x] C3 (64 × 64)
+- [ ] C4 → C20 (canevas 96 × 96 à partir de C4)
 - [ ] Tester H1 dans l'app (affichage agrandi, pixels nets)
 - [ ] Code : choix du perso à l'onboarding (persisté dans `stockage.js`, non modifiable ensuite)
 - [ ] Code : `PALIERS_PERSO` (20 étapes) dans `jeu.js`, composant d'affichage
