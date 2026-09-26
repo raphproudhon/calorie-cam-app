@@ -351,14 +351,14 @@ Same character, same style and same size. Same kitten, same pose, same fur patte
 Same character, same style and same size. Same kitten, same pose, same fur pattern: same thin white stripe on the forehead, same brown tabby patch around the pink nose, same white chest and white paws, same huge sparkly green eyes, same happy expression. New: the red collar is replaced by a small soft cream-colored scarf knotted around his neck, with the same shiny golden bell hanging from the knot. One tiny amber sparkle floats next to his head. Nothing touches the edges of the canvas.
 ```
 
-**C4 — Première étincelle** (nouvel état de C3 **agrandi à 96 × 96 sans redessin**, comme pour l'humain)
+**C4 — Première étincelle** ✅ `assets/perso/chat/c4.gif` (**96 × 96** : C3 agrandi sans redessin ; bout de queue lumineux, étincelles ambrées)
 ```text
 Same character, same style and same pixel size, same position, do not enlarge him to fill the canvas. Same kitten, same pose, same fur pattern: same thin white stripe on the forehead, same brown tabby patch around the pink nose, same white chest and white paws, same huge sparkly green eyes, same happy expression, same cream scarf with golden bell. New: the tip of his tail now glows with a small warm amber light, and two tiny amber sparkles float around him, close to his body. Nothing touches the edges of the canvas.
 ```
 
-**C5 — La petite cape**
+**C5 — La petite cape** (nouvel état de C4, fin de l'acte I)
 ```text
-Same cat, same fur pattern and same face, big green eyes. Cute young cat wearing a tiny adventurer cape in cream and amber, golden bell collar that now glows softly. Tail tip glowing amber. A few amber sparkles float around it. Proud, adorable expression. Kawaii style.
+Same character, same style and same pixel size, same position, do not enlarge him to fill the canvas. Same kitten, same pose, same fur pattern: same thin white stripe on the forehead, same brown tabby patch around the pink nose, same white chest and white paws, same huge sparkly green eyes, same cream scarf, same glowing amber tail tip, same amber sparkles. New: a tiny adventurer cape in cream and amber hangs from his shoulders, and the golden bell now glows softly with a warm amber light. Proud, adorable expression. Nothing touches the edges of the canvas.
 ```
 
 ### Acte II — l'Apprenti
@@ -556,7 +556,8 @@ deux à trois ans : c'est la longévité voulue.
 - [x] C1 (`assets/perso/chat/c1.gif`)
 - [x] C2
 - [x] C3 (64 × 64)
-- [ ] C4 → C20 (canevas 96 × 96 à partir de C4)
+- [x] C4 (canevas 96 × 96 à partir d'ici)
+- [ ] C5 → C20
 - [ ] Tester H1 dans l'app (affichage agrandi, pixels nets)
 - [ ] Code : choix du perso à l'onboarding (persisté dans `stockage.js`, non modifiable ensuite)
 - [ ] Code : `PALIERS_PERSO` (20 étapes) dans `jeu.js`, composant d'affichage
