@@ -241,14 +241,14 @@ Same character, same style and same pixel size, feet at the same height as befor
 
 ### Acte III — le Nécromancien
 
-**H11 — La faux** (nouvel état de H10, début de l'acte III ; on garde la capuche)
+**H11 — La faux** ✅ `assets/perso/humain/h11.gif` (faux verticale, lame verte au-dessus de la tête ; rien ne touche les bords, marge du haut 11 px)
 ```text
 Same character, same style and same pixel size, feet at the same height as before, do not enlarge him to fill the canvas. Same face under the raised black hood, same confident smirk, both eyes glowing emerald green, plus a small scar on his cheek. Same long black coat with emerald green lining and glowing green seams, same two bone-white skull shoulder pads, same bone-decorated harness, same bone-white bracers, same two spectral green skeletal hands, same floating spectral skulls. New: the two knives are gone; instead he holds a black scythe upright in his right hand, the shaft standing vertically beside him, and the curved blade above his head glowing with emerald green ghost-fire. The whole scythe, blade included, stays inside the canvas. Nothing touches the edges of the canvas.
 ```
 
-**H12 — La cape déchirée**
+**H12 — La cape déchirée** (nouvel état de H11)
 ```text
-Same character, same face and same messy brown hair, glowing emerald eyes, small scar. Dark metal and bone armor, a tattered black cape whose bottom dissolves into shadow smoke, glowing green veins along his forearms, black scythe with ghost-fire blade. Spectral skulls orbit around him.
+Same character, same style and same pixel size, feet at the same height as before, do not enlarge him to fill the canvas. Same face under the raised black hood, same confident smirk, both eyes glowing emerald green. Same long black coat with emerald green lining and glowing green seams, same two bone-white skull shoulder pads, same bone-decorated harness, same two spectral green skeletal hands, same floating spectral skulls, same black scythe held upright in his right hand with the green ghost-fire blade above his head. New: a tattered black cape hangs from his shoulders behind him, its ragged bottom edge dissolving into wisps of black smoke with a few green embers. Thin glowing emerald green veins now run along his forearms and hands. The cape stays close behind him and inside the canvas. Nothing touches the edges of the canvas.
 ```
 
 **H13 — Les gantelets**
@@ -502,7 +502,8 @@ deux à trois ans : c'est la longévité voulue.
 - [x] H8 (canevas 96 × 96 à partir d'ici)
 - [x] H9
 - [x] H10 (fin de l'acte II)
-- [ ] H11 → H20
+- [x] H11
+- [ ] H12 → H20
 - [ ] Dans l'app : entourer H1-H7 de 16 px transparents (64 → 96), chacun en nouvel état du précédent
 - [ ] Dans l'app : raviver un peu la saturation du sprite si besoin (PixelLab rend des couleurs ternes)
 - [x] H2
@@ -514,7 +515,8 @@ deux à trois ans : c'est la longévité voulue.
 - [x] H8 (canevas 96 × 96 à partir d'ici)
 - [x] H9
 - [x] H10 (fin de l'acte II)
-- [ ] H11 → H20
+- [x] H11
+- [ ] H12 → H20
 - [ ] Dans l'app : entourer H1-H7 de 16 px transparents (64 → 96), chacun en nouvel état du précédent, en vérifiant ~60 px de haut
 - [ ] C1 : nouveau personnage 120 × 120, vérifier ~60 px de haut
 - [ ] Tester H1 dans l'app (affichage agrandi, pixels nets)
