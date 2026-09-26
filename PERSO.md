@@ -378,14 +378,14 @@ Same character, same style and same pixel size, same position, do not enlarge hi
 Same character, same style and same pixel size, same position, do not enlarge him to fill the canvas. Same kitten, same pose, same fur pattern: same thin white stripe on the forehead, same brown tabby patch around the pink nose, same white paws, same huge sparkly green eyes, same cream scarf with glowing golden bell, same cream and amber cape, same brown leather harness, same amber spirit flame on the tail tip, same amber sparkles. New: a tiny shiny golden chest plate over his white chest, rounded and cute, fixed to the harness. Brave, adorable expression. Nothing touches the edges of the canvas.
 ```
 
-**C9 — Les runes-pattes** (nouvel état de C8)
+**C9 — Les runes-pattes** ✅ `assets/perso/chat/c9.gif` (3 empreintes de pattes ambrées ; la plus haute à 6 px du bord)
 ```text
 Same character, same style and same pixel size, same position, do not enlarge him to fill the canvas. Same kitten, same pose, same fur pattern: same thin white stripe on the forehead, same brown tabby patch around the pink nose, same white paws, same huge sparkly green eyes, same thin cream band around the neck with the small golden bell, same golden shield-shaped breastplate with the paw-print emblem, same cream and amber cape, same brown leather harness, same amber spirit flame on the tail tip. New: the small sparkles are replaced by three small glowing amber paw-print runes floating in the air around him, clearly visible from every direction. Nothing touches the edges of the canvas.
 ```
 
-**C10 — Les yeux ambre**
+**C10 — Les yeux ambre** (nouvel état de C9 **agrandi à 128 × 128 sans redessin**, fin de l'acte II)
 ```text
-Same cat, same fur pattern and same face, its big eyes now glowing warm amber. Tiny golden chest plate, small cape, glowing bell, amber spirit flame on the tail. Little amber flame wisps and paw-print runes float around it. Kawaii style.
+Same character, same style and same pixel size, same position, do not enlarge him to fill the canvas. Same kitten, same pose, same fur pattern: same thin white stripe on the forehead, same brown tabby patch around the pink nose, same white paws, same thin cream band with the small golden bell, same golden shield-shaped breastplate with the paw-print emblem, same cream and amber cape, same brown leather harness, same amber spirit flame on the tail tip, same three amber paw-print runes. New: his big eyes now glow a warm bright amber instead of green, with a white highlight, and a few small amber flame wisps float close around his body. Nothing touches the edges of the canvas.
 ```
 
 ### Acte III — l'Esprit
