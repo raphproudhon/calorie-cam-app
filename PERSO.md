@@ -261,6 +261,12 @@ Same character, same face and same messy brown hair, glowing emerald eyes, small
 Same character, same face and same messy brown hair, blazing emerald eyes with thin green wisps at the corners, small scar. Heavier dark armor with bone details, clawed gauntlets, shadow cape. Green ghost-fire burns on both shoulder pads. Black scythe with ghost-fire blade. Spectral skulls orbit around him.
 ```
 
+> **Idée validée : la double faux à H15.** À la fin de l'acte III, la faux
+> devient une **double faux** : une lame à chaque bout du manche, tenue en
+> diagonale (lame en haut à droite ET en bas à gauche). À H18, les deux lames
+> deviennent de la flamme verte pure. Prompts de H15 et H18 à adapter le
+> moment venu.
+
 **H15 — Le seigneur des tombes**
 ```text
 Same character, same face and same messy brown hair, blazing emerald eyes with green wisps, small scar. Full dark armor with bone ornaments and glowing green runes, long shadow cape, ghost-fire on the shoulders, large black scythe. Imposing, powerful build. A ring of floating green-eyed spectral skulls behind his back.
