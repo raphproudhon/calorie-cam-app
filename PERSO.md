@@ -373,14 +373,14 @@ Same character, same style and same pixel size, same position, do not enlarge hi
 Same character, same style and same pixel size, same position, do not enlarge him to fill the canvas. Same kitten, same pose, same fur pattern: same thin white stripe on the forehead, same brown tabby patch around the pink nose, same white chest and white paws, same huge sparkly green eyes, same cream scarf with glowing golden bell, same cream and amber cape, same brown leather harness with pouch, same amber sparkles. New: the tip of his tail now burns with a small cute amber spirit flame, clearly visible from every direction, instead of just glowing. Nothing touches the edges of the canvas.
 ```
 
-**C8 — Le plastron** (2ᵉ essai gardé en attendant dans `assets/perso/chat/c8.gif` ; à refaire : retirer l'écharpe pour qu'on voie le plastron de face)
+**C8 — Le plastron** ✅ `assets/perso/chat/c8.gif` (2ᵉ essai ; l'or se voit de dos et de côté. Un 3ᵉ essai sans écharpe a été refusé : cape disparue, plastron réduit à un bavoir orange)
 ```text
 Same character, same style and same pixel size, same position, do not enlarge him to fill the canvas. Same kitten, same pose, same fur pattern: same thin white stripe on the forehead, same brown tabby patch around the pink nose, same white paws, same huge sparkly green eyes, same cream scarf with glowing golden bell, same cream and amber cape, same brown leather harness, same amber spirit flame on the tail tip, same amber sparkles. New: a tiny shiny golden chest plate over his white chest, rounded and cute, fixed to the harness. Brave, adorable expression. Nothing touches the edges of the canvas.
 ```
 
 **C9 — Les runes-pattes** (nouvel état de C8)
 ```text
-Same character, same style and same pixel size, same position, do not enlarge him to fill the canvas. Same kitten, same pose, same fur pattern: same thin white stripe on the forehead, same brown tabby patch around the pink nose, same white paws, same huge sparkly green eyes, no scarf, same golden chest plate with the golden bell in its center, same cream and amber cape, same brown leather harness, same amber spirit flame on the tail tip. New: the small sparkles are replaced by three small glowing amber paw-print runes floating in the air around him, clearly visible from every direction. Nothing touches the edges of the canvas.
+Same character, same style and same pixel size, same position, do not enlarge him to fill the canvas. Same kitten, same pose, same fur pattern: same thin white stripe on the forehead, same brown tabby patch around the pink nose, same white paws, same huge sparkly green eyes, same cream scarf with golden bell, same cream and amber cape, same brown leather harness, same golden chest plate, same amber spirit flame on the tail tip. New: the small sparkles are replaced by three small glowing amber paw-print runes floating in the air around him, clearly visible from every direction. Nothing touches the edges of the canvas.
 ```
 
 **C10 — Les yeux ambre**
