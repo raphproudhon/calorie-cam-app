@@ -256,7 +256,7 @@ Same character, same style and same pixel size, feet at the same height as befor
 Same character, same style and same pixel size, feet at the same height as before, do not enlarge him to fill the canvas. Same face under the raised black hood, same confident smirk, both eyes glowing emerald green. Same long black coat with emerald green lining and glowing green seams, same two bone-white skull shoulder pads, same tattered black cape with green embers, same two spectral green skeletal hands, same two floating skulls above his shoulders, same black scythe held diagonally with both hands with its large bright green blade on the right. New: his hands now wear black clawed armored gauntlets with glowing emerald green knuckles and sharp claw tips. Emerald green ghost-fire now also runs along the whole scythe shaft, and small crackling green lightning sparks jump off the blade. Nothing touches the edges of the canvas.
 ```
 
-**H14 — Les flammes spectrales** (nouvel état de H13)
+**H14 — Les flammes spectrales** ✅ `assets/perso/humain/h14.gif` (2ᵉ essai : le 1ᵉʳ avait une capuche vide sans visage. Leçon : écrire « face must stay fully visible… never a dark empty hood » EN TÊTE du prompt)
 ```text
 Same character, same style and same pixel size, feet at the same height as before, do not enlarge him to fill the canvas. Same face under the raised black hood, same pale skin, same confident smirk. His emerald green eyes now blaze brighter, with thin green wisps of light trailing from the corners of his eyes. Same long black coat with glowing green seams, same tattered black cape, same black clawed gauntlets, same two spectral green skeletal hands, same two floating skulls above his shoulders, same black scythe held diagonally with green ghost-fire along the shaft and its large bright green blade on the right. New: emerald green ghost-fire now burns on top of both bone-white skull shoulder pads, like two small green flames rising from the skulls. Nothing touches the edges of the canvas.
 ```
@@ -267,9 +267,9 @@ Same character, same style and same pixel size, feet at the same height as befor
 > deviennent de la flamme verte pure. Prompts de H15 et H18 à adapter le
 > moment venu.
 
-**H15 — Le seigneur des tombes**
+**H15 — Le seigneur des tombes : la double faux** (nouvel état de H14, fin de l'acte III)
 ```text
-Same character, same face and same messy brown hair, blazing emerald eyes with green wisps, small scar. Full dark armor with bone ornaments and glowing green runes, long shadow cape, ghost-fire on the shoulders, large black scythe. Imposing, powerful build. A ring of floating green-eyed spectral skulls behind his back.
+Same character, same style and same pixel size, feet at the same height as before, do not enlarge him to fill the canvas. IMPORTANT: his face must stay fully visible and lit inside the hood, exactly as before: same pale skin, same confident smirk, both blazing emerald green eyes with green wisps at the corners, never a dark empty hood. Same raised black hood, same tattered black cape, same black clawed gauntlets, same green flames on the skull shoulder pads, same two spectral green skeletal hands, same two floating skulls above his shoulders. New: his scythe becomes a DOUBLE scythe, still held diagonally with both hands: the same large bright green blade at the top right end of the shaft, plus a second identical bright green curved blade at the bottom left end of the shaft. His coat is now reinforced with dark armor plates on the chest, engraved with small glowing green runes. Nothing touches the edges of the canvas.
 ```
 
 ### Acte IV — le Souverain des Tombes
@@ -511,7 +511,8 @@ deux à trois ans : c'est la longévité voulue.
 - [x] H11
 - [x] H12
 - [x] H13
-- [ ] H14 → H20
+- [x] H14
+- [ ] H15 → H20
 - [ ] Dans l'app : entourer H1-H7 de 16 px transparents (64 → 96), chacun en nouvel état du précédent
 - [ ] Dans l'app : raviver un peu la saturation du sprite si besoin (PixelLab rend des couleurs ternes)
 - [x] H2
@@ -526,7 +527,8 @@ deux à trois ans : c'est la longévité voulue.
 - [x] H11
 - [x] H12
 - [x] H13
-- [ ] H14 → H20
+- [x] H14
+- [ ] H15 → H20
 - [ ] Dans l'app : entourer H1-H7 de 16 px transparents (64 → 96), chacun en nouvel état du précédent, en vérifiant ~60 px de haut
 - [ ] C1 : nouveau personnage 120 × 120, vérifier ~60 px de haut
 - [ ] Tester H1 dans l'app (affichage agrandi, pixels nets)
