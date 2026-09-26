@@ -100,6 +100,14 @@ mains spectrales à ~15 px des bords.
 - À refaire de la même façon si la place manque encore plus tard (ex. 128 × 128
   pour les ailes de H20) : agrandir le canevas, jamais redessiner.
 
+### Ce que contiennent les GIF
+
+Chaque GIF exporté de PixelLab contient **les 8 directions** du perso (sud,
+sud-est, est, nord-est, nord, nord-ouest, ouest, sud-ouest), une par frame :
+c'est la **rotation**, pas une animation. La frame 0 = vue de face. Dans l'app,
+c'est directement la source de la rotation au doigt. Les animations (idle,
+réactions) restent à générer.
+
 ### Règle de cadrage (la leçon de l'ancien système)
 
 Avec l'ancien système, le perso rapetissait à chaque étape. La cause n'était pas
@@ -280,14 +288,14 @@ Same character, same style and same pixel size, feet at the same height as befor
 Same character, same style and same pixel size, feet at the same height as before, do not enlarge him to fill the canvas. IMPORTANT: his face must stay fully visible and lit inside the hood, exactly as before: same pale skin, same confident smirk, both blazing emerald green eyes with long green wisps at the corners, never a dark empty hood. Same raised black hood, same black clawed gauntlets, same green flames on the skull shoulder pads, same two spectral green skeletal hands, same two floating skulls, same double scythe held diagonally with its two large bright green blades. New: his coat becomes ornate dark armor engraved with bone-white patterns and glowing green runes, and the tattered cape becomes a long black cape with an emerald green inner lining, flowing behind him. Nothing touches the edges of the canvas.
 ```
 
-**H17 — La mèche blanche** (nouvel état de H16)
+**H17 — La mèche blonde** ✅ `assets/perso/humain/h17.gif` (3ᵉ essai : cheveux bruns + une mèche blonde, bord de capuche vert lumineux ; un essai avait rendu tous les cheveux blancs)
 ```text
 Same character, same style and same pixel size, feet at the same height as before, do not enlarge him to fill the canvas. IMPORTANT: his face must stay fully visible and lit inside the hood, exactly as before: same pale skin, same confident smirk, both blazing emerald green eyes with long green wisps at the corners, never a dark empty hood. Same raised black hood, same ornate engraved dark armor with green runes, same long black cape with green lining, same black clawed gauntlets, same green flames on the skull shoulder pads, same two spectral green skeletal hands, same two floating skulls, same double scythe with its two large bright green blades. New: a clearly visible bone-white streak of hair falls from under the hood across his forehead, contrasting with his brown hair. Tiny emerald green particles slowly rise around his whole body like embers. Nothing touches the edges of the canvas.
 ```
 
-**H18 — La faux des âmes**
+**H18 — La faux des âmes** (nouvel état de H17)
 ```text
-Same character, same face, brown hair with a bone-white streak, blazing emerald eyes with green wisps, small scar. Ornate dark armor, long shadow cape. Wields a huge scythe whose blade is made of solid green ghost-fire. A circle of floating green necromantic runes surrounds him, spectral skeletal hands rise from the shadows at his feet.
+Same character, same style and same pixel size, feet at the same height as before, do not enlarge him to fill the canvas. IMPORTANT: his face must stay fully visible and lit inside the hood, exactly as before: same pale skin, same confident smirk, same glowing emerald green eyes, same dark brown hair with one golden blonde strand, never a dark empty hood. Same black hood with glowing green outline, same ornate engraved dark armor with green runes, same long black cape with green lining, same black clawed gauntlets, same green flames on the skull shoulder pads, same two spectral green skeletal hands, same two floating skulls. New: both blades of his double scythe are now made entirely of solid bright emerald green ghost-fire, flickering like flames. A loose circle of small glowing green necromantic runes floats around him at waist height. Nothing touches the edges of the canvas.
 ```
 
 **H19 — La couronne d'os**
@@ -515,7 +523,8 @@ deux à trois ans : c'est la longévité voulue.
 - [x] H14
 - [x] H15 (canevas 128 × 128 à partir d'ici)
 - [x] H16
-- [ ] H17 → H20
+- [x] H17
+- [ ] H18 → H20
 - [ ] Dans l'app : entourer H1-H7 de 16 px transparents (64 → 96), chacun en nouvel état du précédent
 - [ ] Dans l'app : raviver un peu la saturation du sprite si besoin (PixelLab rend des couleurs ternes)
 - [x] H2
@@ -533,7 +542,8 @@ deux à trois ans : c'est la longévité voulue.
 - [x] H14
 - [x] H15 (canevas 128 × 128 à partir d'ici)
 - [x] H16
-- [ ] H17 → H20
+- [x] H17
+- [ ] H18 → H20
 - [ ] Dans l'app : entourer H1-H7 de 16 px transparents (64 → 96), chacun en nouvel état du précédent, en vérifiant ~60 px de haut
 - [ ] C1 : nouveau personnage 120 × 120, vérifier ~60 px de haut
 - [ ] Tester H1 dans l'app (affichage agrandi, pixels nets)
