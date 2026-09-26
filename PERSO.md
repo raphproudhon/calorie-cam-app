@@ -241,14 +241,14 @@ Same character, same style and same pixel size, feet at the same height as befor
 
 ### Acte III — le Nécromancien
 
-**H11 — La faux** (1ᵉʳ essai, faux verticale, gardé en attendant dans `assets/perso/humain/h11.gif` ; à refaire depuis H10 avec la faux **en diagonale**)
+**H11 — La faux** ✅ `assets/perso/humain/h11.gif` (3ᵉ essai depuis H10 : faux en diagonale à deux mains, grande lame vert lumineux à droite, crânes remontés au-dessus des épaules)
 ```text
 Same character, same style and same pixel size, feet at the same height as before, do not enlarge him to fill the canvas. Same face under the raised black hood, same confident smirk, both eyes glowing emerald green, plus a small scar on his cheek. Same long black coat with emerald green lining and glowing green seams, same two bone-white skull shoulder pads, same bone-decorated harness, same bone-white bracers, same two spectral green skeletal hands, same floating spectral skulls. New: the two knives are gone; instead he holds a black scythe diagonally across his body with both hands, the shaft going from his lower left (bottom left of the image) up to his upper right (top right of the image), and the curved blade at the top right, glowing with emerald green ghost-fire and curving over his shoulder. The whole scythe, blade included, stays inside the canvas. Nothing touches the edges of the canvas.
 ```
 
 **H12 — La cape déchirée** (nouvel état de H11)
 ```text
-Same character, same style and same pixel size, feet at the same height as before, do not enlarge him to fill the canvas. Same face under the raised black hood, same confident smirk, both eyes glowing emerald green. Same long black coat with emerald green lining and glowing green seams, same two bone-white skull shoulder pads, same bone-decorated harness, same two spectral green skeletal hands, same floating spectral skulls, same black scythe held diagonally across his body, blade at the top right glowing with green ghost-fire. New: a tattered black cape hangs from his shoulders behind him, its ragged bottom edge dissolving into wisps of black smoke with a few green embers. Thin glowing emerald green veins now run along his forearms and hands. The cape stays close behind him and inside the canvas. Nothing touches the edges of the canvas.
+Same character, same style and same pixel size, feet at the same height as before, do not enlarge him to fill the canvas. Same face under the raised black hood, same confident smirk, both eyes glowing emerald green. Same long black coat with emerald green lining and glowing green seams, same two bone-white skull shoulder pads, same bone-decorated harness, same two spectral green skeletal hands, same floating spectral skulls, same black scythe held diagonally across his body with both hands, with its large bright glowing emerald green blade on the right side, same two floating skulls above his shoulders. New: a tattered black cape hangs from his shoulders behind him, its ragged bottom edge dissolving into wisps of black smoke with a few green embers. Thin glowing emerald green veins now run along his forearms and hands. The cape stays close behind him and inside the canvas. Nothing touches the edges of the canvas.
 ```
 
 **H13 — Les gantelets**
