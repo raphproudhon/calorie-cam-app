@@ -293,14 +293,14 @@ Same character, same style and same pixel size, feet at the same height as befor
 Same character, same style and same pixel size, feet at the same height as before, do not enlarge him to fill the canvas. IMPORTANT: his face must stay fully visible and lit inside the hood, exactly as before: same pale skin, same confident smirk, both blazing emerald green eyes with long green wisps at the corners, never a dark empty hood. Same raised black hood, same ornate engraved dark armor with green runes, same long black cape with green lining, same black clawed gauntlets, same green flames on the skull shoulder pads, same two spectral green skeletal hands, same two floating skulls, same double scythe with its two large bright green blades. New: a clearly visible bone-white streak of hair falls from under the hood across his forehead, contrasting with his brown hair. Tiny emerald green particles slowly rise around his whole body like embers. Nothing touches the edges of the canvas.
 ```
 
-**H18 — La faux des âmes** (nouvel état de H17)
+**H18 — La faux des âmes** ✅ `assets/perso/humain/h18.gif` (lames en flamme, arc de runes ; le manche noir a presque disparu)
 ```text
 Same character, same style and same pixel size, feet at the same height as before, do not enlarge him to fill the canvas. IMPORTANT: his face must stay fully visible and lit inside the hood, exactly as before: same pale skin, same confident smirk, same glowing emerald green eyes, same dark brown hair with one golden blonde strand, never a dark empty hood. Same black hood with glowing green outline, same ornate engraved dark armor with green runes, same long black cape with green lining, same black clawed gauntlets, same green flames on the skull shoulder pads, same two spectral green skeletal hands, same two floating skulls. New: both blades of his double scythe are now made entirely of solid bright emerald green ghost-fire, flickering like flames. A loose circle of small glowing green necromantic runes floats around him at waist height. Nothing touches the edges of the canvas.
 ```
 
-**H19 — La couronne d'os**
+**H19 — La couronne d'os** (nouvel état de H18)
 ```text
-Same character, same face, brown hair with a bone-white streak, incandescent emerald eyes with white-hot core, small scar. Ornate dark armor with bone and dark gold engravings, shadow cape with a torn edge of green ghost-fire, huge ghost-fire scythe. A thin crown of bone on his head. Floating runes and spectral skulls around him.
+Same character, same style and same pixel size, feet at the same height as before, do not enlarge him to fill the canvas. IMPORTANT: his face must stay fully visible and lit inside the hood, exactly as before: same pale skin, same confident smirk, same glowing emerald green eyes, same dark brown hair with one golden blonde strand, never a dark empty hood. Same black hood with glowing green outline, same ornate engraved dark armor, same long black cape with green lining, same black clawed gauntlets, same green flames on the skull shoulder pads, same two spectral green skeletal hands, same two floating skulls, same double scythe with blades of green ghost-fire and its black shaft clearly visible, same runes. New: a thin crown of bone-white spikes sits on top of his hood, and his armor now has dark gold engravings along with the green runes. The edge of his cape burns with a thin line of green ghost-fire. Nothing touches the edges of the canvas.
 ```
 
 **H20 — Le Souverain des Tombes**
@@ -524,7 +524,8 @@ deux à trois ans : c'est la longévité voulue.
 - [x] H15 (canevas 128 × 128 à partir d'ici)
 - [x] H16
 - [x] H17
-- [ ] H18 → H20
+- [x] H18
+- [ ] H19 → H20
 - [ ] Dans l'app : entourer H1-H7 de 16 px transparents (64 → 96), chacun en nouvel état du précédent
 - [ ] Dans l'app : raviver un peu la saturation du sprite si besoin (PixelLab rend des couleurs ternes)
 - [x] H2
@@ -543,7 +544,8 @@ deux à trois ans : c'est la longévité voulue.
 - [x] H15 (canevas 128 × 128 à partir d'ici)
 - [x] H16
 - [x] H17
-- [ ] H18 → H20
+- [x] H18
+- [ ] H19 → H20
 - [ ] Dans l'app : entourer H1-H7 de 16 px transparents (64 → 96), chacun en nouvel état du précédent, en vérifiant ~60 px de haut
 - [ ] C1 : nouveau personnage 120 × 120, vérifier ~60 px de haut
 - [ ] Tester H1 dans l'app (affichage agrandi, pixels nets)
