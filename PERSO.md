@@ -373,14 +373,14 @@ Same character, same style and same pixel size, same position, do not enlarge hi
 Same character, same style and same pixel size, same position, do not enlarge him to fill the canvas. Same kitten, same pose, same fur pattern: same thin white stripe on the forehead, same brown tabby patch around the pink nose, same white chest and white paws, same huge sparkly green eyes, same cream scarf with glowing golden bell, same cream and amber cape, same brown leather harness with pouch, same amber sparkles. New: the tip of his tail now burns with a small cute amber spirit flame, clearly visible from every direction, instead of just glowing. Nothing touches the edges of the canvas.
 ```
 
-**C8 — Le plastron** (nouvel état de C7)
+**C8 — Le plastron** ✅ `assets/perso/chat/c8.gif` (2ᵉ essai ; l'or se voit de dos et de côté, presque pas de face : l'écharpe couvre le poitrail)
 ```text
 Same character, same style and same pixel size, same position, do not enlarge him to fill the canvas. Same kitten, same pose, same fur pattern: same thin white stripe on the forehead, same brown tabby patch around the pink nose, same white paws, same huge sparkly green eyes, same cream scarf with glowing golden bell, same cream and amber cape, same brown leather harness, same amber spirit flame on the tail tip, same amber sparkles. New: a tiny shiny golden chest plate over his white chest, rounded and cute, fixed to the harness. Brave, adorable expression. Nothing touches the edges of the canvas.
 ```
 
-**C9 — Les runes-pattes**
+**C9 — Les runes-pattes** (nouvel état de C8)
 ```text
-Same cat, same fur pattern and same face, big green eyes. Cute cat with tiny golden chest plate, small cape, glowing bell, amber spirit flame at the tail tip. Small glowing amber paw-print runes float around it. Kawaii style.
+Same character, same style and same pixel size, same position, do not enlarge him to fill the canvas. Same kitten, same pose, same fur pattern: same thin white stripe on the forehead, same brown tabby patch around the pink nose, same white paws, same huge sparkly green eyes, same cream scarf with golden bell, same cream and amber cape, same brown leather harness, same golden chest plate, same amber spirit flame on the tail tip. New: the small sparkles are replaced by three small glowing amber paw-print runes floating in the air around him, clearly visible from every direction. Nothing touches the edges of the canvas.
 ```
 
 **C10 — Les yeux ambre**
@@ -560,7 +560,8 @@ deux à trois ans : c'est la longévité voulue.
 - [x] C5 (fin de l'acte I)
 - [x] C6
 - [x] C7
-- [ ] C8 → C20
+- [x] C8
+- [ ] C9 → C20
 - [ ] Tester H1 dans l'app (affichage agrandi, pixels nets)
 - [ ] Code : choix du perso à l'onboarding (persisté dans `stockage.js`, non modifiable ensuite)
 - [ ] Code : `PALIERS_PERSO` (20 étapes) dans `jeu.js`, composant d'affichage
