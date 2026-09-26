@@ -356,16 +356,16 @@ Same character, same style and same size. Same kitten, same pose, same fur patte
 Same character, same style and same pixel size, same position, do not enlarge him to fill the canvas. Same kitten, same pose, same fur pattern: same thin white stripe on the forehead, same brown tabby patch around the pink nose, same white chest and white paws, same huge sparkly green eyes, same happy expression, same cream scarf with golden bell. New: the tip of his tail now glows with a small warm amber light, and two tiny amber sparkles float around him, close to his body. Nothing touches the edges of the canvas.
 ```
 
-**C5 — La petite cape** (nouvel état de C4, fin de l'acte I)
+**C5 — La petite cape** ✅ `assets/perso/chat/c5.gif` (cape crème et ambre, surtout visible de côté et de dos)
 ```text
 Same character, same style and same pixel size, same position, do not enlarge him to fill the canvas. Same kitten, same pose, same fur pattern: same thin white stripe on the forehead, same brown tabby patch around the pink nose, same white chest and white paws, same huge sparkly green eyes, same cream scarf, same glowing amber tail tip, same amber sparkles. New: a tiny adventurer cape in cream and amber hangs from his shoulders, and the golden bell now glows softly with a warm amber light. Proud, adorable expression. Nothing touches the edges of the canvas.
 ```
 
 ### Acte II — l'Apprenti
 
-**C6 — Le harnais**
+**C6 — Le harnais** (nouvel état de C5, début de l'acte II)
 ```text
-Same cat, same fur pattern and same face, big green eyes. Cute young cat wearing a small brown leather harness with a tiny pouch, tiny cream-and-amber cape, glowing golden bell. Tail tip glowing amber. Amber sparkles float around it. Kawaii style.
+Same character, same style and same pixel size, same position, do not enlarge him to fill the canvas. Same kitten, slightly bigger and more confident, same fur pattern: same thin white stripe on the forehead, same brown tabby patch around the pink nose, same white chest and white paws, same huge sparkly green eyes, same cream scarf with glowing golden bell, same cream and amber cape, same glowing amber tail tip, same amber sparkles. New: a small brown leather harness across his chest with a tiny round pouch on his side. Nothing touches the edges of the canvas.
 ```
 
 **C7 — La flamme de la queue**
@@ -557,7 +557,8 @@ deux à trois ans : c'est la longévité voulue.
 - [x] C2
 - [x] C3 (64 × 64)
 - [x] C4 (canevas 96 × 96 à partir d'ici)
-- [ ] C5 → C20
+- [x] C5 (fin de l'acte I)
+- [ ] C6 → C20
 - [ ] Tester H1 dans l'app (affichage agrandi, pixels nets)
 - [ ] Code : choix du perso à l'onboarding (persisté dans `stockage.js`, non modifiable ensuite)
 - [ ] Code : `PALIERS_PERSO` (20 étapes) dans `jeu.js`, composant d'affichage
