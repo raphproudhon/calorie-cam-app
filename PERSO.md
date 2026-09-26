@@ -336,14 +336,14 @@ C2 à C9 gardent ses yeux verts ; à partir de C10 ils brillent d'ambre.
 
 ### Acte I — le Chaton
 
-**C1 — Le chaton**
+**C1 — Le chaton** ✅ `assets/perso/chat/c1.gif` (64 × 64 ; nouveau perso puis état correctif pour le trait blanc du front : les 4 repères sont là)
 ```text
 A tiny cute kitten, brown tabby and white bicolor: brown-grey tabby with dark stripes on the top of the head, ears, back, sides and tail; a thin white stripe on the forehead that stops at eye level; between and below the eyes the nose bridge is brown tabby, and the pink nose sits in that brown patch; the white only starts under the nose, on the mouth, cheeks and chin; white chin, chest, belly and front legs with white paws; pink inner ears; darker tail tip. Huge sparkly green eyes, round face, small pink nose, sitting, happy expression. No accessories, no effects. Kawaii style.
 ```
 
-**C2 — Le grelot**
+**C2 — Le grelot** (nouvel état de C1)
 ```text
-Same cat, same fur pattern and same face. Tiny cute kitten wearing a red collar with a small golden bell. Huge sparkly green eyes, happy expression. Kawaii style.
+Same character, same style and same size. Same kitten, same pose, same fur pattern: same thin white stripe on the forehead, same brown tabby patch around the pink nose, same white chest and white paws, same huge sparkly green eyes, same happy expression. New: a small red collar around his neck with a shiny round golden bell hanging in front, clearly visible on the white chest. Nothing touches the edges of the canvas.
 ```
 
 **C3 — L'écharpe**
@@ -553,7 +553,8 @@ deux à trois ans : c'est la longévité voulue.
 - [x] H20 — **les 20 étapes de l'humain sont faites** (rotations 8 directions)
 - [ ] Humain : animations (idle + réactions)
 - [ ] Dans l'app : entourer H1-H7 de 16 px transparents (64 → 96), chacun en nouvel état du précédent, en vérifiant ~60 px de haut
-- [ ] C1 : nouveau personnage 120 × 120, vérifier ~60 px de haut
+- [x] C1 (`assets/perso/chat/c1.gif`)
+- [ ] C2 → C20
 - [ ] Tester H1 dans l'app (affichage agrandi, pixels nets)
 - [ ] Code : choix du perso à l'onboarding (persisté dans `stockage.js`, non modifiable ensuite)
 - [ ] Code : `PALIERS_PERSO` (20 étapes) dans `jeu.js`, composant d'affichage
