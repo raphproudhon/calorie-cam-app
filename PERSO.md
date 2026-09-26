@@ -383,16 +383,16 @@ Same character, same style and same pixel size, same position, do not enlarge hi
 Same character, same style and same pixel size, same position, do not enlarge him to fill the canvas. Same kitten, same pose, same fur pattern: same thin white stripe on the forehead, same brown tabby patch around the pink nose, same white paws, same huge sparkly green eyes, same thin cream band around the neck with the small golden bell, same golden shield-shaped breastplate with the paw-print emblem, same cream and amber cape, same brown leather harness, same amber spirit flame on the tail tip. New: the small sparkles are replaced by three small glowing amber paw-print runes floating in the air around him, clearly visible from every direction. Nothing touches the edges of the canvas.
 ```
 
-**C10 — Les yeux ambre** (nouvel état de C9 **agrandi à 128 × 128 sans redessin**, fin de l'acte II)
+**C10 — Les yeux ambre** ✅ `assets/perso/chat/c10.gif` (**128 × 128** : C9 agrandi sans redessin ; yeux ambre, volutes de flamme)
 ```text
 Same character, same style and same pixel size, same position, do not enlarge him to fill the canvas. Same kitten, same pose, same fur pattern: same thin white stripe on the forehead, same brown tabby patch around the pink nose, same white paws, same thin cream band with the small golden bell, same golden shield-shaped breastplate with the paw-print emblem, same cream and amber cape, same brown leather harness, same amber spirit flame on the tail tip, same three amber paw-print runes. New: his big eyes now glow a warm bright amber instead of green, with a white highlight, and a few small amber flame wisps float close around his body. Nothing touches the edges of the canvas.
 ```
 
 ### Acte III — l'Esprit
 
-**C11 — La deuxième queue**
+**C11 — La deuxième queue** (nouvel état de C10, début de l'acte III)
 ```text
-Same cat, same fur pattern and same face, glowing amber eyes. Now a young adult cat, still cute and round. A second translucent spectral amber tail appears next to its real tail. Golden chest plate, small cape. Amber wisps float around it. Kawaii style.
+Same character, same style and same pixel size, same position, do not enlarge him to fill the canvas. Same cat, same pose, still round and cute, same fur pattern: same thin white stripe on the forehead, same brown tabby patch around the pink nose, same white paws, same glowing amber eyes, same thin cream band with the small golden bell, same golden shield-shaped breastplate with the paw-print emblem, same cream and amber cape, same brown leather harness, same three amber paw-print runes, same small amber flame wisps. New: next to his real tail with its amber flame, a second tail appears, made of translucent glowing amber spirit light. Exactly two tails, seen the same from every direction. Nothing touches the edges of the canvas.
 ```
 
 **C12 — La marque au front**
