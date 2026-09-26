@@ -363,14 +363,14 @@ Same character, same style and same pixel size, same position, do not enlarge hi
 
 ### Acte II — l'Apprenti
 
-**C6 — Le harnais** (nouvel état de C5, début de l'acte II)
+**C6 — Le harnais** ✅ `assets/perso/chat/c6.gif` (harnais de cuir brun et petites sacoches)
 ```text
 Same character, same style and same pixel size, same position, do not enlarge him to fill the canvas. Same kitten, slightly bigger and more confident, same fur pattern: same thin white stripe on the forehead, same brown tabby patch around the pink nose, same white chest and white paws, same huge sparkly green eyes, same cream scarf with glowing golden bell, same cream and amber cape, same glowing amber tail tip, same amber sparkles. New: a small brown leather harness across his chest with a tiny round pouch on his side. Nothing touches the edges of the canvas.
 ```
 
-**C7 — La flamme de la queue**
+**C7 — La flamme de la queue** (nouvel état de C6)
 ```text
-Same cat, same fur pattern and same face, big green eyes. Cute cat with leather harness, tiny cape, glowing golden bell. The tip of its tail now burns with a small cute amber spirit flame. Amber sparkles float around it. Kawaii style.
+Same character, same style and same pixel size, same position, do not enlarge him to fill the canvas. Same kitten, same pose, same fur pattern: same thin white stripe on the forehead, same brown tabby patch around the pink nose, same white chest and white paws, same huge sparkly green eyes, same cream scarf with glowing golden bell, same cream and amber cape, same brown leather harness with pouch, same amber sparkles. New: the tip of his tail now burns with a small cute amber spirit flame, clearly visible from every direction, instead of just glowing. Nothing touches the edges of the canvas.
 ```
 
 **C8 — Le plastron**
@@ -558,7 +558,8 @@ deux à trois ans : c'est la longévité voulue.
 - [x] C3 (64 × 64)
 - [x] C4 (canevas 96 × 96 à partir d'ici)
 - [x] C5 (fin de l'acte I)
-- [ ] C6 → C20
+- [x] C6
+- [ ] C7 → C20
 - [ ] Tester H1 dans l'app (affichage agrandi, pixels nets)
 - [ ] Code : choix du perso à l'onboarding (persisté dans `stockage.js`, non modifiable ensuite)
 - [ ] Code : `PALIERS_PERSO` (20 étapes) dans `jeu.js`, composant d'affichage
