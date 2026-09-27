@@ -390,14 +390,14 @@ Same character, same style and same pixel size, same position, do not enlarge hi
 
 ### Acte III — l'Esprit
 
-**C11 — La deuxième queue** (nouvel état de C10, début de l'acte III)
+**C11 — La deuxième queue** ✅ `assets/perso/chat/c11.gif` (queue spectrale ambrée à côté de la vraie ; de face elle fait un halo derrière la tête)
 ```text
 Same character, same style and same pixel size, same position, do not enlarge him to fill the canvas. Same cat, same pose, still round and cute, same fur pattern: same thin white stripe on the forehead, same brown tabby patch around the pink nose, same white paws, same glowing amber eyes, same thin cream band with the small golden bell, same golden shield-shaped breastplate with the paw-print emblem, same cream and amber cape, same brown leather harness, same three amber paw-print runes, same small amber flame wisps. New: next to his real tail with its amber flame, a second tail appears, made of translucent glowing amber spirit light. Exactly two tails, seen the same from every direction. Nothing touches the edges of the canvas.
 ```
 
-**C12 — La marque au front**
+**C12 — La marque au front** (nouvel état de C11)
 ```text
-Same cat, same fur pattern and same face, glowing amber eyes, a small glowing golden mark on its forehead. Two tails, one spectral amber. Golden chest plate, cape with gold trim. Amber wisps float around it. Kawaii style.
+Same character, same style and same pixel size, same position, do not enlarge him to fill the canvas. Same cat, same pose, still round and cute, same fur pattern: the thin white stripe on the forehead MUST stay, same brown tabby patch around the pink nose, same white paws, same glowing amber eyes, same thin cream band with the small golden bell, same golden shield-shaped breastplate with the paw-print emblem, same brown leather harness, same two tails (the real one with its amber flame and the translucent amber spirit tail), same three amber paw-print runes, same small amber flame wisps. New: a small glowing golden crescent-moon mark on the top of his head, between the ears, just above the white stripe (not covering it). His cape now has a shiny gold trim along its edge. Nothing touches the edges of the canvas.
 ```
 
 **C13 — Les pattes de feu**
