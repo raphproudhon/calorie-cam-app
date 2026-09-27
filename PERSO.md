@@ -400,14 +400,14 @@ Same character, same style and same pixel size, same position, do not enlarge hi
 Same character, same style and same pixel size, same position, do not enlarge him to fill the canvas. Same cat, same pose, still round and cute, same fur pattern: the thin white stripe on the forehead MUST stay, same brown tabby patch around the pink nose, same white paws, same glowing amber eyes, same thin cream band with the small golden bell, same golden shield-shaped breastplate with the paw-print emblem, same brown leather harness, same two tails (the real one with its amber flame and the translucent amber spirit tail), same three amber paw-print runes, same small amber flame wisps. New: a small glowing golden crescent-moon mark on the top of his head, between the ears, just above the white stripe (not covering it). His cape now has a shiny gold trim along its edge. Nothing touches the edges of the canvas.
 ```
 
-**C13 — Les pattes de feu** (nouvel état de C12)
+**C13 — Les pattes de feu** ✅ `assets/perso/chat/c13.gif` (protections dorées et flammes aux pattes, bout blanc toujours visible)
 ```text
 Same character, same style and same pixel size, same position, do not enlarge him to fill the canvas. Same cat, same pose, still round and cute, same fur pattern: the thin white stripe on the forehead MUST stay exactly as before, nothing on the forehead, same brown tabby patch around the pink nose, same glowing amber eyes, same golden ring cuffs on the ear tips, same thin cream band with the small golden bell, same golden shield-shaped breastplate with the paw-print emblem, same deep amber cape with gold border, same two tails, same three amber paw-print runes. New: small golden armored guards on his four paws (the white paws still visible underneath), with little amber spirit flames dancing around each paw. Nothing touches the edges of the canvas.
 ```
 
-**C14 — Les feux follets**
+**C14 — Les feux follets** (nouvel état de C13)
 ```text
-Same cat, same fur pattern and same face, glowing amber eyes, golden forehead mark. Golden paw guards with amber flames, two tails, chest plate, cape. Three small round amber will-o'-the-wisp orbs orbit around it. Kawaii style.
+Same character, same style and same pixel size, same position, do not enlarge him to fill the canvas. Same cat, same pose, still round and cute, same fur pattern: the thin white stripe on the forehead MUST stay exactly as before, nothing on the forehead, same brown tabby patch around the pink nose, same glowing amber eyes, same golden ring cuffs on the ear tips, same small golden bell, same golden shield-shaped breastplate, same deep amber cape with gold border, same two tails, same golden paw guards with amber flames. New: the three paw-print runes are replaced by exactly three small round glowing amber will-o'-the-wisp orbs with a bright white core, floating in a loose circle around him. Nothing touches the edges of the canvas.
 ```
 
 **C15 — Deux queues de flamme**
