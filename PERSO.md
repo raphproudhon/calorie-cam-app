@@ -417,14 +417,14 @@ Same character, same style and same pixel size, same position, do not enlarge hi
 
 ### Acte IV — le Gardien céleste
 
-**C16 — Trois queues** (nouvel état de C15, début de l'acte IV)
+**C16 — Trois queues** ✅ `assets/perso/chat/c16.gif` (1 queue tigrée enflammée + 2 queues spectrales en éventail, collier doré ; la gemme rose se voit moins)
 ```text
 Same character, same style and same pixel size, same position, do not enlarge him to fill the canvas. Same cat, same pose, still round and cute, same fur pattern: the thin white stripe on the forehead MUST stay exactly as before, nothing on the forehead, same brown tabby patch around the pink nose, same glowing amber eyes, same golden ring cuffs on the ear tips, same golden shield-shaped breastplate with the pink gem, same deep amber cape with gold border, same golden paw guards with amber flames, same three amber will-o'-the-wisp orbs. New: he now has exactly THREE tails fanned out behind him: his real brown tabby tail with its big amber flame, and TWO translucent glowing amber spectral tails (no fur, no stripes) burning with golden spirit flames. The thin band around his neck becomes an ornate golden collar, with the small golden bell still hanging from it. Nothing touches the edges of the canvas.
 ```
 
-**C17 — Les petites ailes**
+**C17 — Les petites ailes** (nouvel état de C16)
 ```text
-Same cat, same fur pattern and same face, glowing amber eyes, golden forehead mark. Small cute spectral wings made of amber light on its back. Three flaming tails, ornate golden collar with pink gem, golden armor pieces. Amber orbs orbit around it. Kawaii style.
+Same character, same style and same pixel size, same position, do not enlarge him to fill the canvas. Same cat, same pose, still round and cute, same fur pattern: the thin white stripe on the forehead MUST stay exactly as before, nothing on the forehead, same brown tabby patch around the pink nose, same glowing amber eyes, same golden ring cuffs on the ear tips, same ornate golden collar with the small golden bell, same golden breastplate with the pink gem, same deep amber cape with gold border, same golden paw guards with amber flames, same three tails (one real tabby tail with a flame, two translucent spectral amber tails), same three amber will-o'-the-wisp orbs. New: a pair of small cute spectral wings made of translucent amber light on his back, folded upward. Nothing touches the edges of the canvas.
 ```
 
 **C18 — La couronne de flammes**
