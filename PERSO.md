@@ -422,14 +422,14 @@ Same character, same style and same pixel size, same position, do not enlarge hi
 Same character, same style and same pixel size, same position, do not enlarge him to fill the canvas. Same cat, same pose, still round and cute, same fur pattern: the thin white stripe on the forehead MUST stay exactly as before, nothing on the forehead, same brown tabby patch around the pink nose, same glowing amber eyes, same golden ring cuffs on the ear tips, same golden shield-shaped breastplate with the pink gem, same deep amber cape with gold border, same golden paw guards with amber flames, same three amber will-o'-the-wisp orbs. New: he now has exactly THREE tails fanned out behind him: his real brown tabby tail with its big amber flame, and TWO translucent glowing amber spectral tails (no fur, no stripes) burning with golden spirit flames. The thin band around his neck becomes an ornate golden collar, with the small golden bell still hanging from it. Nothing touches the edges of the canvas.
 ```
 
-**C17 — Les petites ailes** (nouvel état de C16)
+**C17 — Les petites ailes** ✅ `assets/perso/chat/c17.gif` (ailes spectrales ambrées en plumes, bien visibles de côté et de dos)
 ```text
 Same character, same style and same pixel size, same position, do not enlarge him to fill the canvas. Same cat, same pose, still round and cute, same fur pattern: the thin white stripe on the forehead MUST stay exactly as before, nothing on the forehead, same brown tabby patch around the pink nose, same glowing amber eyes, same golden ring cuffs on the ear tips, same ornate golden collar with the small golden bell, same golden breastplate with the pink gem, same deep amber cape with gold border, same golden paw guards with amber flames, same three tails (one real tabby tail with a flame, two translucent spectral amber tails), same three amber will-o'-the-wisp orbs. New: a pair of small cute spectral wings made of translucent amber light on his back, folded upward. Nothing touches the edges of the canvas.
 ```
 
-**C18 — La couronne de flammes**
+**C18 — La couronne de flammes** (nouvel état de C17)
 ```text
-Same cat, same fur pattern and same face, glowing amber eyes, golden forehead mark. A small crown of floating amber flames above its head. Small spectral amber wings, three flaming tails, ornate golden collar and armor. Kawaii style.
+Same character, same style and same pixel size, same position, do not enlarge him to fill the canvas. Same cat, same pose, still round and cute, same fur pattern: the thin white stripe on the forehead MUST stay exactly as before and fully visible, same brown tabby patch around the pink nose, same glowing amber eyes, same golden ring cuffs on the ear tips, same ornate golden collar with the small golden bell, same golden breastplate with the pink gem, same deep amber cape, same golden paw guards, same three tails, same small spectral amber wings, same three amber will-o'-the-wisp orbs. New: a small crown made of five little floating amber-gold flames hovers ABOVE his head, between his ears, not touching the forehead. Nothing touches the edges of the canvas.
 ```
 
 **C19 — Le halo**
