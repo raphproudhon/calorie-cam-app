@@ -405,14 +405,14 @@ Same character, same style and same pixel size, same position, do not enlarge hi
 Same character, same style and same pixel size, same position, do not enlarge him to fill the canvas. Same cat, same pose, still round and cute, same fur pattern: the thin white stripe on the forehead MUST stay exactly as before, nothing on the forehead, same brown tabby patch around the pink nose, same glowing amber eyes, same golden ring cuffs on the ear tips, same thin cream band with the small golden bell, same golden shield-shaped breastplate with the paw-print emblem, same deep amber cape with gold border, same two tails, same three amber paw-print runes. New: small golden armored guards on his four paws (the white paws still visible underneath), with little amber spirit flames dancing around each paw. Nothing touches the edges of the canvas.
 ```
 
-**C14 — Les feux follets** (nouvel état de C13)
+**C14 — Les feux follets** ✅ `assets/perso/chat/c14.gif` (3 feux follets ambrés au cœur blanc)
 ```text
 Same character, same style and same pixel size, same position, do not enlarge him to fill the canvas. Same cat, same pose, still round and cute, same fur pattern: the thin white stripe on the forehead MUST stay exactly as before, nothing on the forehead, same brown tabby patch around the pink nose, same glowing amber eyes, same golden ring cuffs on the ear tips, same small golden bell, same golden shield-shaped breastplate, same deep amber cape with gold border, same two tails, same golden paw guards with amber flames. New: the three paw-print runes are replaced by exactly three small round glowing amber will-o'-the-wisp orbs with a bright white core, floating in a loose circle around him. Nothing touches the edges of the canvas.
 ```
 
-**C15 — Deux queues de flamme**
+**C15 — Deux queues de flamme** (nouvel état de C14, fin de l'acte III)
 ```text
-Same cat, same fur pattern and same face, glowing amber eyes, golden forehead mark. Both tails now burn with bright amber spirit flames. Golden chest plate, golden paw guards, cape with gold trim, a tiny pink gem on its collar. Amber orbs orbit around it. Confident and adorable. Kawaii style.
+Same character, same style and same pixel size, same position, do not enlarge him to fill the canvas. Same cat, same pose, still round and cute, same fur pattern: the thin white stripe on the forehead MUST stay exactly as before, nothing on the forehead, same brown tabby patch around the pink nose, same glowing amber eyes, same golden ring cuffs on the ear tips, same small golden bell, same golden shield-shaped breastplate, same deep amber cape with gold border, same golden paw guards with amber flames, same three amber will-o'-the-wisp orbs. New: both of his tails now burn along their whole length with bright amber and gold spirit flames, like two flaming torches. A small pink gem now shines in the center of his breastplate. Confident and adorable. Exactly two tails. Nothing touches the edges of the canvas.
 ```
 
 ### Acte IV — le Gardien céleste
