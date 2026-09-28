@@ -1,4 +1,4 @@
-// Systeme de progression ludique : XP, niveaux, badges, evolution du personnage.
+// Systeme de progression ludique : XP, niveaux, badges, etapes du personnage.
 //
 // GARDE-FOU DE SANTE (voir aussi besoins.js) : on recompense des COMPORTEMENTS
 // sains, jamais "manger le moins possible". Une journee ne rapporte le bonus
@@ -166,6 +166,44 @@ export function recompenserPesee(jeu, entree, but) {
 
   for (const id of badgesDebloques(j)) j.badges.push(id);
   return j;
+}
+
+// --- Personnage : 20 etapes par palier de niveau ----------------------------
+// Deux persos au choix (fixe a l'onboarding, definitif) : "humain" (le
+// Necromancien) et "chat" (le Chat celeste). Meme progression pour les deux :
+// les 10 paliers de couleur + 10 intercales. Le debut va vite (5 etapes la
+// premiere semaine), la fin prend 2-3 ans (voir PERSO.md).
+export const PALIERS_PERSO = [1, 2, 3, 4, 5, 6, 7, 9, 11, 13, 15, 18, 21, 24, 27, 31, 35, 40, 45, 50];
+export const NB_ETAPES = PALIERS_PERSO.length;
+
+export const PERSOS = {
+  humain: {
+    nom: "Le Nécromancien",
+    etapes: [
+      "L'inconnu", "L'ombre qui bouge", "L'éveil", "Le blouson", "Premier appel",
+      "Le long manteau", "Le harnais d'os", "Les mains de l'ombre", "L'épaulière crâne", "Le capuchon",
+      "La faux", "La cape déchirée", "Les gantelets", "Les flammes spectrales", "La double faux",
+      "L'armure gravée", "La mèche blonde", "La faux des âmes", "La couronne d'os", "Le Souverain des Tombes",
+    ],
+  },
+  chat: {
+    nom: "Le Chat céleste",
+    etapes: [
+      "Le chaton", "Le grelot", "L'écharpe", "Première étincelle", "La petite cape",
+      "Le harnais", "La flamme de la queue", "Le plastron", "Les runes-pattes", "Les yeux ambre",
+      "La deuxième queue", "Les anneaux d'oreilles", "Les pattes de feu", "Les feux follets", "Deux queues de flamme",
+      "Trois queues", "Les petites ailes", "La couronne de flammes", "Le halo", "Le Gardien céleste",
+    ],
+  },
+};
+
+/** Etape du personnage (0..19) atteinte a un niveau donne. */
+export function etapePersonnage(niveau) {
+  let e = 0;
+  for (let i = 0; i < PALIERS_PERSO.length; i++) {
+    if (niveau >= PALIERS_PERSO[i]) e = i;
+  }
+  return e;
 }
 
 // --- Palette de l'app, par palier de niveau --------------------------------

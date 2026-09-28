@@ -2,8 +2,10 @@
 
 Ce projet (**CalorieCam**) est décrit en détail dans le `README.md` — le lire en premier.
 
-⚠️ **Nouveau système de personnage en cours : cahier des charges et prompts
-PixelLab dans `PERSO.md`.** L'ancien système a été entièrement retiré (art, outils
+⚠️ **Nouveau système de personnage : cahier des charges, prompts PixelLab et
+suivi dans `PERSO.md`.** Deux persos au choix (humain / chat, choix définitif
+après l'onboarding), 20 étapes chacun, rotation 8 directions au doigt. Après
+avoir changé un GIF de `assets/perso/`, relancer `node tools/build-perso.js`. L'ancien système a été entièrement retiré (art, outils
 sprites, étapes, avatar rotatif). Il est à reprendre de zéro ; l'ancienne
 version reste consultable dans l'historique Git, avant le commit de suppression.
 Le pourquoi, l'inventaire de ce qui a sauté et la marche à suivre pour reprendre
@@ -59,10 +61,12 @@ passent dans le même affichage/bilan que les aliments d'une photo.
 | `besoins.js` | BMR/objectif calorique + bilan du jour, garde-fous de sécurité |
 | `health.js` | lecture de la dépense via Apple Santé (HealthKit) |
 | `stockage.js` | persistance locale (AsyncStorage) + bascule de journée à minuit |
-| `jeu.js` | gamification : XP, niveaux, badges + palette du thème par niveau |
+| `jeu.js` | gamification : XP, niveaux, badges, étapes du perso (`PALIERS_PERSO`, `PERSOS`, `etapePersonnage`) + palette du thème par niveau |
+| `perso-sprites.js` | **généré** par `tools/build-perso.js` : table des sprites `SPRITES[perso][étape][direction]` |
+| `assets/perso/` | GIF PixelLab sources (`humain/h1..20.gif`, `chat/c1..20.gif`) + PNG générés dans `rot/` |
 | `cle.js` | résolution de la clé API Gemini (saisie dans l'app ou `secrets.js`) |
 | `data/ciqual.json` | table réduite (235 Ko), **versionnée** — ne pas régénérer sans raison |
-| `tools/` | outils hors-app : `build-ciqual.js` (conversion de la table ANSES) |
+| `tools/` | outils hors-app : `build-ciqual.js` (conversion de la table ANSES), `build-perso.js` (GIF PixelLab → sprites de l'app) |
 
 ## Invariants à ne pas casser
 

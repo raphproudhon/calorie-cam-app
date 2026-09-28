@@ -15,7 +15,9 @@
 import { createContext, useContext, useEffect, useMemo, useRef, useState } from "react";
 import {
   ActivityIndicator,
+  Image,
   Modal,
+  PanResponder,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -43,7 +45,11 @@ import {
   recompenserPesee,
   ajouterXp,
   jeuParDefaut,
+  etapePersonnage,
+  NB_ETAPES,
+  PERSOS,
 } from "./jeu";
+import { SPRITES } from "./perso-sprites";
 
 // Le theme "accent" de l'app suit le personnage : sa couleur evolue avec le
 // niveau (bleu -> cramoisi -> or). Fourni par App, lu partout via useContext.
@@ -90,6 +96,16 @@ export default function App() {
             setEtat((e) => ({ ...e, profil, objectif }))
           }
         />
+      </View>
+    );
+  }
+
+  // --- Choix du personnage (une seule fois, definitif) ---
+  // Aussi montre aux utilisateurs deja installes avant l'arrivee des persos.
+  if (!etat.perso) {
+    return (
+      <View style={styles.ecran}>
+        <ChoixPerso onChoisir={(perso) => setEtat((e) => ({ ...e, perso }))} />
       </View>
     );
   }
@@ -178,6 +194,7 @@ export default function App() {
         onResetJour={() => majJour({ consomme: 0, sport: "" })}
         onDevXp={(m) => setEtat((e) => ({ ...e, jeu: ajouterXp(e.jeu, m) }))}
         onResetHeros={() => setEtat((e) => ({ ...e, jeu: jeuParDefaut() }))}
+        onDevPerso={() => setEtat((e) => ({ ...e, perso: e.perso === "chat" ? "humain" : "chat" }))}
       />
     </View>
     </AccentCtx.Provider>
@@ -822,7 +839,7 @@ function CarteCleApi() {
   );
 }
 
-function MenuParametres({ visible, etat, onFermer, onModifierObjectif, onAjouterPoids, onResetJour, onDevXp, onResetHeros }) {
+function MenuParametres({ visible, etat, onFermer, onModifierObjectif, onAjouterPoids, onResetJour, onDevXp, onResetHeros, onDevPerso }) {
   const accent = useAccent();
   const [vue, setVue] = useState("menu"); // menu | objectif
   const [poidsSaisi, setPoidsSaisi] = useState("");
@@ -943,7 +960,8 @@ function MenuParametres({ visible, etat, onFermer, onModifierObjectif, onAjouter
               <View style={[styles.carte, { borderWidth: 1, borderColor: COULEURS.accent }]}>
                 <Text style={styles.champLabel}>🧪 Test (mode développeur)</Text>
                 <Text style={styles.objectifDetail}>
-                  Niveau {niveauDepuisXp(etat.jeu.xp).niveau} · {etat.jeu.xp} XP
+                  Niveau {niveauDepuisXp(etat.jeu.xp).niveau} · {etat.jeu.xp} XP ·
+                  étape {etapePersonnage(niveauDepuisXp(etat.jeu.xp).niveau) + 1}/{NB_ETAPES}
                 </Text>
                 <View style={[styles.row2, { marginTop: 10 }]}>
                   <TouchableOpacity style={[styles.bouton, styles.boutonSecondaire, styles.boutonMoitie]} onPress={() => onDevXp(100)}>
@@ -955,6 +973,11 @@ function MenuParametres({ visible, etat, onFermer, onModifierObjectif, onAjouter
                 </View>
                 <TouchableOpacity style={[styles.bouton, styles.boutonSecondaire, { marginTop: 8 }]} onPress={onResetHeros}>
                   <Text style={styles.boutonTexte}>Réinitialiser le héros</Text>
+                </TouchableOpacity>
+                {/* En vrai le choix est definitif ; ce bouton sert seulement a
+                    voir les deux persos pendant le developpement. */}
+                <TouchableOpacity style={[styles.bouton, styles.boutonSecondaire]} onPress={onDevPerso}>
+                  <Text style={styles.boutonTexte}>Changer de perso (test)</Text>
                 </TouchableOpacity>
               </View>
             ) : null}
@@ -1264,7 +1287,7 @@ function EcranProgression({ etat }) {
       <Text style={styles.sousTitre}>Votre poids et vos calories dans le temps</Text>
 
       {/* --- Personnage & niveau --- */}
-      <CarteHeros jeu={etat.jeu} />
+      <CarteHeros jeu={etat.jeu} perso={etat.perso} />
 
       {/* --- Courbe de poids --- */}
       <View style={styles.carte}>
@@ -1296,15 +1319,103 @@ function EcranProgression({ etat }) {
   );
 }
 
-/** Carte de progression : niveau, barre d'XP, serie, badges. */
-function CarteHeros({ jeu }) {
+/**
+ * Le personnage, que l'utilisateur fait tourner en glissant le doigt : chaque
+ * tranche de deplacement horizontal passe a la direction suivante (8 en tout,
+ * ca boucle). Les sprites sont prepares par tools/build-perso.js : meme canevas
+ * pour toutes les etapes (le perso ne saute pas d'une etape a l'autre) et
+ * pixels deja agrandis (pas de flou).
+ */
+function AvatarPerso({ perso, etape, taille = 280, zoom = 1, tournable = true }) {
+  const frames = SPRITES[perso][Math.max(0, Math.min(etape, NB_ETAPES - 1))];
+  const [direction, setDirection] = useState(0);
+  const directionRef = useRef(0); // valeur courante, lisible dans le geste
+  const baseRef = useRef(0);      // direction au debut du glissement
+
+  const pan = useRef(
+    PanResponder.create({
+      onStartShouldSetPanResponder: () => true,
+      onMoveShouldSetPanResponder: (_e, g) => Math.abs(g.dx) > 3,
+      onPanResponderGrant: () => { baseRef.current = directionRef.current; },
+      onPanResponderMove: (_e, g) => {
+        // ~22 px de glissement = une direction. Glisser vers la droite fait
+        // tourner le perso vers la droite (sens naturel du geste).
+        const n = (((baseRef.current + Math.round(g.dx / 22)) % 8) + 8) % 8;
+        directionRef.current = n;
+        setDirection(n);
+      },
+    })
+  ).current;
+
+  return (
+    // zoom > 1 recadre sur le centre du canevas : utile pour les premieres
+    // etapes, ou le perso n'occupe que le milieu (la marge sert aux effets des
+    // etapes suivantes).
+    <View
+      style={{ width: taille, height: taille, overflow: "hidden", alignItems: "center", justifyContent: "center" }}
+      {...(tournable ? pan.panHandlers : {})}
+    >
+      <Image source={frames[direction]} style={{ width: taille * zoom, height: taille * zoom }} fadeDuration={0} />
+    </View>
+  );
+}
+
+/** Premier lancement : choix du personnage, definitif. */
+function ChoixPerso({ onChoisir }) {
+  const [choix, setChoix] = useState(null);
+  const accent = useAccent();
+
+  return (
+    <ScrollView contentContainerStyle={styles.contenu}>
+      <Text style={styles.titre}>Votre héros</Text>
+      <Text style={styles.sousTitre}>
+        Il évoluera avec vous, niveau après niveau. Choisissez bien : ce choix est définitif.
+      </Text>
+      <View style={styles.choixPersoRangee}>
+        {["humain", "chat"].map((p) => (
+          <Pressable
+            key={p}
+            onPress={() => setChoix(p)}
+            style={[styles.choixPersoCarte, choix === p && { borderColor: accent }]}
+          >
+            <AvatarPerso perso={p} etape={0} taille={140} zoom={1.8} tournable={false} />
+            <Text style={styles.choixPersoNom}>{PERSOS[p].nom}</Text>
+          </Pressable>
+        ))}
+      </View>
+      <TouchableOpacity
+        style={[styles.bouton, { marginTop: 24, backgroundColor: accent }, !choix && styles.boutonInactif]}
+        disabled={!choix}
+        onPress={() => onChoisir(choix)}
+      >
+        <Text style={styles.boutonTexte}>
+          {choix ? `Commencer avec ${PERSOS[choix].nom.toLowerCase()}` : "Choisissez un héros"}
+        </Text>
+      </TouchableOpacity>
+    </ScrollView>
+  );
+}
+
+/** Carte de progression : personnage, niveau, barre d'XP, serie, badges. */
+function CarteHeros({ jeu, perso }) {
   const j = jeu || { xp: 0, streak: 0, badges: [] };
   const niv = niveauDepuisXp(j.xp);
   const accent = accentPourNiveau(niv.niveau); // couleur du theme a ce niveau
   const badgesAcquis = new Set(j.badges || []);
+  const etape = etapePersonnage(niv.niveau);
 
   return (
     <View style={styles.carte}>
+      {perso ? (
+        <>
+          <View style={styles.herosScene}>
+            <AvatarPerso perso={perso} etape={etape} />
+          </View>
+          <Text style={styles.astuceCentre}>glissez pour le faire tourner</Text>
+          <Text style={[styles.herosTitreCentre, { color: accent }]}>{PERSOS[perso].etapes[etape]}</Text>
+        </>
+      ) : null}
+
       <Text style={styles.herosNiveauGros}>Niveau {niv.niveau}</Text>
 
       <View style={styles.xpFond}>
@@ -1717,6 +1828,26 @@ const styles = StyleSheet.create({
   xpRempli: { height: 10, borderRadius: 5, backgroundColor: COULEURS.accent },
   herosStreak: { fontSize: 13, color: COULEURS.texte, marginTop: 8, fontWeight: "600" },
 
+  herosScene: {
+    alignItems: "center",
+    justifyContent: "center",
+    paddingVertical: 8,
+    borderRadius: 16,
+    backgroundColor: "#161320",
+  },
+  astuceCentre: { fontSize: 11, color: COULEURS.doux, textAlign: "center", marginTop: 6 },
+  herosTitreCentre: { fontSize: 16, fontWeight: "700", textAlign: "center", marginTop: 8 },
+  choixPersoRangee: { flexDirection: "row", gap: 12, marginTop: 24 },
+  choixPersoCarte: {
+    flex: 1,
+    alignItems: "center",
+    paddingVertical: 16,
+    borderRadius: 16,
+    borderWidth: 2,
+    borderColor: COULEURS.bord,
+    backgroundColor: COULEURS.carte,
+  },
+  choixPersoNom: { color: COULEURS.texte, fontSize: 15, fontWeight: "700", marginTop: 8, textAlign: "center" },
   herosNiveauGros: { fontSize: 30, fontWeight: "800", color: COULEURS.texte, textAlign: "center", marginTop: 10 },
   herosXpCentre: { fontSize: 12, color: COULEURS.doux, textAlign: "center", marginTop: 5 },
   herosStreakCentre: { fontSize: 14, color: COULEURS.texte, textAlign: "center", marginTop: 10, fontWeight: "600" },
@@ -1730,6 +1861,7 @@ const styles = StyleSheet.create({
     backgroundColor: COULEURS.fond,
   },
   badgeVerrou: { opacity: 0.5 },
+  boutonInactif: { opacity: 0.4 },
   badgeEmoji: { fontSize: 22 },
   badgeEmojiVerrou: { fontSize: 18 },
   badgeLibelle: { fontSize: 9, color: COULEURS.doux, textAlign: "center", marginTop: 3 },

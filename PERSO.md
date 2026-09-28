@@ -509,62 +509,29 @@ régulier.
 Le début va vite (5 étapes en une semaine, pour accrocher). La fin prend
 deux à trois ans : c'est la longévité voulue.
 
+## Intégration dans l'app (faite)
+
+- `tools/build-perso.js` : lit les 40 GIF, recentre chaque direction sur un
+  canevas commun de 128 × 128 (les agrandissements 64 → 96 → 128 étaient
+  centrés, donc les pieds restent alignés d'une étape à l'autre), agrandit ×4 au
+  plus proche voisin (pixels nets, pas de flou) et écrit
+  `assets/perso/{humain,chat}/rot/{étape}/{direction}.png` + `perso-sprites.js`.
+  À relancer après tout changement de GIF.
+- `jeu.js` : `PALIERS_PERSO` (les 20 paliers ci-dessus), `PERSOS` (noms des
+  persos et des étapes), `etapePersonnage(niveau)`.
+- `stockage.js` : `etat.perso` = `"humain"` | `"chat"` | `null`.
+- `App.js` : écran **« Votre héros »** juste après l'onboarding (et une fois
+  pour les utilisateurs existants) ; `AvatarPerso` (rotation au doigt, 22 px
+  de glissement = une direction) dans la carte de l'onglet Progression, avec le
+  nom de l'étape. Section de test (mode dev) : étape N/20 et bouton pour
+  changer de perso.
+
 ## Reste à faire
 
-- [x] H1 validé (`assets/perso/humain/h1.gif`)
-- [x] H2
-- [x] H3
-- [x] H4
-- [x] H5 (fin de l'acte I)
-- [x] H6
-- [x] H7
-- [x] H8 (canevas 96 × 96 à partir d'ici)
-- [x] H9
-- [x] H10 (fin de l'acte II)
-- [x] H11
-- [x] H12
-- [x] H13
-- [x] H14
-- [x] H15 (canevas 128 × 128 à partir d'ici)
-- [x] H16
-- [x] H17
-- [x] H18
-- [x] H19
-- [x] H20 — **les 20 étapes de l'humain sont faites** (rotations 8 directions)
-- [ ] Humain : animations (idle + réactions)
-- [ ] Dans l'app : entourer H1-H7 de 16 px transparents (64 → 96), chacun en nouvel état du précédent
-- [ ] Dans l'app : raviver un peu la saturation du sprite si besoin (PixelLab rend des couleurs ternes)
-- [x] H2
-- [x] H3
-- [x] H4
-- [x] H5 (fin de l'acte I)
-- [x] H6
-- [x] H7
-- [x] H8 (canevas 96 × 96 à partir d'ici)
-- [x] H9
-- [x] H10 (fin de l'acte II)
-- [x] H11
-- [x] H12
-- [x] H13
-- [x] H14
-- [x] H15 (canevas 128 × 128 à partir d'ici)
-- [x] H16
-- [x] H17
-- [x] H18
-- [x] H19
-- [x] H20 — **les 20 étapes de l'humain sont faites** (rotations 8 directions)
-- [ ] Humain : animations (idle + réactions)
-- [ ] Dans l'app : entourer H1-H7 de 16 px transparents (64 → 96), chacun en nouvel état du précédent, en vérifiant ~60 px de haut
-- [x] C1 (`assets/perso/chat/c1.gif`)
-- [x] C2
-- [x] C3 (64 × 64)
-- [x] C4 (canevas 96 × 96 à partir d'ici)
-- [x] C5 (fin de l'acte I)
-- [x] C6
-- [x] C7
-- [x] C8
-- [ ] C9 → C20
-- [ ] Tester H1 dans l'app (affichage agrandi, pixels nets)
-- [ ] Code : choix du perso à l'onboarding (persisté dans `stockage.js`, non modifiable ensuite)
-- [ ] Code : `PALIERS_PERSO` (20 étapes) dans `jeu.js`, composant d'affichage
-      (rotation + animations + réactions) dans `App.js`
+- [x] Humain : 20 étapes (`assets/perso/humain/h1..h20.gif`, 8 directions chacune)
+- [x] Chat : 20 étapes (`assets/perso/chat/c1..c20.gif`, 8 directions chacune)
+- [x] App : choix du perso, 20 paliers, affichage net, pieds alignés, rotation au doigt
+- [ ] Tester sur le téléphone (Expo Go) : taille du perso à l'écran, fluidité de la rotation
+- [ ] Animations (idle + content / level up / fatigué / miam) pour les deux persos
+- [ ] Afficher le perso ailleurs (montée de niveau, Bilan…)
+- [ ] Éventuellement : raviver un peu la saturation (PixelLab rend des couleurs ternes)

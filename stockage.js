@@ -12,6 +12,7 @@
 //     jour:      { date, consomme, sport },   // journee EN COURS
 //     historique:[ { date, consomme, sport, objectif } ],  // jours passes
 //     poids:     [ { date, valeur } ],   // journal de poids
+//     perso:     "humain" | "chat" | null, // personnage choisi (definitif)
 //   }
 //
 // profil === null signifie "premier lancement" -> on montre l'onboarding.
@@ -38,6 +39,7 @@ function etatParDefaut() {
     jour: { date: dateDuJour(), consomme: 0, sport: "" },
     historique: [],
     poids: [],
+    perso: null,
     jeu: jeuParDefaut(),
   };
 }
