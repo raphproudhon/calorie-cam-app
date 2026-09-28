@@ -40,8 +40,7 @@ import { chargerEtat, sauvegarderEtat, dateDuJour } from "./stockage";
 import { chargerCle, definirCle, cleGemini, cleEmbarqueePresente } from "./cle";
 import {
   niveauDepuisXp,
-  accentPourNiveau,
-  fondPourNiveau,
+  themePerso,
   BADGES,
   recompenserPesee,
   ajouterXp,
@@ -140,11 +139,11 @@ export default function App() {
   const ajouterConsomme = (kcal) =>
     majJour({ consomme: (etat.jour.consomme || 0) + Math.max(0, Math.round(kcal || 0)) });
 
-  // Accent + fond du theme : ils progressent avec le niveau. Le fond reste
-  // tres sombre (teinte legere) pour la lisibilite.
+  // Accent + fond du theme : propres a chaque perso (voir themePerso). Pour le
+  // Necromancien ils progressent avec le niveau. Le fond reste tres sombre
+  // (teinte legere) pour la lisibilite.
   const niveauCourant = niveauDepuisXp((etat.jeu || {}).xp || 0).niveau;
-  const accent = accentPourNiveau(niveauCourant);
-  const fond = fondPourNiveau(niveauCourant);
+  const { accent, fond } = themePerso(etat.perso, niveauCourant);
 
   const cible = (id) => (noeud) => { if (noeud) cibles.current[id] = noeud; };
 
@@ -1565,7 +1564,7 @@ function CarteHeros({ jeu, perso, onGeste }) {
   const cible = useCible();
   const j = jeu || { xp: 0, streak: 0, badges: [] };
   const niv = niveauDepuisXp(j.xp);
-  const accent = accentPourNiveau(niv.niveau); // couleur du theme a ce niveau
+  const { accent } = themePerso(perso, niv.niveau); // couleur du theme (perso, niveau)
   const badgesAcquis = new Set(j.badges || []);
   const etape = etapePersonnage(niv.niveau);
 

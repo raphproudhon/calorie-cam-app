@@ -251,3 +251,18 @@ function melangeHex(a, b, t) {
 export function fondPourNiveau(niveau) {
   return melangeHex(accentPourNiveau(niveau), "#15131B", 0.16);
 }
+
+// --- Theme par perso -----------------------------------------------------------
+// Chaque perso a son propre theme. Le Necromancien (humain) suit la rampe
+// ci-dessus, qui evolue avec le niveau. Le Chat celeste aura un theme a lui
+// (consignes a venir) : en attendant, couleur fixe (bleu du palier 1), sans
+// progression.
+const ACCENT_CHAT = RAMPE_ACCENT[0];
+
+/** Theme de l'app { accent, fond } pour un perso et un niveau donnes. */
+export function themePerso(perso, niveau) {
+  if (perso === "chat") {
+    return { accent: ACCENT_CHAT, fond: melangeHex(ACCENT_CHAT, "#15131B", 0.16) };
+  }
+  return { accent: accentPourNiveau(niveau), fond: fondPourNiveau(niveau) };
+}
