@@ -148,7 +148,13 @@ export default function App() {
     <View style={[styles.ecran, { backgroundColor: fond }]}>
       {/* Barre du haut : roue crantee (parametres) a gauche + titre */}
       <View style={[styles.barreHaut, { backgroundColor: fond }]}>
-        <Pressable onPress={() => setParamsOuverts(true)} hitSlop={12} style={styles.rouePos}>
+        <Pressable
+          onPress={() => setParamsOuverts(true)}
+          hitSlop={14}
+          style={({ pressed }) => [styles.rouePos, pressed && styles.roueAppui]}
+          accessibilityRole="button"
+          accessibilityLabel="Paramètres"
+        >
           <Text style={styles.roue}>⚙︎</Text>
         </Pressable>
         <Text style={styles.barreTitre}>CalorieCam</Text>
@@ -1575,11 +1581,18 @@ const styles = StyleSheet.create({
     alignItems: "center",
     paddingTop: 56,
     paddingHorizontal: 20,
-    paddingBottom: 4,
+    paddingBottom: 10, // laisse la zone de la roue au-dessus des onglets
     backgroundColor: COULEURS.fond,
+    zIndex: 2, // la zone de la roue deborde un peu : elle doit passer devant les onglets
   },
-  rouePos: { position: "absolute", left: 16, top: 50, padding: 6 },
-  roue: { fontSize: 24, color: COULEURS.texte },
+  // Zone de 52 x 52 centree sur la ligne du titre (+ hitSlop) : facile a
+  // toucher. zIndex : au-dessus du titre, qui occupe toute la largeur.
+  rouePos: {
+    position: "absolute", left: 6, top: 41, width: 52, height: 52, zIndex: 1,
+    alignItems: "center", justifyContent: "center", borderRadius: 26,
+  },
+  roueAppui: { backgroundColor: "rgba(255,255,255,0.12)" },
+  roue: { fontSize: 32, lineHeight: 36, color: COULEURS.texte },
   barreTitre: { flex: 1, textAlign: "center", fontSize: 18, fontWeight: "700", color: COULEURS.texte },
 
   tabs: {
