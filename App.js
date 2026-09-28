@@ -1490,7 +1490,7 @@ function ChoixPerso({ onChoisir }) {
   );
 }
 
-/** Carte de progression : personnage, niveau, barre d'XP, serie, badges. */
+/** Haut de Progression : le perso a meme l'ecran (niveau, XP, serie), puis la carte des badges. */
 function CarteHeros({ jeu, perso, onGeste }) {
   const j = jeu || { xp: 0, streak: 0, badges: [] };
   const niv = niveauDepuisXp(j.xp);
@@ -1499,44 +1499,48 @@ function CarteHeros({ jeu, perso, onGeste }) {
   const etape = etapePersonnage(niv.niveau);
 
   return (
-    <View style={styles.carte}>
-      {perso ? (
-        <>
-          <View style={styles.herosScene}>
+    <>
+      {/* Le perso, a meme l'ecran (pas de carte) : centre, avec niveau et
+          barre d'XP centres juste en dessous. */}
+      <View style={styles.herosZone}>
+        {perso ? (
+          <>
             <AvatarPerso perso={perso} etape={etape} onGeste={onGeste} />
-          </View>
-          <Text style={styles.astuceCentre}>glissez pour le faire tourner</Text>
-          <Text style={[styles.herosTitreCentre, { color: accent }]}>{PERSOS[perso].etapes[etape]}</Text>
-        </>
-      ) : null}
+            <Text style={styles.astuceCentre}>glissez pour le faire tourner</Text>
+            <Text style={[styles.herosTitreCentre, { color: accent }]}>{PERSOS[perso].etapes[etape]}</Text>
+          </>
+        ) : null}
 
-      <Text style={styles.herosNiveauGros}>Niveau {niv.niveau}</Text>
+        <Text style={styles.herosNiveauGros}>Niveau {niv.niveau}</Text>
 
-      <View style={styles.xpFond}>
-        <View style={[styles.xpRempli, { width: `${Math.round(niv.progression * 100)}%`, backgroundColor: accent }]} />
+        <View style={[styles.xpFond, styles.xpFondCentre]}>
+          <View style={[styles.xpRempli, { width: `${Math.round(niv.progression * 100)}%`, backgroundColor: accent }]} />
+        </View>
+        <Text style={styles.herosXpCentre}>{niv.xpDansNiveau} / {niv.xpNiveau} XP</Text>
+
+        {j.streak > 0 ? (
+          <Text style={styles.herosStreakCentre}>🔥 Série : {j.streak} jour{j.streak > 1 ? "s" : ""}</Text>
+        ) : null}
       </View>
-      <Text style={styles.herosXpCentre}>{niv.xpDansNiveau} / {niv.xpNiveau} XP</Text>
-
-      {j.streak > 0 ? (
-        <Text style={styles.herosStreakCentre}>🔥 Série : {j.streak} jour{j.streak > 1 ? "s" : ""}</Text>
-      ) : null}
 
       {/* Badges */}
-      <Text style={[styles.champLabel, { marginTop: 14 }]}>Badges</Text>
-      <View style={styles.badgesZone}>
-        {BADGES.map((b) => {
-          const acquis = badgesAcquis.has(b.id);
-          return (
-            <View key={b.id} style={[styles.badge, !acquis && styles.badgeVerrou]}>
-              <Text style={[styles.badgeEmoji, !acquis && styles.badgeEmojiVerrou]}>
-                {acquis ? b.emoji : "🔒"}
-              </Text>
-              <Text style={styles.badgeLibelle}>{b.libelle}</Text>
-            </View>
-          );
-        })}
+      <View style={styles.carte}>
+        <Text style={styles.champLabel}>Badges</Text>
+        <View style={styles.badgesZone}>
+          {BADGES.map((b) => {
+            const acquis = badgesAcquis.has(b.id);
+            return (
+              <View key={b.id} style={[styles.badge, !acquis && styles.badgeVerrou]}>
+                <Text style={[styles.badgeEmoji, !acquis && styles.badgeEmojiVerrou]}>
+                  {acquis ? b.emoji : "🔒"}
+                </Text>
+                <Text style={styles.badgeLibelle}>{b.libelle}</Text>
+              </View>
+            );
+          })}
+        </View>
       </View>
-    </View>
+    </>
   );
 }
 
@@ -1929,13 +1933,8 @@ const styles = StyleSheet.create({
   xpRempli: { height: 10, borderRadius: 5, backgroundColor: COULEURS.accent },
   herosStreak: { fontSize: 13, color: COULEURS.texte, marginTop: 8, fontWeight: "600" },
 
-  herosScene: {
-    alignItems: "center",
-    justifyContent: "center",
-    paddingVertical: 8,
-    borderRadius: 16,
-    backgroundColor: "#161320",
-  },
+  herosZone: { alignItems: "center", marginTop: 12 },
+  xpFondCentre: { width: "75%", marginTop: 10 },
   astuceCentre: { fontSize: 11, color: COULEURS.doux, textAlign: "center", marginTop: 6 },
   herosTitreCentre: { fontSize: 16, fontWeight: "700", textAlign: "center", marginTop: 8 },
   choixPersoRangee: { flexDirection: "row", gap: 12, marginTop: 24 },
