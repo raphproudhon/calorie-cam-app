@@ -15,13 +15,14 @@
 //   - action : l'utilisateur fait le geste lui-meme (toucher un onglet, la roue
 //     crantee) ; le trou laisse passer le doigt et l'etape avance toute seule ;
 //   - sans cible : bulle au centre (ce qui n'est pas encore a l'ecran).
+// Une main animee montre le geste attendu (geste: "appui" ou "glisser").
 //
 // Les Parametres s'ouvrent dans une Modal, qui passe au-dessus de tout : les
 // etapes zone: "params" sont donc dessinees par une seconde instance du
 // tutoriel, placee dans la Modal. L'etape courante est tenue par l'App.
 
 import { createContext, useContext, useEffect, useRef, useState } from "react";
-import { Pressable, StyleSheet, Text, View, useWindowDimensions } from "react-native";
+import { Animated, Easing, Platform, Pressable, StyleSheet, Text, View, useWindowDimensions } from "react-native";
 
 export const ETAPES_TUTO = [
   // --- Photo ---
@@ -51,6 +52,7 @@ export const ETAPES_TUTO = [
     titre: "Votre progression",
     texte: "Touchez l'onglet Progression.",
     attendOnglet: "progression",
+    geste: "appui",
   },
   {
     cible: "perso",
@@ -59,6 +61,7 @@ export const ETAPES_TUTO = [
     titre: "Votre héros",
     texte: "Il évolue au fil de vos niveaux. Glissez le doigt à l'horizontale pour le faire tourner : essayez !",
     libre: true,
+    geste: "glisser",
   },
   {
     cible: "xp",
@@ -95,6 +98,7 @@ export const ETAPES_TUTO = [
     titre: "Votre journée",
     texte: "Touchez l'onglet Bilan.",
     attendOnglet: "bilan",
+    geste: "appui",
   },
   {
     cible: "bilan-reste",
@@ -123,6 +127,7 @@ export const ETAPES_TUTO = [
     titre: "Réglages",
     texte: "Touchez la roue crantée.",
     attendParams: true,
+    geste: "appui",
   },
   {
     cible: "params-objectif",
@@ -215,6 +220,92 @@ const PREMIER_PLAN = { zIndex: 100, elevation: 100 };
 
 /** Nombre d'etapes, pour l'App (fin du tutoriel). */
 export const NB_ETAPES_TUTO = ETAPES_TUTO.length;
+
+// --- La main animee ------------------------------------------------------------
+
+const TAILLE_DOIGT = 46;
+const ANIM_NATIVE = Platform.OS !== "web"; // le driver natif n'existe pas sur le web
+
+/**
+ * Main qui mime le geste attendu, en boucle, le bout du doigt sur (x, y) :
+ *   - "appui"  : le doigt s'enfonce et une onde s'elargit sous lui ;
+ *   - "glisser": le doigt part de la gauche et glisse vers la droite (sur
+ *     `course` px), puis s'efface et recommence.
+ * Purement decoratif : ne capte jamais le doigt de l'utilisateur.
+ */
+function MainAnimee({ x, y, geste, course = 120, accent }) {
+  const t = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    t.setValue(0);
+    const boucle = Animated.loop(
+      Animated.timing(t, {
+        toValue: 1,
+        duration: geste === "glisser" ? 1800 : 1300,
+        easing: Easing.inOut(Easing.quad),
+        useNativeDriver: ANIM_NATIVE,
+      })
+    );
+    boucle.start();
+    return () => boucle.stop();
+  }, [geste]);
+
+  // L'emoji 👆 a le bout du doigt en haut, un peu a gauche du centre.
+  const pos = { left: x - TAILLE_DOIGT * 0.42, top: y - TAILLE_DOIGT * 0.1 };
+
+  if (geste === "glisser") {
+    const d = course / 2;
+    return (
+      <Animated.View
+        pointerEvents="none"
+        style={[
+          styles.main,
+          pos,
+          {
+            opacity: t.interpolate({ inputRange: [0, 0.1, 0.7, 0.85, 1], outputRange: [0, 1, 1, 0, 0] }),
+            transform: [
+              { translateX: t.interpolate({ inputRange: [0, 0.1, 0.7, 1], outputRange: [-d, -d, d, d] }) },
+            ],
+          },
+        ]}
+      >
+        <Text style={styles.doigt}>👆</Text>
+      </Animated.View>
+    );
+  }
+
+  // Appui : onde sous le doigt + doigt qui s'enfonce.
+  return (
+    <>
+      <Animated.View
+        pointerEvents="none"
+        style={[
+          styles.onde,
+          { left: x - 22, top: y - 22, borderColor: accent },
+          {
+            opacity: t.interpolate({ inputRange: [0, 0.3, 0.32, 0.8, 1], outputRange: [0, 0, 0.9, 0, 0] }),
+            transform: [{ scale: t.interpolate({ inputRange: [0, 0.3, 0.8, 1], outputRange: [0.3, 0.3, 1.6, 1.6] }) }],
+          },
+        ]}
+      />
+      <Animated.View
+        pointerEvents="none"
+        style={[
+          styles.main,
+          pos,
+          {
+            transform: [
+              { translateY: t.interpolate({ inputRange: [0, 0.3, 0.5, 1], outputRange: [10, 0, 10, 10] }) },
+              { scale: t.interpolate({ inputRange: [0, 0.3, 0.5, 1], outputRange: [1, 0.86, 1, 1] }) },
+            ],
+          },
+        ]}
+      >
+        <Text style={styles.doigt}>👆</Text>
+      </Animated.View>
+    </>
+  );
+}
 
 export function Tutoriel({ zone = "app", i, setI, registre, onglet, setOnglet, paramsOuverts, accent, onFin }) {
   const [trou, setTrou] = useState(null); // { x, y, w, h } en coordonnees fenetre ; "centre" si sans cible
@@ -318,8 +409,12 @@ export function Tutoriel({ zone = "app", i, setI, registre, onglet, setOnglet, p
   // Bulle du cote ou il y a le plus de place, puis ramenee dans l'ecran (elle
   // peut alors chevaucher un peu la cible, plutot que d'etre coupee).
   const enBas = H - (y + h) >= y;
+  // Main animee au centre de la cible ; pour un appui, elle deborde sous la
+  // cible : on eloigne la bulle d'autant.
+  const main = etape.geste ? { x: x + w / 2, y: y + h / 2 } : null;
+  const ecart = etape.geste === "appui" && enBas ? 14 + Math.max(0, TAILLE_DOIGT + 10 - h / 2) : 14;
   const hautBulle = enBas
-    ? Math.min(y + h + 14, H - hBulle - 16)
+    ? Math.min(y + h + ecart, H - hBulle - 16)
     : Math.max(HAUT_SUR, y - hBulle - 14);
   const bande = { position: "absolute", backgroundColor: SOMBRE };
 
@@ -339,12 +434,24 @@ export function Tutoriel({ zone = "app", i, setI, registre, onglet, setOnglet, p
       />
 
       {bulle({ top: hautBulle })}
+
+      {main ? (
+        <MainAnimee x={main.x} y={main.y} geste={etape.geste} course={Math.min(w * 0.6, 160)} accent={accent} />
+      ) : null}
     </View>
   );
 }
 
 const styles = StyleSheet.create({
   contour: { position: "absolute", borderWidth: 2, borderRadius: 14 },
+  main: { position: "absolute", width: TAILLE_DOIGT, height: TAILLE_DOIGT * 1.2 },
+  doigt: {
+    fontSize: TAILLE_DOIGT,
+    lineHeight: TAILLE_DOIGT * 1.2,
+    textShadowColor: "rgba(0,0,0,0.6)",
+    textShadowRadius: 6,
+  },
+  onde: { position: "absolute", width: 44, height: 44, borderRadius: 22, borderWidth: 3 },
   bulle: {
     position: "absolute",
     left: 16,
