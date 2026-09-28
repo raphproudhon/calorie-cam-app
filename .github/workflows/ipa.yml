@@ -1,0 +1,78 @@
+# Fabrique un fichier .ipa NON SIGNE de l'app, sur un Mac de GitHub Actions.
+# Pour l'installer, il faut le signer soi-meme (outil de sideload + certificat) :
+# ce workflow ne touche a aucun compte Apple.
+#
+# Declenchement : un commit dont le message contient "[ipa]" sur la branche du
+# perso (ou "Run workflow" une fois ce fichier present sur main). Pas a chaque
+# push : le depot est prive, et les minutes macOS comptent 10 fois.
+#
+# Sortie : une release GitHub "ipa-<numero>" (pre-release) avec
+# CalorieCam-ipa-<numero>.ipa en piece jointe, telechargeable depuis le telephone.
+# Aucune cle API embarquee : on colle la sienne dans les Parametres.
+
+name: IPA (non signe)
+
+on:
+  push:
+    branches: [claude/refonte-systeme-perso-ets8q7]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: ipa
+  cancel-in-progress: true
+
+jobs:
+  ipa:
+    if: github.event_name == 'workflow_dispatch' || contains(github.event.head_commit.message, '[ipa]')
+    runs-on: macos-15
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - run: npm ci
+
+      - name: Fichier de secrets vide
+        run: cp secrets.example.js secrets.js
+
+      - name: Numero de version
+        run: |
+          VERSION="ipa-${{ github.run_number }} · ${GITHUB_SHA::7}"
+          echo "VERSION=$VERSION" >> "$GITHUB_ENV"
+          echo "NUM=${{ github.run_number }}" >> "$GITHUB_ENV"
+          printf 'export const VERSION = "%s";\nexport const TEST = true;\n' "$VERSION" > version.js
+
+      - name: Projet iOS natif
+        run: npx expo prebuild --platform ios --clean
+
+      - name: Compilation (Release, sans signature)
+        run: |
+          WS=$(ls -d ios/*.xcworkspace | head -1)
+          SCHEME=$(basename "$WS" .xcworkspace)
+          xcodebuild -workspace "$WS" -scheme "$SCHEME" -configuration Release \
+            -sdk iphoneos -destination 'generic/platform=iOS' \
+            -archivePath build/app.xcarchive archive \
+            CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO CODE_SIGN_IDENTITY="" \
+            | tail -n 200
+
+      - name: Paquet .ipa
+        run: |
+          mkdir -p Payload
+          cp -R build/app.xcarchive/Products/Applications/*.app Payload/
+          zip -qry "CalorieCam-ipa-$NUM.ipa" Payload
+          ls -lh "CalorieCam-ipa-$NUM.ipa"
+
+      - name: Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create "ipa-$NUM" "CalorieCam-ipa-$NUM.ipa" \
+            --target "$GITHUB_SHA" --prerelease \
+            --title "CalorieCam $VERSION" \
+            --notes "IPA non signé, branche ${GITHUB_REF_NAME}. À signer avant installation."
