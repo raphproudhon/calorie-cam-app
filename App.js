@@ -1304,13 +1304,17 @@ function EcranProgression({ etat }) {
   // But (perte/prise/maintien) pour orienter la lecture de la courbe de poids.
   const but = etat.profil?.but;
 
+  // Defilement coupe tant qu'un doigt tourne le perso : sinon, au moindre
+  // ecart vertical, la page defile au lieu de faire tourner le perso.
+  const [defilement, setDefilement] = useState(true);
+
   return (
-    <ScrollView contentContainerStyle={styles.contenu}>
+    <ScrollView contentContainerStyle={styles.contenu} scrollEnabled={defilement}>
       <Text style={styles.titre}>Progression</Text>
       <Text style={styles.sousTitre}>Votre poids et vos calories dans le temps</Text>
 
       {/* --- Personnage & niveau --- */}
-      <CarteHeros jeu={etat.jeu} perso={etat.perso} />
+      <CarteHeros jeu={etat.jeu} perso={etat.perso} onRotation={(actif) => setDefilement(!actif)} />
 
       {/* --- Courbe de poids --- */}
       <View style={styles.carte}>
@@ -1349,24 +1353,38 @@ function EcranProgression({ etat }) {
  * pour toutes les etapes (le perso ne saute pas d'une etape a l'autre) et
  * pixels deja agrandis (pas de flou).
  */
-function AvatarPerso({ perso, etape, taille = 280, zoom = 1, tournable = true }) {
+function AvatarPerso({ perso, etape, taille = 280, zoom = 1, tournable = true, onRotation }) {
   const frames = SPRITES[perso][Math.max(0, Math.min(etape, NB_ETAPES - 1))];
   const [direction, setDirection] = useState(0);
   const directionRef = useRef(0); // valeur courante, lisible dans le geste
   const baseRef = useRef(0);      // direction au debut du glissement
+  // onRotation(true/false) : previent le parent qu'un doigt tourne le perso,
+  // pour qu'il coupe son defilement (sinon il vole le geste). Lu via une ref :
+  // le PanResponder est cree une seule fois.
+  const onRotationRef = useRef(onRotation);
+  onRotationRef.current = onRotation;
+  const fin = () => onRotationRef.current?.(false);
 
   const pan = useRef(
     PanResponder.create({
       onStartShouldSetPanResponder: () => true,
       onMoveShouldSetPanResponder: (_e, g) => Math.abs(g.dx) > 3,
-      onPanResponderGrant: () => { baseRef.current = directionRef.current; },
+      onPanResponderGrant: () => {
+        baseRef.current = directionRef.current;
+        onRotationRef.current?.(true);
+      },
       onPanResponderMove: (_e, g) => {
         // ~22 px de glissement = une direction. Glisser vers la droite fait
-        // tourner le perso vers la droite (sens naturel du geste).
+        // tourner le perso vers la droite (sens naturel du geste). Seul le
+        // deplacement horizontal compte, meme si le doigt part en biais.
         const n = (((baseRef.current + Math.round(g.dx / 22)) % 8) + 8) % 8;
         directionRef.current = n;
         setDirection(n);
       },
+      // Le geste reste au perso jusqu'au lever du doigt.
+      onPanResponderTerminationRequest: () => false,
+      onPanResponderRelease: fin,
+      onPanResponderTerminate: fin,
     })
   ).current;
 
@@ -1420,7 +1438,7 @@ function ChoixPerso({ onChoisir }) {
 }
 
 /** Carte de progression : personnage, niveau, barre d'XP, serie, badges. */
-function CarteHeros({ jeu, perso }) {
+function CarteHeros({ jeu, perso, onRotation }) {
   const j = jeu || { xp: 0, streak: 0, badges: [] };
   const niv = niveauDepuisXp(j.xp);
   const accent = accentPourNiveau(niv.niveau); // couleur du theme a ce niveau
@@ -1432,7 +1450,7 @@ function CarteHeros({ jeu, perso }) {
       {perso ? (
         <>
           <View style={styles.herosScene}>
-            <AvatarPerso perso={perso} etape={etape} />
+            <AvatarPerso perso={perso} etape={etape} onRotation={onRotation} />
           </View>
           <Text style={styles.astuceCentre}>glissez pour le faire tourner</Text>
           <Text style={[styles.herosTitreCentre, { color: accent }]}>{PERSOS[perso].etapes[etape]}</Text>
