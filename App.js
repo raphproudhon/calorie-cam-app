@@ -53,6 +53,7 @@ import {
 import { SPRITES } from "./perso-sprites";
 import { VERSION, TEST } from "./version";
 import { kcalDepuisLien } from "./lien";
+import { Tutoriel, FournisseurCibles, useCible } from "./tuto";
 
 // Le theme "accent" de l'app suit le personnage : sa couleur evolue avec le
 // niveau (bleu -> cramoisi -> or). Fourni par App, lu partout via useContext.
@@ -65,6 +66,7 @@ export default function App() {
   const [etat, setEtat] = useState(null); // null = en cours de chargement
   const [onglet, setOnglet] = useState("photo");
   const [paramsOuverts, setParamsOuverts] = useState(false);
+  const cibles = useRef({}); // vues montrees par le tutoriel (voir tuto.js)
 
   // Chargement de l'etat persiste (profil, historique, poids) au demarrage.
   // chargerEtat applique aussi la bascule de journee (archivage de la veille).
@@ -143,12 +145,16 @@ export default function App() {
   const accent = accentPourNiveau(niveauCourant);
   const fond = fondPourNiveau(niveauCourant);
 
+  const cible = (id) => (noeud) => { if (noeud) cibles.current[id] = noeud; };
+
   return (
     <AccentCtx.Provider value={accent}>
+    <FournisseurCibles registre={cibles}>
     <View style={[styles.ecran, { backgroundColor: fond }]}>
       {/* Barre du haut : roue crantee (parametres) a gauche + titre */}
       <View style={[styles.barreHaut, { backgroundColor: fond }]}>
         <Pressable
+          ref={cible("roue")}
           onPress={() => setParamsOuverts(true)}
           hitSlop={14}
           style={({ pressed }) => [styles.rouePos, pressed && styles.roueAppui]}
@@ -168,6 +174,7 @@ export default function App() {
         ].map(([cle, libelle]) => (
           <Pressable
             key={cle}
+            ref={cible("onglet-" + cle)}
             style={[styles.tab, onglet === cle && styles.tabActif, onglet === cle && { backgroundColor: accent }]}
             onPress={() => setOnglet(cle)}
           >
@@ -221,8 +228,25 @@ export default function App() {
         onDevXp={(m) => setEtat((e) => ({ ...e, jeu: ajouterXp(e.jeu, m) }))}
         onResetHeros={() => setEtat((e) => ({ ...e, jeu: jeuParDefaut() }))}
         onDevPerso={() => setEtat((e) => ({ ...e, perso: e.perso === "chat" ? "humain" : "chat" }))}
+        onRevoirTuto={() => {
+          setParamsOuverts(false);
+          setOnglet("photo");
+          setEtat((e) => ({ ...e, tutoVu: false }));
+        }}
       />
+
+      {/* Tutoriel du premier lancement (et « Revoir le tutoriel »). */}
+      {!etat.tutoVu ? (
+        <Tutoriel
+          registre={cibles}
+          onglet={onglet}
+          setOnglet={setOnglet}
+          accent={accent}
+          onFin={() => setEtat((e) => ({ ...e, tutoVu: true }))}
+        />
+      ) : null}
     </View>
+    </FournisseurCibles>
     </AccentCtx.Provider>
   );
 }
@@ -249,6 +273,7 @@ const LIBELLE_CONFIANCE = {
 
 function EcranPhoto({ onAjouterConsomme }) {
   const accent = useAccent();
+  const cible = useCible();
   const [etape, setEtape] = useState(null); // texte affiche pendant le chargement
   const [analyse, setAnalyse] = useState(null);
   const [erreur, setErreur] = useState(null);
@@ -388,21 +413,25 @@ function EcranPhoto({ onAjouterConsomme }) {
           {" "}({NB_ALIMENTS} aliments)
         </Text>
 
-        <TouchableOpacity style={[styles.bouton, { backgroundColor: accent }]} onPress={() => lancer("camera")}>
-          <Text style={styles.boutonTexte}>Prendre une photo</Text>
-        </TouchableOpacity>
-        <TouchableOpacity
-          style={[styles.bouton, styles.boutonSecondaire]}
-          onPress={() => lancer("galerie")}
-        >
-          <Text style={styles.boutonTexte}>Choisir dans la galerie</Text>
-        </TouchableOpacity>
-        <TouchableOpacity
-          style={[styles.bouton, styles.boutonScan]}
-          onPress={() => ouvrirScanner(false)}
-        >
-          <Text style={styles.boutonTexte}>Scanner un code-barres</Text>
-        </TouchableOpacity>
+        <View ref={cible("photo-actions")}>
+          <TouchableOpacity style={[styles.bouton, { backgroundColor: accent }]} onPress={() => lancer("camera")}>
+            <Text style={styles.boutonTexte}>Prendre une photo</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={[styles.bouton, styles.boutonSecondaire]}
+            onPress={() => lancer("galerie")}
+          >
+            <Text style={styles.boutonTexte}>Choisir dans la galerie</Text>
+          </TouchableOpacity>
+        </View>
+        <View ref={cible("photo-scan")}>
+          <TouchableOpacity
+            style={[styles.bouton, styles.boutonScan]}
+            onPress={() => ouvrirScanner(false)}
+          >
+            <Text style={styles.boutonTexte}>Scanner un code-barres</Text>
+          </TouchableOpacity>
+        </View>
 
         {etape && (
           <View style={styles.centre}>
@@ -865,7 +894,7 @@ function CarteCleApi() {
   );
 }
 
-function MenuParametres({ visible, etat, onFermer, onModifierObjectif, onAjouterPoids, onResetJour, onDevXp, onResetHeros, onDevPerso }) {
+function MenuParametres({ visible, etat, onFermer, onModifierObjectif, onAjouterPoids, onResetJour, onDevXp, onResetHeros, onDevPerso, onRevoirTuto }) {
   const accent = useAccent();
   const [vue, setVue] = useState("menu"); // menu | objectif
   const [poidsSaisi, setPoidsSaisi] = useState("");
@@ -979,6 +1008,17 @@ function MenuParametres({ visible, etat, onFermer, onModifierObjectif, onAjouter
               </TouchableOpacity>
             </View>
 
+            {/* Tutoriel */}
+            <View style={styles.carte}>
+              <Text style={styles.champLabel}>Tutoriel</Text>
+              <TouchableOpacity
+                style={[styles.bouton, styles.boutonSecondaire]}
+                onPress={() => { setVue("menu"); onRevoirTuto(); }}
+              >
+                <Text style={styles.boutonTexte}>Revoir le tutoriel</Text>
+              </TouchableOpacity>
+            </View>
+
             {/* Section de TEST — visible en mode developpement (Expo Go) et
                 dans les versions de test publiees par le workflow expo-go.yml
                 (TEST), jamais dans un vrai build de production. Permet de voir
@@ -1045,6 +1085,7 @@ function MenuParametres({ visible, etat, onFermer, onModifierObjectif, onAjouter
 // =========================================================================
 
 function EcranBilan({ objectif, consomme, sport, onSport }) {
+  const cible = useCible();
   // Le "sport du jour" (saisi a la main, ou importe depuis Apple Sante) vit dans
   // l'etat global : sinon il serait efface a chaque changement d'onglet.
   const [dispoSante] = useState(() => santeDisponible());
@@ -1082,7 +1123,7 @@ function EcranBilan({ objectif, consomme, sport, onSport }) {
 
       {(
         <>
-          <View style={styles.carte}>
+          <View style={styles.carte} ref={cible("bilan-reste")}>
             <Text style={styles.champLabel}>Il vous reste</Text>
             <Text
               style={[
@@ -1135,7 +1176,7 @@ function EcranBilan({ objectif, consomme, sport, onSport }) {
             ))}
           </View>
 
-          <View style={styles.carte}>
+          <View style={styles.carte} ref={cible("bilan-sport")}>
             <Text style={styles.champLabel}>Sport du jour</Text>
             <View style={styles.champNombreBoite}>
               <TextInput
@@ -1492,6 +1533,7 @@ function ChoixPerso({ onChoisir }) {
 
 /** Haut de Progression : le perso a meme l'ecran (niveau, XP, serie), puis la carte des badges. */
 function CarteHeros({ jeu, perso, onGeste }) {
+  const cible = useCible();
   const j = jeu || { xp: 0, streak: 0, badges: [] };
   const niv = niveauDepuisXp(j.xp);
   const accent = accentPourNiveau(niv.niveau); // couleur du theme a ce niveau
@@ -1505,18 +1547,21 @@ function CarteHeros({ jeu, perso, onGeste }) {
       <View style={styles.herosZone}>
         {perso ? (
           <>
-            <AvatarPerso perso={perso} etape={etape} onGeste={onGeste} />
+            <View ref={cible("perso")}>
+              <AvatarPerso perso={perso} etape={etape} onGeste={onGeste} />
+            </View>
             <Text style={styles.astuceCentre}>glissez pour le faire tourner</Text>
             <Text style={[styles.herosTitreCentre, { color: accent }]}>{PERSOS[perso].etapes[etape]}</Text>
           </>
         ) : null}
 
-        <Text style={styles.herosNiveauGros}>Niveau {niv.niveau}</Text>
-
-        <View style={[styles.xpFond, styles.xpFondCentre]}>
-          <View style={[styles.xpRempli, { width: `${Math.round(niv.progression * 100)}%`, backgroundColor: accent }]} />
+        <View ref={cible("xp")} style={styles.herosXpBloc}>
+          <Text style={styles.herosNiveauGros}>Niveau {niv.niveau}</Text>
+          <View style={[styles.xpFond, styles.xpFondCentre]}>
+            <View style={[styles.xpRempli, { width: `${Math.round(niv.progression * 100)}%`, backgroundColor: accent }]} />
+          </View>
+          <Text style={styles.herosXpCentre}>{niv.xpDansNiveau} / {niv.xpNiveau} XP</Text>
         </View>
-        <Text style={styles.herosXpCentre}>{niv.xpDansNiveau} / {niv.xpNiveau} XP</Text>
 
         {j.streak > 0 ? (
           <Text style={styles.herosStreakCentre}>🔥 Série : {j.streak} jour{j.streak > 1 ? "s" : ""}</Text>
@@ -1934,6 +1979,7 @@ const styles = StyleSheet.create({
   herosStreak: { fontSize: 13, color: COULEURS.texte, marginTop: 8, fontWeight: "600" },
 
   herosZone: { alignItems: "center", marginTop: 12 },
+  herosXpBloc: { alignSelf: "stretch", alignItems: "center", paddingBottom: 4 },
   xpFondCentre: { width: "75%", marginTop: 10 },
   astuceCentre: { fontSize: 11, color: COULEURS.doux, textAlign: "center", marginTop: 6 },
   herosTitreCentre: { fontSize: 16, fontWeight: "700", textAlign: "center", marginTop: 8 },

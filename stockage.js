@@ -37,6 +37,7 @@ function etatParDefaut() {
     profil: null,
     objectif: null,
     jour: { date: dateDuJour(), consomme: 0, sport: "" },
+    tutoVu: false, // tutoriel du premier lancement deja vu (voir tuto.js)
     historique: [],
     poids: [],
     perso: null,
