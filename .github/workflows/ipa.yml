@@ -65,6 +65,12 @@ jobs:
         run: |
           mkdir -p Payload
           cp -R build/app.xcarchive/Products/Applications/*.app Payload/
+          # Sans signature, Xcode n'embarque pas les entitlements (HealthKit).
+          # Une signature ad hoc les inscrit dans le binaire : l'outil de
+          # sideload les lit pour les redemander en re-signant.
+          ENT=$(ls ios/*/*.entitlements | head -1)
+          codesign --force --sign - --entitlements "$ENT" Payload/*.app
+          codesign -d --entitlements - Payload/*.app
           zip -qry "CalorieCam-ipa-$NUM.ipa" Payload
           ls -lh "CalorieCam-ipa-$NUM.ipa"
 
