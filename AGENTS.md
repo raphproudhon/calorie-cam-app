@@ -64,6 +64,7 @@ passent dans le même affichage/bilan que les aliments d'une photo.
 | `jeu.js` | gamification : XP, niveaux, badges, étapes du perso (`PALIERS_PERSO`, `PERSOS`, `etapePersonnage`) + palette du thème par niveau |
 | `perso-sprites.js` | **généré** par `tools/build-perso.js` : table des sprites `SPRITES[perso][étape][direction]` |
 | `assets/perso/` | GIF PixelLab sources (`humain/h1..20.gif`, `chat/c1..20.gif`) + PNG générés dans `rot/` |
+| `lien.js` | lien entrant `caloriecam://sport?kcal=N` (raccourci iOS qui lit Apple Santé quand l'app sideloadée n'a pas HealthKit) → remplace le sport du jour |
 | `version.js` | numéro de version affiché dans les Paramètres (`local` ; réécrit par le workflow Expo Go) |
 | `cle.js` | résolution de la clé API Gemini (saisie dans l'app ou `secrets.js`) |
 | `data/ciqual.json` | table réduite (235 Ko), **versionnée** — ne pas régénérer sans raison |
@@ -101,6 +102,10 @@ passent dans le même affichage/bilan que les aliments d'une photo.
   perso) : publie la branche par EAS Update (secret `EXPO_TOKEN`), numérotée
   `perso-<n>` — le numéro s'affiche en bas des Paramètres (`version.js`, réécrit
   par le workflow, qui y active aussi la section de test).
+- **.ipa non signé** (`.github/workflows/ipa.yml`, commit contenant `[ipa]`) :
+  compilé sur un Mac GitHub, publié en pre-release `ipa-<n>`, installé via
+  SideStore. La signature gratuite retire l'entitlement HealthKit (vérifié : il
+  est bien dans l'ipa) → Apple Santé passe par un raccourci iOS et `lien.js`.
 - **Build de développement** (EAS, voir README) : nécessaire pour HealthKit.
   Se lance ensuite avec `npx expo start --dev-client`.
 

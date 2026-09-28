@@ -16,6 +16,7 @@ import { createContext, useContext, useEffect, useMemo, useRef, useState } from 
 import {
   ActivityIndicator,
   Image,
+  Linking,
   Modal,
   PanResponder,
   Pressable,
@@ -51,6 +52,7 @@ import {
 } from "./jeu";
 import { SPRITES } from "./perso-sprites";
 import { VERSION, TEST } from "./version";
+import { kcalDepuisLien } from "./lien";
 
 // Le theme "accent" de l'app suit le personnage : sa couleur evolue avec le
 // niveau (bleu -> cramoisi -> or). Fourni par App, lu partout via useContext.
@@ -75,6 +77,23 @@ export default function App() {
   useEffect(() => {
     if (etat) sauvegarderEtat(etat);
   }, [etat]);
+
+  // Lien caloriecam://sport?kcal=N (raccourci iOS qui lit Apple Sante, voir
+  // lien.js) : remplace le sport du jour et affiche le Bilan. Branche une fois
+  // l'etat charge, pour ne pas ecrire dans un etat encore vide.
+  const charge = etat !== null;
+  useEffect(() => {
+    if (!charge) return;
+    const recevoir = (url) => {
+      const kcal = kcalDepuisLien(url);
+      if (kcal == null) return;
+      setEtat((e) => ({ ...e, jour: { ...e.jour, sport: String(kcal) } }));
+      setOnglet("bilan");
+    };
+    Linking.getInitialURL().then(recevoir).catch(() => {});
+    const abonnement = Linking.addEventListener("url", ({ url }) => recevoir(url));
+    return () => abonnement.remove();
+  }, [charge]);
 
   // --- Ecran d'attente pendant le chargement ---
   if (!etat) {

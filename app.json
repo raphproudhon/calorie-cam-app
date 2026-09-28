@@ -2,6 +2,7 @@
   "expo": {
     "name": "calorie-cam-app",
     "slug": "calorie-cam-app",
+    "scheme": "caloriecam",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
