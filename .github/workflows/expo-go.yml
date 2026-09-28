@@ -1,0 +1,97 @@
+# Publie la branche du nouveau perso dans Expo Go (EAS Update), a chaque push.
+# But : tester la vraie appli sur iPhone sans ordinateur. Chaque publication
+# porte un numero ("perso-<numero>"), affiche en bas des Parametres de l'app.
+#
+# Pre-requis (une seule fois) : un compte expo.dev et son access token, range
+# dans les secrets du depot sous le nom EXPO_TOKEN.
+#
+# Rien de tout ca n'est versionne : expo-updates, le lien vers le projet EAS et
+# le runtimeVersion ne sont ajoutes que dans la copie de travail du workflow.
+#   - runtimeVersion "sdkVersion" (= exposdk:54.0.0) : c'est ce qu'Expo Go sait
+#     charger ; la politique par defaut (appVersion) ne marche que dans un build.
+#   - aucune cle API embarquee (secrets.js vient du modele) : on colle la sienne
+#     dans les Parametres, comme sur la version web.
+
+name: Expo Go (perso)
+
+on:
+  push:
+    branches: [claude/refonte-systeme-perso-ets8q7]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: expo-go-perso
+  cancel-in-progress: true
+
+jobs:
+  publier:
+    runs-on: ubuntu-latest
+    env:
+      EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+    steps:
+      - name: Token Expo present ?
+        run: |
+          if [ -z "$EXPO_TOKEN" ]; then
+            echo "::error::Secret EXPO_TOKEN absent (Settings > Secrets and variables > Actions)."
+            exit 1
+          fi
+
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - run: npm ci
+
+      - name: Fichier de secrets vide
+        run: cp secrets.example.js secrets.js
+
+      - name: Numero de version
+        run: |
+          VERSION="perso-${{ github.run_number }} · ${GITHUB_SHA::7}"
+          echo "VERSION=$VERSION" >> "$GITHUB_ENV"
+          printf 'export const VERSION = "%s";\nexport const TEST = true;\n' "$VERSION" > version.js
+
+      - name: expo-updates (version compatible SDK 54)
+        run: npx expo install expo-updates
+
+      - name: Lien avec le projet EAS (le cree au premier passage)
+        run: npx eas-cli@latest init --non-interactive --force --json > init.json && cat init.json
+
+      - name: runtimeVersion lisible par Expo Go
+        run: |
+          node -e '
+            const fs = require("fs");
+            const cfg = JSON.parse(fs.readFileSync("app.json", "utf8"));
+            cfg.expo.runtimeVersion = { policy: "sdkVersion" };
+            cfg.expo.updates = { ...(cfg.expo.updates || {}), url: "https://u.expo.dev/" + cfg.expo.extra.eas.projectId };
+            fs.writeFileSync("app.json", JSON.stringify(cfg, null, 2));
+          '
+
+      - name: Publication
+        run: |
+          npx eas-cli@latest update --branch perso --platform ios \
+            --message "$VERSION" --non-interactive --json > update.json
+          cat update.json
+
+      - name: Liens
+        run: |
+          node -e '
+            const cfg = require("./app.json").expo;
+            const projet = require("./init.json");
+            const maj = require("./update.json")[0];
+            const id = cfg.extra.eas.projectId;
+            const lignes = [
+              "## " + process.env.VERSION,
+              "",
+              "- Page de la version : " + projet.dashboardUrl + "/updates/" + maj.group,
+              "- Lien Expo Go : `exp://u.expo.dev/" + id + "/group/" + maj.group + "`",
+              "- runtimeVersion : " + maj.runtimeVersion,
+            ];
+            require("fs").appendFileSync(process.env.GITHUB_STEP_SUMMARY, lignes.join("\n") + "\n");
+          '

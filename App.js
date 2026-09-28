@@ -50,6 +50,7 @@ import {
   PERSOS,
 } from "./jeu";
 import { SPRITES } from "./perso-sprites";
+import { VERSION, TEST } from "./version";
 
 // Le theme "accent" de l'app suit le personnage : sa couleur evolue avec le
 // niveau (bleu -> cramoisi -> or). Fourni par App, lu partout via useContext.
@@ -953,10 +954,11 @@ function MenuParametres({ visible, etat, onFermer, onModifierObjectif, onAjouter
               </TouchableOpacity>
             </View>
 
-            {/* Section de TEST — visible uniquement en mode developpement
-                (Expo Go), jamais dans un build de production. Permet de voir la
-                progression evoluer sans attendre l'XP reelle. */}
-            {typeof __DEV__ !== "undefined" && __DEV__ ? (
+            {/* Section de TEST — visible en mode developpement (Expo Go) et
+                dans les versions de test publiees par le workflow expo-go.yml
+                (TEST), jamais dans un vrai build de production. Permet de voir
+                la progression evoluer sans attendre l'XP reelle. */}
+            {TEST || (typeof __DEV__ !== "undefined" && __DEV__) ? (
               <View style={[styles.carte, { borderWidth: 1, borderColor: COULEURS.accent }]}>
                 <Text style={styles.champLabel}>🧪 Test (mode développeur)</Text>
                 <Text style={styles.objectifDetail}>
@@ -1004,6 +1006,8 @@ function MenuParametres({ visible, etat, onFermer, onModifierObjectif, onAjouter
               )}
               {messageSante ? <Text style={styles.objectifDetail}>{messageSante}</Text> : null}
             </View>
+
+            <Text style={[styles.astuceCentre, { marginBottom: 20 }]}>Version {VERSION}</Text>
           </ScrollView>
         )}
       </View>

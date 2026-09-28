@@ -64,6 +64,7 @@ passent dans le même affichage/bilan que les aliments d'une photo.
 | `jeu.js` | gamification : XP, niveaux, badges, étapes du perso (`PALIERS_PERSO`, `PERSOS`, `etapePersonnage`) + palette du thème par niveau |
 | `perso-sprites.js` | **généré** par `tools/build-perso.js` : table des sprites `SPRITES[perso][étape][direction]` |
 | `assets/perso/` | GIF PixelLab sources (`humain/h1..20.gif`, `chat/c1..20.gif`) + PNG générés dans `rot/` |
+| `version.js` | numéro de version affiché dans les Paramètres (`local` ; réécrit par le workflow Expo Go) |
 | `cle.js` | résolution de la clé API Gemini (saisie dans l'app ou `secrets.js`) |
 | `data/ciqual.json` | table réduite (235 Ko), **versionnée** — ne pas régénérer sans raison |
 | `tools/` | outils hors-app : `build-ciqual.js` (conversion de la table ANSES), `build-perso.js` (GIF PixelLab → sprites de l'app) |
@@ -96,6 +97,10 @@ passent dans le même affichage/bilan que les aliments d'une photo.
   pas (caméra web limitée) ; le reste oui. Deps : `react-native-web`, `react-dom`.
 - **GitHub Pages** (`.github/workflows/pages.yml`, push sur `main`) : version web
   publique, sans clé API embarquée — chacun colle la sienne dans les Paramètres.
+- **Expo Go sans PC** (`.github/workflows/expo-go.yml`, push sur la branche du
+  perso) : publie la branche par EAS Update (secret `EXPO_TOKEN`), numérotée
+  `perso-<n>` — le numéro s'affiche en bas des Paramètres (`version.js`, réécrit
+  par le workflow, qui y active aussi la section de test).
 - **Build de développement** (EAS, voir README) : nécessaire pour HealthKit.
   Se lance ensuite avec `npx expo start --dev-client`.
 
