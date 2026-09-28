@@ -307,7 +307,7 @@ function MainAnimee({ x, y, geste, course = 120, accent }) {
   );
 }
 
-export function Tutoriel({ zone = "app", i, setI, registre, onglet, setOnglet, paramsOuverts, accent, onFin }) {
+export function Tutoriel({ zone = "app", i, setI, registre, onglet, setOnglet, paramsOuverts, accent, surAccent = "#fff", onFin }) {
   const [trou, setTrou] = useState(null); // { x, y, w, h } en coordonnees fenetre ; "centre" si sans cible
   const [hBulle, setHBulle] = useState(0); // hauteur de la bulle, pour la garder a l'ecran
   const { width: L, height: H } = useWindowDimensions();
@@ -384,7 +384,7 @@ export function Tutoriel({ zone = "app", i, setI, registre, onglet, setOnglet, p
           <Text style={[styles.consigne, { color: accent }]}>👆 À vous !</Text>
         ) : (
           <Pressable onPress={suivant} style={[styles.suivant, { backgroundColor: accent }]}>
-            <Text style={styles.suivantTexte}>{derniere ? "C'est parti !" : "Suivant"}</Text>
+            <Text style={[styles.suivantTexte, { color: surAccent }]}>{derniere ? "C'est parti !" : "Suivant"}</Text>
           </Pressable>
         )}
       </View>

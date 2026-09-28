@@ -21,6 +21,7 @@ import {
   PanResponder,
   Pressable,
   ScrollView,
+  StatusBar,
   StyleSheet,
   Text,
   TextInput,
@@ -97,6 +98,14 @@ export default function App() {
     return () => abonnement.remove();
   }, [charge]);
 
+  // Palette de l'app : claire pour le Chat, sombre sinon (Necromancien, et
+  // ecrans d'avant le choix du perso), avec l'accent du theme du perso pour
+  // les textes et traits. A appliquer avant tout rendu.
+  appliquerPalette(
+    etat?.perso === "chat" ? "clair" : "sombre",
+    etat?.perso ? themePerso(etat.perso, niveauDepuisXp(etat.jeu?.xp || 0).niveau).accentTexte : null
+  );
+
   // --- Ecran d'attente pendant le chargement ---
   if (!etat) {
     return (
@@ -144,6 +153,8 @@ export default function App() {
   // (teinte legere) pour la lisibilite.
   const niveauCourant = niveauDepuisXp((etat.jeu || {}).xp || 0).niveau;
   const { accent, fond } = themePerso(etat.perso, niveauCourant);
+  // Texte pose sur l'accent (boutons, onglet actif) : fonce sur un accent pale.
+  const surAccent = COULEURS.surAccent;
 
   const cible = (id) => (noeud) => { if (noeud) cibles.current[id] = noeud; };
 
@@ -166,6 +177,7 @@ export default function App() {
     setOnglet,
     paramsOuverts,
     accent,
+    surAccent,
     onFin: finTuto,
   };
 
@@ -173,6 +185,7 @@ export default function App() {
     <AccentCtx.Provider value={accent}>
     <FournisseurCibles registre={cibles}>
     <View style={[styles.ecran, { backgroundColor: fond }]}>
+      <StatusBar barStyle={COULEURS.barreEtat} />
       {/* Barre du haut : roue crantee (parametres) a gauche + titre */}
       <View style={[styles.barreHaut, { backgroundColor: fond }]}>
         <Pressable
@@ -267,15 +280,73 @@ export default function App() {
   );
 }
 
-const COULEURS = {
-  fond: "#17151F",
-  accent: "#C4622D",
-  secondaire: "#363143",
-  texte: "#EEE9F2",
-  doux: "#A49FAE",
-  carte: "#221E2C",
-  bord: "#332F3D",
+// Deux palettes : sombre (Necromancien, et ecrans d'avant le choix du perso)
+// et claire (Chat celeste : blanc, rose pale, vert pale). COULEURS est
+// l'objet vivant lu partout ; appliquerPalette() le remplit et recalcule la
+// feuille de styles (voir creerStyles, en bas du fichier).
+const PALETTES = {
+  sombre: {
+    fond: "#17151F",
+    accent: "#C4622D",     // accent des textes, traits et courbes
+    secondaire: "#363143", // boutons secondaires
+    texte: "#EEE9F2",
+    doux: "#A49FAE",
+    carte: "#221E2C",
+    bord: "#332F3D",
+    piste: "#2A2636",      // fond des barres, segments, options
+    surAccent: "#FFFFFF",  // texte pose sur un bouton ou un onglet colore
+    rouge: "#FF6B6B",
+    vert: "#58D08A",
+    scan: "#4A7C59",
+    supprimer: "#B00020",
+    erreurFond: "#3A2126",
+    avertFond: "#3A2F1E",
+    avertBord: "#574326",
+    avertTexte: "#E7C883",
+    appui: "rgba(255,255,255,0.12)",
+    scene: "#161320",
+    fantome: "#ffffff88",
+    barreEtat: "light-content",
+  },
+  clair: {
+    fond: "#FFF9FB",
+    accent: "#C2567A",     // rose soutenu : lisible en texte sur blanc
+    secondaire: "#E3F2E6", // vert pale
+    texte: "#3B2F36",
+    doux: "#8C7F86",
+    carte: "#FFFFFF",
+    bord: "#F3D9E2",
+    piste: "#F4E6EC",
+    surAccent: "#3B2F36",  // texte fonce sur le rose pale
+    rouge: "#D9485F",
+    vert: "#3E9C63",
+    scan: "#CDEBD5",
+    supprimer: "#C0304A",
+    erreurFond: "#FDE7EA",
+    avertFond: "#FFF4DE",
+    avertBord: "#F2D8A7",
+    avertTexte: "#7A5A12",
+    appui: "rgba(0,0,0,0.06)",
+    scene: "#FFF1F5",
+    fantome: "#00000055",
+    barreEtat: "dark-content",
+  },
 };
+
+const COULEURS = { ...PALETTES.sombre };
+let paletteActive = "sombre";
+
+/**
+ * Active une palette ("sombre" | "clair") et la couleur d'accent des textes,
+ * traits et courbes (celle du theme du perso) : COULEURS et styles suivent.
+ */
+function appliquerPalette(nom, accentTexte) {
+  const cle = nom + (accentTexte || "");
+  if (cle === paletteActive) return;
+  paletteActive = cle;
+  Object.assign(COULEURS, PALETTES[nom], accentTexte ? { accent: accentTexte } : {});
+  styles = creerStyles();
+}
 
 // Le code de confiance de l'ANSES (A a D) indique la fiabilite de la donnee
 // nutritionnelle elle-meme. On l'expose : l'utilisateur doit pouvoir distinguer
@@ -1154,7 +1225,7 @@ function EcranBilan({ objectif, consomme, sport, onSport }) {
             <Text
               style={[
                 styles.objectifGros,
-                bilan.restant < 0 && { color: "#FF6B6B" },
+                bilan.restant < 0 && { color: COULEURS.rouge },
               ]}
             >
               {bilan.restant} kcal
@@ -1171,7 +1242,7 @@ function EcranBilan({ objectif, consomme, sport, onSport }) {
                 style={[
                   styles.barreRemplie,
                   { width: `${Math.round(bilan.part * 100)}%` },
-                  bilan.restant < 0 && { backgroundColor: "#FF6B6B" },
+                  bilan.restant < 0 && { backgroundColor: COULEURS.rouge },
                 ]}
               />
             </View>
@@ -1182,7 +1253,7 @@ function EcranBilan({ objectif, consomme, sport, onSport }) {
                 <Text style={styles.besoinLabel}>objectif{"\n"}de base</Text>
               </View>
               <View style={styles.besoinCase}>
-                <Text style={[styles.besoinValeur, { color: "#58D08A" }]}>
+                <Text style={[styles.besoinValeur, { color: COULEURS.vert }]}>
                   +{parseInt(sport || "0", 10)}
                 </Text>
                 <Text style={styles.besoinLabel}>sport{"\n"}du jour</Text>
@@ -1564,7 +1635,7 @@ function CarteHeros({ jeu, perso, onGeste }) {
   const cible = useCible();
   const j = jeu || { xp: 0, streak: 0, badges: [] };
   const niv = niveauDepuisXp(j.xp);
-  const { accent } = themePerso(perso, niv.niveau); // couleur du theme (perso, niveau)
+  const theme = themePerso(perso, niv.niveau); // couleurs du theme (perso, niveau)
   const badgesAcquis = new Set(j.badges || []);
   const etape = etapePersonnage(niv.niveau);
 
@@ -1579,14 +1650,14 @@ function CarteHeros({ jeu, perso, onGeste }) {
               <AvatarPerso perso={perso} etape={etape} onGeste={onGeste} />
             </View>
             <Text style={styles.astuceCentre}>glissez pour le faire tourner</Text>
-            <Text style={[styles.herosTitreCentre, { color: accent }]}>{PERSOS[perso].etapes[etape]}</Text>
+            <Text style={[styles.herosTitreCentre, { color: theme.accentTexte }]}>{PERSOS[perso].etapes[etape]}</Text>
           </>
         ) : null}
 
         <View ref={cible("xp")} style={styles.herosXpBloc}>
           <Text style={styles.herosNiveauGros}>Niveau {niv.niveau}</Text>
           <View style={[styles.xpFond, styles.xpFondCentre]}>
-            <View style={[styles.xpRempli, { width: `${Math.round(niv.progression * 100)}%`, backgroundColor: accent }]} />
+            <View style={[styles.xpRempli, { width: `${Math.round(niv.progression * 100)}%`, backgroundColor: theme.xp }]} />
           </View>
           <Text style={styles.herosXpCentre}>{niv.xpDansNiveau} / {niv.xpNiveau} XP</Text>
         </View>
@@ -1653,7 +1724,7 @@ function CourbePoids({ poids, but }) {
         <Text style={styles.legendePoidsTexte}>
           {premier} kg → {dernier} kg
         </Text>
-        <Text style={[styles.legendePoidsDelta, { color: bonSens ? "#58D08A" : "#FF6B6B" }]}>
+        <Text style={[styles.legendePoidsDelta, { color: bonSens ? COULEURS.vert : COULEURS.rouge }]}>
           {delta > 0 ? "+" : ""}{delta} kg
         </Text>
       </View>
@@ -1679,7 +1750,7 @@ function BarresCalories({ historique }) {
             <View
               style={[
                 styles.barreCal,
-                { height: hauteur, backgroundColor: depasse ? "#FF6B6B" : "#58D08A" },
+                { height: hauteur, backgroundColor: depasse ? COULEURS.rouge : COULEURS.vert },
               ]}
             />
             <Text style={styles.barreJour}>{jourNum}</Text>
@@ -1690,7 +1761,9 @@ function BarresCalories({ historique }) {
   );
 }
 
-const styles = StyleSheet.create({
+// Feuille de styles, recalculee a chaque changement de palette.
+function creerStyles() {
+  return StyleSheet.create({
   ecran: { flex: 1, backgroundColor: COULEURS.fond },
   centreEcran: { alignItems: "center", justifyContent: "center" },
   contenu: { padding: 20, paddingTop: 16, paddingBottom: 60 },
@@ -1715,7 +1788,7 @@ const styles = StyleSheet.create({
     position: "absolute", left: 6, top: 41, width: 52, height: 52, zIndex: 1,
     alignItems: "center", justifyContent: "center", borderRadius: 26,
   },
-  roueAppui: { backgroundColor: "rgba(255,255,255,0.12)" },
+  roueAppui: { backgroundColor: COULEURS.appui },
   roue: { fontSize: 32, lineHeight: 36, color: COULEURS.texte },
   barreTitre: { flex: 1, textAlign: "center", fontSize: 18, fontWeight: "700", color: COULEURS.texte },
 
@@ -1730,11 +1803,11 @@ const styles = StyleSheet.create({
     flex: 1,
     paddingVertical: 10,
     borderRadius: 10,
-    backgroundColor: "#2A2636",
+    backgroundColor: COULEURS.piste,
   },
   tabActif: { backgroundColor: COULEURS.accent },
   tabTexte: { textAlign: "center", fontWeight: "600", color: COULEURS.doux, fontSize: 13 },
-  tabTexteActif: { color: "white" },
+  tabTexteActif: { color: COULEURS.surAccent },
 
   titre: { fontSize: 32, fontWeight: "700", textAlign: "center", color: COULEURS.texte },
   sousTitre: {
@@ -1747,18 +1820,18 @@ const styles = StyleSheet.create({
 
   bouton: { backgroundColor: COULEURS.accent, padding: 16, borderRadius: 12, marginBottom: 12 },
   boutonSecondaire: { backgroundColor: COULEURS.secondaire },
-  boutonScan: { backgroundColor: "#4A7C59" },
+  boutonScan: { backgroundColor: COULEURS.scan },
   boutonAjoutScan: {
     marginTop: 6,
     paddingVertical: 10,
     borderRadius: 10,
     borderWidth: 1,
-    borderColor: "#4A7C59",
+    borderColor: COULEURS.vert,
     alignItems: "center",
   },
-  boutonAjoutScanTexte: { color: "#4A7C59", fontWeight: "600" },
-  supprimer: { color: "#B00020", fontSize: 12, marginTop: 6 },
-  boutonTexte: { color: "white", fontSize: 16, fontWeight: "600", textAlign: "center" },
+  boutonAjoutScanTexte: { color: COULEURS.vert, fontWeight: "600" },
+  supprimer: { color: COULEURS.supprimer, fontSize: 12, marginTop: 6 },
+  boutonTexte: { color: COULEURS.surAccent, fontSize: 16, fontWeight: "600", textAlign: "center" },
   scanEcran: { flex: 1, backgroundColor: "#000" },
   scanCamera: { flex: 1 },
   scanBas: {
@@ -1800,7 +1873,7 @@ const styles = StyleSheet.create({
 
   centre: { alignItems: "center", marginTop: 30 },
   info: { marginTop: 10, color: COULEURS.doux },
-  erreur: { color: "#FF6B6B", marginTop: 20 },
+  erreur: { color: COULEURS.rouge, marginTop: 20 },
 
   carte: { backgroundColor: COULEURS.carte, borderRadius: 16, padding: 20, marginTop: 24 },
   plat: { fontSize: 22, fontWeight: "700", color: COULEURS.texte },
@@ -1892,7 +1965,7 @@ const styles = StyleSheet.create({
   segmentBtnColonne: { flex: 0 },
   segmentBtnActif: { backgroundColor: COULEURS.accent, borderColor: COULEURS.accent },
   segmentTexte: { textAlign: "center", color: COULEURS.texte, fontWeight: "600" },
-  segmentTexteActif: { color: "white" },
+  segmentTexteActif: { color: COULEURS.surAccent },
 
   ligneChamps: { flexDirection: "row", gap: 10, marginTop: 14, marginBottom: 4 },
   champNombre: { flex: 1 },
@@ -1919,7 +1992,7 @@ const styles = StyleSheet.create({
   },
   optionActiviteActive: { backgroundColor: COULEURS.accent, borderColor: COULEURS.accent },
   optionActiviteTexte: { color: COULEURS.texte, fontSize: 14 },
-  optionActiviteTexteActif: { color: "white", fontWeight: "600" },
+  optionActiviteTexteActif: { color: COULEURS.surAccent, fontWeight: "600" },
 
   rythmeApercu: { fontSize: 12, color: COULEURS.doux, marginTop: 2, marginBottom: 2 },
 
@@ -1927,9 +2000,9 @@ const styles = StyleSheet.create({
     marginTop: 14,
     padding: 12,
     borderRadius: 10,
-    backgroundColor: "#3A2126",
+    backgroundColor: COULEURS.erreurFond,
   },
-  erreurLigne: { color: "#FF6B6B", fontSize: 13, marginVertical: 1 },
+  erreurLigne: { color: COULEURS.rouge, fontSize: 13, marginVertical: 1 },
 
   objectifGros: { fontSize: 40, fontWeight: "800", color: COULEURS.accent, marginTop: 2 },
   objectifSous: { fontSize: 14, color: COULEURS.doux },
@@ -1938,7 +2011,7 @@ const styles = StyleSheet.create({
   barreFond: {
     height: 8,
     borderRadius: 4,
-    backgroundColor: "#2A2636",
+    backgroundColor: COULEURS.piste,
     marginTop: 12,
     overflow: "hidden",
   },
@@ -1971,11 +2044,11 @@ const styles = StyleSheet.create({
     marginTop: 12,
     padding: 12,
     borderRadius: 10,
-    backgroundColor: "#3A2F1E",
+    backgroundColor: COULEURS.avertFond,
     borderWidth: 1,
-    borderColor: "#574326",
+    borderColor: COULEURS.avertBord,
   },
-  avertissementTexte: { fontSize: 13, color: "#E7C883", lineHeight: 18 },
+  avertissementTexte: { fontSize: 13, color: COULEURS.avertTexte, lineHeight: 18 },
 
   disclaimer: { marginTop: 16, fontSize: 11, color: COULEURS.doux, lineHeight: 16, fontStyle: "italic" },
 
@@ -1985,7 +2058,7 @@ const styles = StyleSheet.create({
     width: 120,
     height: 150,
     borderRadius: 12,
-    backgroundColor: "#161320",
+    backgroundColor: COULEURS.scene,
     borderWidth: 1,
     borderColor: COULEURS.bord,
     alignItems: "center",
@@ -1996,13 +2069,13 @@ const styles = StyleSheet.create({
     position: "absolute",
     bottom: 4,
     fontSize: 9,
-    color: "#ffffff88",
+    color: COULEURS.fantome,
   },
   herosInfos: { flex: 1, marginLeft: 12 },
   herosNiveau: { fontSize: 22, fontWeight: "800", color: COULEURS.texte },
   herosTitre: { fontSize: 14, fontWeight: "600", color: COULEURS.accent, marginTop: 1 },
   herosXp: { fontSize: 12, color: COULEURS.doux, marginTop: 6 },
-  xpFond: { height: 10, borderRadius: 5, backgroundColor: "#2A2636", marginTop: 4, overflow: "hidden" },
+  xpFond: { height: 10, borderRadius: 5, backgroundColor: COULEURS.piste, marginTop: 4, overflow: "hidden" },
   xpRempli: { height: 10, borderRadius: 5, backgroundColor: COULEURS.accent },
   herosStreak: { fontSize: 13, color: COULEURS.texte, marginTop: 8, fontWeight: "600" },
 
@@ -2056,3 +2129,5 @@ const styles = StyleSheet.create({
   barreCal: { width: "70%", borderRadius: 3, minHeight: 2 },
   barreJour: { fontSize: 9, color: COULEURS.doux, marginTop: 4 },
 });
+}
+let styles = creerStyles();

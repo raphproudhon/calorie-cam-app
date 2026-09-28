@@ -236,15 +236,31 @@ export function accentNecromancien(etape) {
   return (ACCENT_NECRO.find((p) => etape <= p.jusqua) || ACCENT_NECRO[ACCENT_NECRO.length - 1]).accent;
 }
 
-// Chat celeste : theme a lui (consignes a venir). En attendant, couleur fixe,
-// sans progression.
-const ACCENT_CHAT = "#3E7CB1";
+// Chat celeste : theme clair et doux — blanc, rose pale, vert pale. Les
+// boutons sont rose pale (texte fonce dessus), la barre d'XP vert pale ; les
+// textes colores prennent un rose plus soutenu, lisible sur fond blanc.
+const THEME_CHAT = {
+  clair: true,
+  accent: "#F7C6D4",      // rose pale : boutons, onglet actif
+  accentTexte: "#C2567A", // rose soutenu : textes colores
+  xp: "#9ED9AE",          // vert pale : barre d'XP
+  fond: "#FFF9FB",        // blanc a peine rose
+};
 
-/** Theme de l'app { accent, fond } pour un perso et un niveau donnes. */
+/**
+ * Theme de l'app pour un perso et un niveau donnes :
+ * { clair, accent, accentTexte, xp, fond }.
+ */
 export function themePerso(perso, niveau) {
-  if (perso === "chat") return { accent: ACCENT_CHAT, fond: fondDe(ACCENT_CHAT) };
+  if (perso === "chat") return THEME_CHAT;
   const etape = etapePersonnage(niveau) + 1; // 1..20
   const accent = accentNecromancien(etape);
   // Etapes d'or : le fond garde la teinte emeraude, l'or ne sert qu'a l'accent.
-  return { accent, fond: fondDe(etape >= 19 ? EMERAUDE : accent) };
+  return {
+    clair: false,
+    accent,
+    accentTexte: accent,
+    xp: accent,
+    fond: fondDe(etape >= 19 ? EMERAUDE : accent),
+  };
 }
