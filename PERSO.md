@@ -13,7 +13,7 @@ personnages, 20 étapes.
 | Évolution | change d'**équipement** + physique **légèrement plus fort** à chaque étape |
 | Nombre d'étapes | **20** par personnage |
 | Paliers | on garde les 10 paliers existants et on en intercale 10 (voir plus bas) |
-| Couleurs | **palette propre** à chaque perso ; le thème de l'app reste piloté par le niveau (`accentPourNiveau`) |
+| Couleurs | **palette propre** à chaque perso ; le thème de l'app suit le perso (`themePerso`) : pour le Nécromancien, ses 20 étapes (brun → vert émeraude → or sombre) |
 | Où il apparaît | partout où c'est légitime (Progression, Bilan, fin d'analyse, montée de niveau…) |
 | Affichage | **rotation au doigt** (8 directions) **+ animations** |
 | Réactions | oui : content, montée de niveau, fatigué, miam |

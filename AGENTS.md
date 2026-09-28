@@ -11,7 +11,7 @@ version reste consultable dans l'historique Git, avant le commit de suppression.
 Le pourquoi, l'inventaire de ce qui a sauté et la marche à suivre pour reprendre
 sont dans **`EXPERIMENTATION.md`** — à lire avant de toucher à cette branche.
 Le thème de couleurs de l'app, qui suivait l'étape du personnage, suit
-désormais le **perso et le niveau** (`themePerso` dans `jeu.js`) : rampe par niveau pour le Nécromancien, thème propre au Chat (consignes à venir).
+désormais le **perso et le niveau** (`themePerso` dans `jeu.js`) : couleur qui suit les 20 étapes du Nécromancien d'après son design (brun → vert émeraude → or sombre), thème propre au Chat (consignes à venir).
 
 Points clés :
 

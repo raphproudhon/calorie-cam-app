@@ -206,63 +206,45 @@ export function etapePersonnage(niveau) {
   return e;
 }
 
-// --- Palette de l'app, par palier de niveau --------------------------------
-// Le theme de l'app progresse avec le niveau : rampe bleu -> cramoisi -> or.
-// Les paliers montent vite au debut (motivant) puis s'espacent (aspirationnel).
-const PALIERS_COULEUR = [1, 2, 4, 6, 9, 13, 18, 24, 31, 40];
-
-const RAMPE_ACCENT = [
-  "#3E7CB1", // palier 1  bleu
-  "#8A5A7A", // palier 2
-  "#B0454E", // palier 3
-  "#C0392B", // palier 4  cramoisi
-  "#CC3D28", // palier 5
-  "#D64B22", // palier 6  braise
-  "#E05E1C", // palier 7
-  "#E67318", // palier 8  orange ardent
-  "#E28E1B", // palier 9
-  "#E0B02F", // palier 10 or
-];
-
-/** Index de palette (0..9) atteint a un niveau donne. */
-export function paletteDepuisNiveau(niveau) {
-  let p = 0;
-  for (let i = 0; i < PALIERS_COULEUR.length; i++) {
-    if (niveau >= PALIERS_COULEUR[i]) p = i;
-  }
-  return p;
-}
-
-/** Couleur d'accent (hex) du theme, pour un niveau donne. */
-export function accentPourNiveau(niveau) {
-  return RAMPE_ACCENT[paletteDepuisNiveau(niveau)];
-}
-
-// --- Teinte de fond --------------------------------------------------------
-// On melange l'accent a une base tres sombre : le fond reste lisible tout en
-// tirant legerement vers la couleur du palier atteint.
+// --- Theme de l'app, propre a chaque perso -----------------------------------
+// Le fond melange l'accent a une base tres sombre : il reste lisible tout en
+// tirant legerement vers la couleur du theme.
 function melangeHex(a, b, t) {
   const pa = parseInt(a.slice(1), 16), pb = parseInt(b.slice(1), 16);
   const mix = (sh) => Math.round(((pa >> sh) & 255) * t + ((pb >> sh) & 255) * (1 - t));
   return "#" + [mix(16), mix(8), mix(0)].map((v) => v.toString(16).padStart(2, "0")).join("");
 }
+const fondDe = (accent) => melangeHex(accent, "#15131B", 0.16);
 
-/** Couleur de fond (sombre) teintee vers l'accent, pour un niveau donne. */
-export function fondPourNiveau(niveau) {
-  return melangeHex(accentPourNiveau(niveau), "#15131B", 0.16);
+// Necromancien : la couleur suit ses 20 etapes et reprend son design (voir
+// PERSO.md) — le brun de ses yeux au debut, puis le vert de sa flamme
+// spectrale qui s'intensifie avec ses yeux, et l'or sombre des etapes finales.
+// Teintes un peu assombries pour garder le texte blanc des boutons lisible
+// (contraste >= 3 avec le blanc).
+const ACCENT_NECRO = [
+  { jusqua: 2,  accent: "#9A6B45" }, // 1-2   brun chaud : yeux marron
+  { jusqua: 5,  accent: "#5E8C6A" }, // 3-5   vert-de-gris : reflet vert
+  { jusqua: 8,  accent: "#3A8A55" }, // 6-8   vert noisette : legere lueur
+  { jusqua: 14, accent: "#1F9D55" }, // 9-14  emeraude : yeux emeraude
+  { jusqua: 18, accent: "#10A35A" }, // 15-18 emeraude ardent
+  { jusqua: 20, accent: "#A8841C" }, // 19-20 or sombre
+];
+const EMERAUDE = "#10A35A";
+
+/** Accent du Necromancien a une etape (1..20). */
+export function accentNecromancien(etape) {
+  return (ACCENT_NECRO.find((p) => etape <= p.jusqua) || ACCENT_NECRO[ACCENT_NECRO.length - 1]).accent;
 }
 
-// --- Theme par perso -----------------------------------------------------------
-// Chaque perso a son propre theme. Le Necromancien (humain) suit la rampe
-// ci-dessus, qui evolue avec le niveau. Le Chat celeste aura un theme a lui
-// (consignes a venir) : en attendant, couleur fixe (bleu du palier 1), sans
-// progression.
-const ACCENT_CHAT = RAMPE_ACCENT[0];
+// Chat celeste : theme a lui (consignes a venir). En attendant, couleur fixe,
+// sans progression.
+const ACCENT_CHAT = "#3E7CB1";
 
 /** Theme de l'app { accent, fond } pour un perso et un niveau donnes. */
 export function themePerso(perso, niveau) {
-  if (perso === "chat") {
-    return { accent: ACCENT_CHAT, fond: melangeHex(ACCENT_CHAT, "#15131B", 0.16) };
-  }
-  return { accent: accentPourNiveau(niveau), fond: fondPourNiveau(niveau) };
+  if (perso === "chat") return { accent: ACCENT_CHAT, fond: fondDe(ACCENT_CHAT) };
+  const etape = etapePersonnage(niveau) + 1; // 1..20
+  const accent = accentNecromancien(etape);
+  // Etapes d'or : le fond garde la teinte emeraude, l'or ne sert qu'a l'accent.
+  return { accent, fond: fondDe(etape >= 19 ? EMERAUDE : accent) };
 }
