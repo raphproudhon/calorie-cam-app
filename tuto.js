@@ -1,20 +1,30 @@
 // Tutoriel du premier lancement, en « projecteur » : tout l'ecran est assombri
-// sauf l'element presente, avec une bulle d'explication a cote.
+// sauf l'element presente, avec une bulle d'explication a cote. Il fait le
+// tour de toute l'app : Photo, Progression, Bilan, puis l'interieur des
+// Parametres.
 //
 // Les elements a montrer s'enregistrent eux-memes : ref={cible("id")}, ou
-// cible vient de useCible(). Le tutoriel les mesure (measureInWindow) a chaque
-// etape et dessine quatre bandes sombres autour du trou.
+// cible vient de useCible(). Les pages qui defilent s'enregistrent avec
+// useDefilTuto("id") : le tutoriel les fait defiler pour amener l'element a
+// l'ecran. A chaque etape, l'element est mesure (measureInWindow) et quatre
+// bandes sombres sont dessinees autour du trou.
 //
-// Deux sortes d'etapes :
-//   - explication : bouton « Suivant » ; le trou est bloque (on ne lance pas
-//     une photo par megarde), sauf si libre: true (ex. : faire tourner le perso) ;
-//   - action : l'utilisateur doit faire le geste lui-meme (toucher un onglet) ;
-//     le trou laisse passer le doigt et l'etape avance toute seule.
+// Sortes d'etapes :
+//   - explication : bouton « Suivant » ; l'element est bloque (on ne lance pas
+//     une photo par megarde), sauf libre: true (ex. : faire tourner le perso) ;
+//   - action : l'utilisateur fait le geste lui-meme (toucher un onglet, la roue
+//     crantee) ; le trou laisse passer le doigt et l'etape avance toute seule ;
+//   - sans cible : bulle au centre (ce qui n'est pas encore a l'ecran).
+//
+// Les Parametres s'ouvrent dans une Modal, qui passe au-dessus de tout : les
+// etapes zone: "params" sont donc dessinees par une seconde instance du
+// tutoriel, placee dans la Modal. L'etape courante est tenue par l'App.
 
 import { createContext, useContext, useEffect, useRef, useState } from "react";
 import { Pressable, StyleSheet, Text, View, useWindowDimensions } from "react-native";
 
 export const ETAPES_TUTO = [
+  // --- Photo ---
   {
     cible: "photo-actions",
     onglet: "photo",
@@ -29,6 +39,14 @@ export const ETAPES_TUTO = [
     texte: "Pour un produit emballé, scannez son code-barres. Vous pouvez en enchaîner plusieurs dans la même analyse.",
   },
   {
+    cible: null,
+    onglet: "photo",
+    titre: "Après l'analyse",
+    texte:
+      "Chaque aliment s'affiche avec son poids estimé. Touchez un poids pour le corriger, ou le nom pour choisir une autre fiche. Ajoutez d'autres produits au scanner, puis touchez « Ajouter au bilan ».",
+  },
+  // --- Progression ---
+  {
     cible: "onglet-progression",
     titre: "Votre progression",
     texte: "Touchez l'onglet Progression.",
@@ -37,6 +55,7 @@ export const ETAPES_TUTO = [
   {
     cible: "perso",
     onglet: "progression",
+    defil: "progression",
     titre: "Votre héros",
     texte: "Il évolue au fil de vos niveaux. Glissez le doigt à l'horizontale pour le faire tourner : essayez !",
     libre: true,
@@ -44,9 +63,33 @@ export const ETAPES_TUTO = [
   {
     cible: "xp",
     onglet: "progression",
+    defil: "progression",
     titre: "Niveau et XP",
-    texte: "Vous gagnez de l'XP en suivant vos repas et votre poids. Chaque palier fait évoluer votre héros.",
+    texte:
+      "Vous gagnez de l'XP en suivant vos repas et votre poids. Chaque palier fait évoluer votre héros ; la série compte vos jours suivis d'affilée.",
   },
+  {
+    cible: "badges",
+    onglet: "progression",
+    defil: "progression",
+    titre: "Badges",
+    texte: "Des récompenses à débloquer au fil de votre suivi. Celles à venir sont cadenassées.",
+  },
+  {
+    cible: "prog-poids",
+    onglet: "progression",
+    defil: "progression",
+    titre: "Courbe de poids",
+    texte: "Votre poids dans le temps, dès deux pesées enregistrées (via la roue crantée).",
+  },
+  {
+    cible: "prog-calories",
+    onglet: "progression",
+    defil: "progression",
+    titre: "Historique des calories",
+    texte: "Chaque journée terminée est archivée ici : ce que vous avez mangé face à votre objectif.",
+  },
+  // --- Bilan ---
   {
     cible: "onglet-bilan",
     titre: "Votre journée",
@@ -56,93 +99,218 @@ export const ETAPES_TUTO = [
   {
     cible: "bilan-reste",
     onglet: "bilan",
+    defil: "bilan",
     titre: "Ce qu'il vous reste",
     texte: "Objectif + sport − ce que vous avez mangé : voilà ce qu'il vous reste à manger aujourd'hui.",
   },
   {
     cible: "bilan-sport",
     onglet: "bilan",
+    defil: "bilan",
     titre: "Le sport compte",
     texte: "Ajoutez les calories brûlées à la main, ou importez-les depuis Apple Santé.",
   },
   {
+    cible: "bilan-consomme",
+    onglet: "bilan",
+    defil: "bilan",
+    titre: "Consommé aujourd'hui",
+    texte: "Tout ce que vous ajoutez depuis l'onglet Photo s'additionne ici. La journée est archivée à minuit.",
+  },
+  // --- Parametres ---
+  {
     cible: "roue",
     titre: "Réglages",
-    texte: "Objectif, poids du jour, clé API… tout se règle ici. Vous pourrez aussi y revoir ce tutoriel.",
+    texte: "Touchez la roue crantée.",
+    attendParams: true,
+  },
+  {
+    cible: "params-objectif",
+    zone: "params",
+    defil: "params",
+    delai: 600, // la Modal glisse encore : on attend qu'elle soit en place
+    titre: "Votre objectif",
+    texte: "Votre objectif calorique du jour. « Modifier » le recalcule à partir de votre profil (âge, poids, but…).",
+  },
+  {
+    cible: "params-poids",
+    zone: "params",
+    defil: "params",
+    titre: "Votre poids",
+    texte: "Pesez-vous régulièrement : chaque pesée nourrit la courbe de poids et rapporte de l'XP.",
+  },
+  {
+    cible: "params-journee",
+    zone: "params",
+    defil: "params",
+    titre: "Journée en cours",
+    texte: "Une erreur dans la journée ? Remettez-la à zéro ici.",
+  },
+  {
+    cible: "params-cle",
+    zone: "params",
+    defil: "params",
+    facultative: true, // absente quand l'app embarque deja une cle
+    titre: "Clé API",
+    texte: "L'analyse photo a besoin d'une clé Gemini (gratuite). Collez-la ici : elle reste sur votre téléphone.",
+  },
+  {
+    cible: "params-sante",
+    zone: "params",
+    defil: "params",
+    titre: "Apple Santé",
+    texte: "Pour que vos calories brûlées remontent dans le Bilan.",
+  },
+  {
+    cible: "params-tuto",
+    zone: "params",
+    defil: "params",
+    titre: "Et voilà !",
+    texte: "Vous pourrez revoir ce tutoriel ici quand vous voulez.",
   },
 ];
 
-// --- Registre des cibles ----------------------------------------------------
+// --- Registre des cibles et des pages qui defilent -----------------------------
 
-const CibleCtx = createContext(() => () => {});
-
-/** ref={cible("id")} : enregistre la vue a montrer pendant le tutoriel. */
-export const useCible = () => useContext(CibleCtx);
+const RegistreCtx = createContext(null);
 
 export function FournisseurCibles({ registre, children }) {
-  const cible = (id) => (noeud) => {
-    if (noeud) registre.current[id] = noeud;
+  return <RegistreCtx.Provider value={registre}>{children}</RegistreCtx.Provider>;
+}
+
+/** ref={cible("id")} : enregistre la vue a montrer pendant le tutoriel. */
+export function useCible() {
+  const registre = useContext(RegistreCtx);
+  return (id) => (noeud) => {
+    if (noeud && registre) registre.current[id] = noeud;
   };
-  return <CibleCtx.Provider value={cible}>{children}</CibleCtx.Provider>;
+}
+
+/**
+ * Props a etaler sur une ScrollView ({...defil}) pour que le tutoriel puisse
+ * la faire defiler. Si la ScrollView a deja un ref ou un onScroll, appeler
+ * defil.ref(n) et defil.onScroll(e) depuis les siens.
+ */
+export function useDefilTuto(id) {
+  const registre = useContext(RegistreCtx);
+  const entree = () => {
+    const tous = (registre.current.__defil = registre.current.__defil || {});
+    return (tous[id] = tous[id] || { y: 0, ref: null });
+  };
+  return {
+    ref: (n) => { if (n && registre) entree().ref = n; },
+    onScroll: (e) => { if (registre) entree().y = e.nativeEvent.contentOffset.y; },
+    scrollEventThrottle: 16,
+  };
 }
 
 // --- Le tutoriel -------------------------------------------------------------
 
 const MARGE = 8;      // espace entre l'element et le bord du trou
 const HAUT_SUR = 50;  // ne pas passer sous la barre d'etat
+const HAUT_CIBLE = 140; // ou l'on amene un element a faire defiler
 const SOMBRE = "rgba(8, 6, 14, 0.82)";
 // Au-dessus de tout (la barre du haut a elle-meme un zIndex).
 const PREMIER_PLAN = { zIndex: 100, elevation: 100 };
 
-export function Tutoriel({ registre, onglet, setOnglet, accent, onFin }) {
-  const [i, setI] = useState(0);
-  const [trou, setTrou] = useState(null); // { x, y, w, h } en coordonnees fenetre
+/** Nombre d'etapes, pour l'App (fin du tutoriel). */
+export const NB_ETAPES_TUTO = ETAPES_TUTO.length;
+
+export function Tutoriel({ zone = "app", i, setI, registre, onglet, setOnglet, paramsOuverts, accent, onFin }) {
+  const [trou, setTrou] = useState(null); // { x, y, w, h } en coordonnees fenetre ; "centre" si sans cible
   const [hBulle, setHBulle] = useState(0); // hauteur de la bulle, pour la garder a l'ecran
   const { width: L, height: H } = useWindowDimensions();
   const etape = ETAPES_TUTO[i];
+  const actif = !!etape && (etape.zone || "app") === zone;
   const derniere = i === ETAPES_TUTO.length - 1;
-  const origine = useRef(null); // pour ramener le trou dans le repere de l'overlay
+  const suivant = () => (derniere ? onFin() : setI(i + 1));
+  const suivantRef = useRef(suivant);
+  suivantRef.current = suivant;
 
   // Change d'onglet si l'etape le demande.
   useEffect(() => {
-    if (etape.onglet && onglet !== etape.onglet) setOnglet(etape.onglet);
-  }, [i]);
+    if (actif && etape.onglet && onglet !== etape.onglet) setOnglet(etape.onglet);
+  }, [i, actif]);
 
-  // Etape « action » : avance des que l'utilisateur a touche le bon onglet.
+  // Etapes « action » : avancent des que le geste est fait.
   useEffect(() => {
-    if (etape.attendOnglet && onglet === etape.attendOnglet) setI((n) => n + 1);
-  }, [onglet, i]);
+    if (!actif) return;
+    if (etape.attendOnglet && onglet === etape.attendOnglet) suivantRef.current();
+    if (etape.attendParams && paramsOuverts) suivantRef.current();
+  }, [onglet, paramsOuverts, i, actif]);
 
-  // Mesure de la cible (apres le changement d'onglet, qu'elle soit affichee).
+  // Mesure de la cible, apres le changement d'onglet (qu'elle soit affichee) ;
+  // si elle est hors de l'ecran, on fait defiler sa page puis on remesure.
   useEffect(() => {
+    if (!actif) return;
     setTrou(null);
+    if (!etape.cible) { setTrou("centre"); return; }
     let annule = false;
+    let aDefile = false;
     const mesurer = (essai) => {
+      if (annule) return;
       const noeud = registre.current[etape.cible];
-      if (!noeud || !noeud.measureInWindow) return;
+      if (!noeud || !noeud.measureInWindow) {
+        // Cible absente : etape facultative sautee, sinon on reessaie un peu.
+        if (etape.facultative || essai >= 8) { suivantRef.current(); return; }
+        setTimeout(() => mesurer(essai + 1), 150);
+        return;
+      }
       noeud.measureInWindow((x, y, w, h) => {
         if (annule) return;
         if (!w || !h) {
-          if (essai < 5) setTimeout(() => mesurer(essai + 1), 150);
+          if (essai < 8) setTimeout(() => mesurer(essai + 1), 150);
+          else if (etape.facultative) suivantRef.current();
           return;
         }
-        const o = origine.current || { x: 0, y: 0 };
-        setTrou({ x: x - o.x - MARGE, y: y - o.y - MARGE, w: w + 2 * MARGE, h: h + 2 * MARGE });
+        const defil = etape.defil && registre.current.__defil?.[etape.defil];
+        const horsEcran = y < HAUT_SUR + 40 || y + Math.min(h, H * 0.45) > H - 40;
+        if (defil?.ref && horsEcran && !aDefile) {
+          aDefile = true;
+          defil.ref.scrollTo({ y: Math.max(0, defil.y + y - HAUT_CIBLE), animated: false });
+          setTimeout(() => mesurer(essai), 250);
+          return;
+        }
+        setTrou({ x: x - MARGE, y: y - MARGE, w: w + 2 * MARGE, h: h + 2 * MARGE });
       });
     };
-    const t = setTimeout(() => mesurer(0), 250);
+    const t = setTimeout(() => mesurer(0), etape.delai || 250);
     return () => { annule = true; clearTimeout(t); };
-  }, [i, L, H]);
+  }, [i, actif, L, H]);
 
-  const suivant = () => (derniere ? onFin() : setI((n) => n + 1));
+  if (!actif) return null;
+
+  const bulle = (style) => (
+    <View style={[styles.bulle, style]} onLayout={(e) => setHBulle(e.nativeEvent.layout.height)}>
+      <Text style={styles.compteur}>{i + 1} / {ETAPES_TUTO.length}</Text>
+      <Text style={styles.titre}>{etape.titre}</Text>
+      <Text style={styles.texte}>{etape.texte}</Text>
+      <View style={styles.boutons}>
+        <Pressable onPress={onFin} hitSlop={10}>
+          <Text style={styles.passer}>Passer</Text>
+        </Pressable>
+        {etape.attendOnglet || etape.attendParams ? (
+          <Text style={[styles.consigne, { color: accent }]}>👆 À vous !</Text>
+        ) : (
+          <Pressable onPress={suivant} style={[styles.suivant, { backgroundColor: accent }]}>
+            <Text style={styles.suivantTexte}>{derniere ? "C'est parti !" : "Suivant"}</Text>
+          </Pressable>
+        )}
+      </View>
+    </View>
+  );
 
   // Tant que la cible n'est pas mesuree : voile uniforme.
   if (!trou) {
+    return <View style={[StyleSheet.absoluteFill, PREMIER_PLAN, { backgroundColor: SOMBRE }]} />;
+  }
+
+  // Etape sans cible : voile uniforme et bulle au centre.
+  if (trou === "centre") {
     return (
-      <View
-        style={[StyleSheet.absoluteFill, PREMIER_PLAN, { backgroundColor: SOMBRE }]}
-        ref={(r) => r?.measureInWindow?.((x, y) => { origine.current = { x, y }; })}
-      />
+      <View style={[StyleSheet.absoluteFill, PREMIER_PLAN, { backgroundColor: SOMBRE }]}>
+        {bulle({ top: Math.max(HAUT_SUR, (H - hBulle) / 2) })}
+      </View>
     );
   }
 
@@ -166,30 +334,11 @@ export function Tutoriel({ registre, onglet, setOnglet, accent, onFin }) {
       {/* Contour du trou. Etape d'explication non libre : il bloque aussi le
           doigt (on ne declenche pas l'element presente par megarde). */}
       <View
-        pointerEvents={etape.attendOnglet || etape.libre ? "none" : "auto"}
+        pointerEvents={etape.attendOnglet || etape.attendParams || etape.libre ? "none" : "auto"}
         style={[styles.contour, { left: x, top: y, width: w, height: h, borderColor: accent }]}
       />
 
-      <View
-        style={[styles.bulle, { top: hautBulle }]}
-        onLayout={(e) => setHBulle(e.nativeEvent.layout.height)}
-      >
-        <Text style={styles.compteur}>{i + 1} / {ETAPES_TUTO.length}</Text>
-        <Text style={styles.titre}>{etape.titre}</Text>
-        <Text style={styles.texte}>{etape.texte}</Text>
-        <View style={styles.boutons}>
-          <Pressable onPress={onFin} hitSlop={10}>
-            <Text style={styles.passer}>Passer</Text>
-          </Pressable>
-          {etape.attendOnglet ? (
-            <Text style={[styles.consigne, { color: accent }]}>👆 À vous !</Text>
-          ) : (
-            <Pressable onPress={suivant} style={[styles.suivant, { backgroundColor: accent }]}>
-              <Text style={styles.suivantTexte}>{derniere ? "C'est parti !" : "Suivant"}</Text>
-            </Pressable>
-          )}
-        </View>
-      </View>
+      {bulle({ top: hautBulle })}
     </View>
   );
 }

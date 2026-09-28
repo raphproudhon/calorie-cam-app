@@ -53,7 +53,7 @@ import {
 import { SPRITES } from "./perso-sprites";
 import { VERSION, TEST } from "./version";
 import { kcalDepuisLien } from "./lien";
-import { Tutoriel, FournisseurCibles, useCible } from "./tuto";
+import { Tutoriel, FournisseurCibles, useCible, useDefilTuto } from "./tuto";
 
 // Le theme "accent" de l'app suit le personnage : sa couleur evolue avec le
 // niveau (bleu -> cramoisi -> or). Fourni par App, lu partout via useContext.
@@ -67,6 +67,7 @@ export default function App() {
   const [onglet, setOnglet] = useState("photo");
   const [paramsOuverts, setParamsOuverts] = useState(false);
   const cibles = useRef({}); // vues montrees par le tutoriel (voir tuto.js)
+  const [etapeTuto, setEtapeTuto] = useState(0);
 
   // Chargement de l'etat persiste (profil, historique, poids) au demarrage.
   // chargerEtat applique aussi la bascule de journee (archivage de la veille).
@@ -146,6 +147,28 @@ export default function App() {
   const fond = fondPourNiveau(niveauCourant);
 
   const cible = (id) => (noeud) => { if (noeud) cibles.current[id] = noeud; };
+
+  // Tutoriel : deux instances partagent l'etape courante, l'une sur l'app,
+  // l'autre dans la Modal des Parametres (qui passe au-dessus de tout).
+  const finTuto = () => {
+    // Les pages que le tutoriel a fait defiler reviennent en haut.
+    Object.values(cibles.current.__defil || {}).forEach((d) =>
+      d.ref?.scrollTo({ y: 0, animated: false })
+    );
+    setEtat((e) => ({ ...e, tutoVu: true }));
+    setParamsOuverts(false);
+    setEtapeTuto(0);
+  };
+  const propsTuto = {
+    i: etapeTuto,
+    setI: setEtapeTuto,
+    registre: cibles,
+    onglet,
+    setOnglet,
+    paramsOuverts,
+    accent,
+    onFin: finTuto,
+  };
 
   return (
     <AccentCtx.Provider value={accent}>
@@ -231,20 +254,14 @@ export default function App() {
         onRevoirTuto={() => {
           setParamsOuverts(false);
           setOnglet("photo");
+          setEtapeTuto(0);
           setEtat((e) => ({ ...e, tutoVu: false }));
         }}
+        tuto={!etat.tutoVu ? <Tutoriel zone="params" {...propsTuto} /> : null}
       />
 
       {/* Tutoriel du premier lancement (et « Revoir le tutoriel »). */}
-      {!etat.tutoVu ? (
-        <Tutoriel
-          registre={cibles}
-          onglet={onglet}
-          setOnglet={setOnglet}
-          accent={accent}
-          onFin={() => setEtat((e) => ({ ...e, tutoVu: true }))}
-        />
-      ) : null}
+      {!etat.tutoVu ? <Tutoriel zone="app" {...propsTuto} /> : null}
     </View>
     </FournisseurCibles>
     </AccentCtx.Provider>
@@ -894,8 +911,10 @@ function CarteCleApi() {
   );
 }
 
-function MenuParametres({ visible, etat, onFermer, onModifierObjectif, onAjouterPoids, onResetJour, onDevXp, onResetHeros, onDevPerso, onRevoirTuto }) {
+function MenuParametres({ visible, etat, onFermer, onModifierObjectif, onAjouterPoids, onResetJour, onDevXp, onResetHeros, onDevPerso, onRevoirTuto, tuto }) {
   const accent = useAccent();
+  const cible = useCible();
+  const defil = useDefilTuto("params");
   const [vue, setVue] = useState("menu"); // menu | objectif
   const [poidsSaisi, setPoidsSaisi] = useState("");
   const [dispoSante] = useState(() => santeDisponible());
@@ -954,9 +973,9 @@ function MenuParametres({ visible, etat, onFermer, onModifierObjectif, onAjouter
             }}
           />
         ) : (
-          <ScrollView keyboardShouldPersistTaps="handled">
+          <ScrollView keyboardShouldPersistTaps="handled" {...defil}>
             {/* Objectif actuel */}
-            <View style={styles.carte}>
+            <View style={styles.carte} ref={cible("params-objectif")}>
               <Text style={styles.champLabel}>Objectif quotidien</Text>
               <Text style={styles.objectifGros}>{etat.objectif} kcal</Text>
               <TouchableOpacity
@@ -968,7 +987,7 @@ function MenuParametres({ visible, etat, onFermer, onModifierObjectif, onAjouter
             </View>
 
             {/* Saisie du poids */}
-            <View style={styles.carte}>
+            <View style={styles.carte} ref={cible("params-poids")}>
               <Text style={styles.champLabel}>Mon poids</Text>
               {dernierPoids ? (
                 <Text style={styles.objectifDetail}>
@@ -998,7 +1017,7 @@ function MenuParametres({ visible, etat, onFermer, onModifierObjectif, onAjouter
             </View>
 
             {/* Remise a zero du jour */}
-            <View style={styles.carte}>
+            <View style={styles.carte} ref={cible("params-journee")}>
               <Text style={styles.champLabel}>Journée en cours</Text>
               <TouchableOpacity
                 style={[styles.bouton, styles.boutonSecondaire]}
@@ -1009,7 +1028,7 @@ function MenuParametres({ visible, etat, onFermer, onModifierObjectif, onAjouter
             </View>
 
             {/* Tutoriel */}
-            <View style={styles.carte}>
+            <View style={styles.carte} ref={cible("params-tuto")}>
               <Text style={styles.champLabel}>Tutoriel</Text>
               <TouchableOpacity
                 style={[styles.bouton, styles.boutonSecondaire]}
@@ -1052,10 +1071,14 @@ function MenuParametres({ visible, etat, onFermer, onModifierObjectif, onAjouter
             {/* Cle API Gemini — utile seulement quand le build n'en embarque
                 pas (version web publiee) : chacun colle la sienne, elle reste
                 dans son navigateur. */}
-            {cleEmbarqueePresente() ? null : <CarteCleApi />}
+            {cleEmbarqueePresente() ? null : (
+              <View ref={cible("params-cle")}>
+                <CarteCleApi />
+              </View>
+            )}
 
             {/* Apple Sante */}
-            <View style={styles.carte}>
+            <View style={styles.carte} ref={cible("params-sante")}>
               <Text style={styles.champLabel}>Apple Santé</Text>
               {dispoSante ? (
                 <TouchableOpacity
@@ -1075,6 +1098,9 @@ function MenuParametres({ visible, etat, onFermer, onModifierObjectif, onAjouter
             <Text style={[styles.astuceCentre, { marginBottom: 20 }]}>Version {VERSION}</Text>
           </ScrollView>
         )}
+
+        {/* Etapes du tutoriel qui portent sur les Parametres. */}
+        {tuto}
       </View>
     </Modal>
   );
@@ -1086,6 +1112,7 @@ function MenuParametres({ visible, etat, onFermer, onModifierObjectif, onAjouter
 
 function EcranBilan({ objectif, consomme, sport, onSport }) {
   const cible = useCible();
+  const defil = useDefilTuto("bilan");
   // Le "sport du jour" (saisi a la main, ou importe depuis Apple Sante) vit dans
   // l'etat global : sinon il serait efface a chaque changement d'onglet.
   const [dispoSante] = useState(() => santeDisponible());
@@ -1115,7 +1142,7 @@ function EcranBilan({ objectif, consomme, sport, onSport }) {
   });
 
   return (
-    <ScrollView contentContainerStyle={styles.contenu} keyboardShouldPersistTaps="handled">
+    <ScrollView contentContainerStyle={styles.contenu} keyboardShouldPersistTaps="handled" {...defil}>
       <Text style={styles.titre}>Bilan du jour</Text>
       <Text style={styles.sousTitre}>
         Ce qu'il vous reste à manger = objectif + sport − déjà consommé
@@ -1213,7 +1240,7 @@ function EcranBilan({ objectif, consomme, sport, onSport }) {
             )}
           </View>
 
-          <View style={styles.carte}>
+          <View style={styles.carte} ref={cible("bilan-consomme")}>
             <Text style={styles.champLabel}>Consommé aujourd'hui</Text>
             <Text style={styles.objectifDetail}>
               {consomme} kcal ajoutées depuis l'onglet Photo. Analysez un plat
@@ -1356,6 +1383,8 @@ function EcranProgression({ etat }) {
   // quasi horizontal -> il tourne le perso ; geste vertical -> on fait defiler
   // la page nous-memes, du deplacement du doigt.
   const [defilement, setDefilement] = useState(true);
+  const cible = useCible();
+  const defil = useDefilTuto("progression"); // le tutoriel fait defiler la page
   const scrollRef = useRef(null);
   const yRef = useRef(0);       // position de defilement courante
   const departRef = useRef(0);  // position au debut du geste
@@ -1378,11 +1407,11 @@ function EcranProgression({ etat }) {
 
   return (
     <ScrollView
-      ref={scrollRef}
+      ref={(n) => { scrollRef.current = n; defil.ref(n); }}
       contentContainerStyle={styles.contenu}
       scrollEnabled={defilement}
       scrollEventThrottle={16}
-      onScroll={(e) => { yRef.current = e.nativeEvent.contentOffset.y; }}
+      onScroll={(e) => { yRef.current = e.nativeEvent.contentOffset.y; defil.onScroll(e); }}
       onLayout={(e) => { hauteurs.current.fenetre = e.nativeEvent.layout.height; majMax(); }}
       onContentSizeChange={(_w, h) => { hauteurs.current.contenu = h; majMax(); }}
     >
@@ -1393,7 +1422,7 @@ function EcranProgression({ etat }) {
       <CarteHeros jeu={etat.jeu} perso={etat.perso} onGeste={onGestePerso} />
 
       {/* --- Courbe de poids --- */}
-      <View style={styles.carte}>
+      <View style={styles.carte} ref={cible("prog-poids")}>
         <Text style={styles.champLabel}>Poids</Text>
         {poids.length < 2 ? (
           <Text style={styles.objectifDetail}>
@@ -1407,7 +1436,7 @@ function EcranProgression({ etat }) {
       </View>
 
       {/* --- Historique des calories --- */}
-      <View style={styles.carte}>
+      <View style={styles.carte} ref={cible("prog-calories")}>
         <Text style={styles.champLabel}>Calories des derniers jours</Text>
         {historique.length === 0 ? (
           <Text style={styles.objectifDetail}>
@@ -1569,7 +1598,7 @@ function CarteHeros({ jeu, perso, onGeste }) {
       </View>
 
       {/* Badges */}
-      <View style={styles.carte}>
+      <View style={styles.carte} ref={cible("badges")}>
         <Text style={styles.champLabel}>Badges</Text>
         <View style={styles.badgesZone}>
           {BADGES.map((b) => {
