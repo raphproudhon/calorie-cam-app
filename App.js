@@ -7,7 +7,7 @@
 //
 // Repartition des roles (voir README) :
 //   - analyse.js  : l'IA identifie les aliments et estime les portions
-//   - ia.js       : les IA interchangeables (Gemini, Claude), choisies dans les Parametres
+//   - ia.js       : les IA interchangeables (Gemini, Claude, ChatGPT, Mistral) ; on colle une cle, l'IA est reconnue
 //   - ciqual.js   : la table officielle de l'ANSES fournit les valeurs nutritionnelles
 //   - besoins.js  : calcul du besoin calorique et de l'objectif, avec garde-fous
 //   - stockage.js : persistance locale (profil, historique, poids) + bascule de jour
@@ -42,7 +42,8 @@ import { calculer, totaliser, rechercher, NB_ALIMENTS, SOURCE } from "./ciqual";
 import { ACTIVITES, RYTHMES, calculerObjectif, bilanJournalier } from "./besoins";
 import { estDisponible as santeDisponible, demanderAcces, depenseDuJour } from "./health";
 import { chargerEtat, sauvegarderEtat, dateDuJour } from "./stockage";
-import { chargerCle, definirCle, cleDe, fournisseurActif, definirFournisseur, FOURNISSEURS, IDS_FOURNISSEURS } from "./cle";
+import { chargerCle, definirCle, modeleDe, fournisseurActif, definirFournisseur, fournisseursDisponibles, FOURNISSEURS } from "./cle";
+import { reconnaitreCle } from "./ia";
 import {
   niveauDepuisXp,
   themePerso,
@@ -963,53 +964,79 @@ function FormulaireObjectif({ profilInitial, titre, sousTitre, libelleValider = 
 //  MENU PARAMETRES — roue crantee : objectif, poids, reset, Apple Sante
 // =========================================================================
 
-// Choix de l'IA vision (Gemini ou Claude) et saisie de sa cle. Les versions
-// publiees n'embarquent aucune cle : chacun colle la sienne, elle reste sur
-// l'appareil et n'est envoyee qu'a l'IA concernee.
+// IA vision : on colle une cle, n'importe laquelle (Gemini, Claude, ChatGPT,
+// Mistral) ; reconnaitreCle devine l'IA et la verifie aupres du service. Les
+// versions publiees n'embarquent aucune cle : elle reste sur l'appareil et
+// n'est envoyee qu'a l'IA concernee.
 function CarteIA() {
   const [choisie, setChoisie] = useState(fournisseurActif());
   const [saisie, setSaisie] = useState("");
   const [message, setMessage] = useState(null);
-  const f = FOURNISSEURS[choisie];
-  const configuree = cleDe(choisie) !== "";
-  const autres = IDS_FOURNISSEURS.filter((id) => id !== choisie && cleDe(id));
+  const [verif, setVerif] = useState(false);
+  const [, rafraichir] = useState(0);
+  const dispo = fournisseursDisponibles();
+  // L'IA choisie n'a plus de cle : c'est la 1re disponible qui sert.
+  const utilisee = dispo.includes(choisie) ? choisie : dispo[0];
 
   async function choisir(id) {
     await definirFournisseur(id);
     setChoisie(id);
-    setSaisie("");
-    setMessage(null);
   }
 
-  async function enregistrer() {
-    const cle = await definirCle(choisie, saisie);
-    setSaisie("");
-    setMessage(cle ? "Clé enregistrée." : "Clé effacée.");
+  async function ajouter() {
+    setVerif(true);
+    setMessage(null);
+    try {
+      const { id, cle, modele } = await reconnaitreCle(saisie);
+      await definirCle(id, cle, modele);
+      await choisir(id);
+      setSaisie("");
+      setMessage(`Clé ${FOURNISSEURS[id].nom} reconnue : c'est elle qui analyse vos photos.`);
+    } catch (e) {
+      setMessage(e.message);
+    } finally {
+      setVerif(false);
+    }
+  }
+
+  async function retirer(id) {
+    await definirCle(id, "");
+    setMessage(`Clé ${FOURNISSEURS[id].nom} retirée.`);
+    rafraichir((n) => n + 1);
   }
 
   return (
     <View style={styles.carte}>
       <Text style={styles.champLabel}>Intelligence artificielle</Text>
-      <Segment
-        options={IDS_FOURNISSEURS.map((id) => [id, FOURNISSEURS[id].nom])}
-        valeur={choisie}
-        onChange={choisir}
-      />
-      <Text style={[styles.objectifDetail, { marginTop: 10 }]}>
-        {configuree
-          ? `Une clé ${f.nom} est enregistrée sur cet appareil.`
-          : `Aucune clé ${f.nom} : collez-la ci-dessous.`}
-        {autres.length
-          ? ` Si ${f.nom} est surchargé, l'analyse passe sur ${autres.map((id) => FOURNISSEURS[id].nom).join(", ")}.`
-          : ""}
-      </Text>
-      <Text style={styles.disclaimer}>{f.aide} Elle reste sur cet appareil.</Text>
+      {dispo.length ? (
+        dispo.map((id) => (
+          <View key={id} style={styles.iaLigne}>
+            <Pressable style={{ flex: 1 }} onPress={() => choisir(id)}>
+              <Text style={styles.iaNom}>
+                {id === utilisee ? "● " : "○ "}
+                {FOURNISSEURS[id].nom}
+                {modeleDe(id) ? <Text style={styles.disclaimer}>  {modeleDe(id)}</Text> : null}
+              </Text>
+            </Pressable>
+            <TouchableOpacity onPress={() => retirer(id)}>
+              <Text style={styles.iaRetirer}>Retirer</Text>
+            </TouchableOpacity>
+          </View>
+        ))
+      ) : (
+        <Text style={styles.objectifDetail}>Aucune clé : l'analyse photo est indisponible.</Text>
+      )}
+      {dispo.length > 1 ? (
+        <Text style={styles.disclaimer}>
+          Touchez une IA pour l'utiliser. Si elle est surchargée, une autre prend le relais.
+        </Text>
+      ) : null}
       <View style={[styles.champNombreBoite, { marginTop: 10 }]}>
         <TextInput
           style={styles.champNombreSaisie}
           value={saisie}
           onChangeText={setSaisie}
-          placeholder={configuree ? `Remplacer la clé ${f.nom}` : `Coller la clé ${f.nom}`}
+          placeholder="Coller une clé API"
           placeholderTextColor={COULEURS.doux}
           autoCapitalize="none"
           autoCorrect={false}
@@ -1017,12 +1044,16 @@ function CarteIA() {
         />
       </View>
       <TouchableOpacity
-        style={[styles.bouton, styles.boutonSecondaire, { marginTop: 10 }]}
-        onPress={enregistrer}
+        style={[styles.bouton, styles.boutonSecondaire, { marginTop: 10 }, (verif || !saisie.trim()) && styles.boutonInactif]}
+        onPress={ajouter}
+        disabled={verif || !saisie.trim()}
       >
-        <Text style={styles.boutonTexte}>Enregistrer la clé</Text>
+        <Text style={styles.boutonTexte}>{verif ? "Vérification…" : "Ajouter la clé"}</Text>
       </TouchableOpacity>
       {message ? <Text style={styles.objectifDetail}>{message}</Text> : null}
+      <Text style={styles.disclaimer}>
+        Gemini, Claude, ChatGPT ou Mistral : l'app reconnaît la clé toute seule. {FOURNISSEURS.gemini.aide} La clé reste sur cet appareil.
+      </Text>
     </View>
   );
 }
@@ -2180,6 +2211,9 @@ function BarresCalories({ historique }) {
 // Feuille de styles, recalculee a chaque changement de palette.
 function creerStyles() {
   return StyleSheet.create({
+    iaLigne: { flexDirection: "row", alignItems: "center", paddingVertical: 8, borderBottomWidth: 1, borderBottomColor: COULEURS.bord },
+    iaNom: { color: COULEURS.texte, fontSize: 16, fontWeight: "600" },
+    iaRetirer: { color: COULEURS.rouge, fontSize: 14, paddingLeft: 12 },
   ecran: { flex: 1, backgroundColor: COULEURS.fond },
   centreEcran: { alignItems: "center", justifyContent: "center" },
   contenu: { padding: 20, paddingTop: 16, paddingBottom: 60 },

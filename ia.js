@@ -1,4 +1,4 @@
-// Appels aux IA vision, interchangeables.
+// Appels aux IA vision, interchangeables : Gemini, Claude, ChatGPT, Mistral.
 //
 // analyse.js decrit CE QU'IL FAUT DEMANDER (prompts, schemas des reponses) ;
 // ce fichier sait COMMENT le demander a chaque IA. Toutes rendent le meme
@@ -12,12 +12,22 @@
 // IA utilisee : celle choisie dans les Parametres (cle.js). Si elle est
 // surchargee ou injoignable et qu'une cle existe pour une autre, on bascule
 // dessus plutot que d'echouer.
+//
+// L'utilisateur n'a qu'a coller une cle : reconnaitreCle() devine l'IA d'apres
+// sa forme, puis le verifie aupres du service (et y choisit le modele).
 
 import Anthropic from "@anthropic-ai/sdk";
-import { cleDe, fournisseurActif, FOURNISSEURS, IDS_FOURNISSEURS } from "./cle";
+import { cleDe, modeleDe, fournisseurActif, FOURNISSEURS, IDS_FOURNISSEURS } from "./cle";
 
 const MODELE_GEMINI = "gemini-flash-latest";
 const MODELE_CLAUDE = "claude-opus-5-5";
+// ChatGPT et Mistral : le modele est choisi a l'enregistrement de la cle parmi
+// ceux qu'elle donne le droit d'utiliser (choisirModele). Ceux-ci ne servent
+// que si ce choix n'a pas pu se faire.
+const MODELE_OPENAI = "gpt-4o";
+const MODELE_MISTRAL = "mistral-medium-latest";
+const URL_OPENAI = "https://api.openai.com/v1";
+const URL_MISTRAL = "https://api.mistral.ai/v1";
 
 const pause = (ms) => new Promise((r) => setTimeout(r, ms));
 
@@ -193,9 +203,166 @@ async function appelerClaude(cle, { image, texte, schema }) {
   return JSON.parse(sortie);
 }
 
+// --- ChatGPT et Mistral (meme forme d'API : "chat completions") ---------------
+
+async function appelerChat(base, cle, modele, { image, texte, schema, temperature }, options) {
+  const contenu = [{ type: "text", text: texte }];
+  if (image) {
+    const url = `data:image/jpeg;base64,${image}`;
+    // OpenAI attend { url }, Mistral la chaine directement.
+    contenu.unshift({ type: "image_url", image_url: options.imageEnChaine ? url : { url } });
+  }
+  const corps = {
+    model: modele,
+    messages: [{ role: "user", content: contenu }],
+    response_format: {
+      type: "json_schema",
+      json_schema: { name: "reponse", strict: true, schema: versJsonSchema(schema) },
+    },
+  };
+  // Les modeles de raisonnement d'OpenAI refusent tout reglage de temperature.
+  if (options.temperature) corps.temperature = temperature;
+
+  const MAX_ESSAIS = 3;
+  let derniere = null;
+  for (let essai = 1; essai <= MAX_ESSAIS; essai++) {
+    let reponse;
+    try {
+      reponse = await fetch(`${base}/chat/completions`, {
+        method: "POST",
+        headers: { "content-type": "application/json", authorization: `Bearer ${cle}` },
+        body: JSON.stringify(corps),
+      });
+    } catch (e) {
+      derniere = e.message;
+      if (essai < MAX_ESSAIS) { await pause(essai * 1200); continue; }
+      throw erreurTransitoire(`${options.nom} injoignable. Vérifiez votre connexion.`);
+    }
+    const data = await reponse.json().catch(() => ({}));
+    if (!reponse.ok) {
+      const code = data?.error?.code || data?.error?.type || "";
+      derniere = data?.error?.message || data?.message || `Erreur ${reponse.status}`;
+      if (reponse.status === 401 || reponse.status === 403) {
+        throw new Error(`Clé ${options.nom} refusée. Vérifiez-la dans les Paramètres.`);
+      }
+      if (code === "insufficient_quota") {
+        throw new Error(`Crédit ${options.nom} épuisé.`);
+      }
+      if (reponse.status === 429 || reponse.status >= 500) {
+        if (essai < MAX_ESSAIS) { await pause(essai * 1500); continue; }
+        throw erreurTransitoire(`${options.nom} est surchargé. Réessayez dans un instant.`);
+      }
+      throw new Error(derniere);
+    }
+    const message = data?.choices?.[0]?.message;
+    if (message?.refusal) throw new Error("L'IA a refusé d'analyser cette image.");
+    const sortie = typeof message?.content === "string"
+      ? message.content
+      : (message?.content || []).map((c) => c.text || "").join("");
+    if (!sortie) {
+      derniere = "Reponse vide";
+      if (essai < MAX_ESSAIS) { await pause(essai * 1200); continue; }
+      throw erreurTransitoire("Reponse vide de l'IA. Réessayez.");
+    }
+    return JSON.parse(sortie);
+  }
+  throw erreurTransitoire(derniere || "Échec de l'analyse. Réessayez.");
+}
+
+const appelerOpenAI = (cle, demande) =>
+  appelerChat(URL_OPENAI, cle, modeleDe("openai") || MODELE_OPENAI, demande, { nom: "ChatGPT" });
+
+const appelerMistral = (cle, demande) =>
+  appelerChat(URL_MISTRAL, cle, modeleDe("mistral") || MODELE_MISTRAL, demande,
+    { nom: "Mistral", imageEnChaine: true, temperature: true });
+
+// --- Reconnaissance d'une cle -------------------------------------------------
+
+/**
+ * Choisit le modele a utiliser parmi ceux qu'une cle donne le droit d'utiliser.
+ * ChatGPT : le GPT generaliste le plus recent (pas les variantes audio, image,
+ * code, recherche, ni les versions datees). Mistral : un modele qui voit les
+ * images, le plus capable d'abord.
+ */
+export function choisirModele(id, ids) {
+  if (id === "openai") {
+    const EXCLUS = /audio|realtime|transcribe|tts|search|image|codex|instruct|nano|oss|chat-latest|preview|\d{4}-\d{2}-\d{2}|\d{4}$/;
+    const notes = ids
+      .map((m) => {
+        const v = /^gpt-(\d+(?:\.\d+)?)(o)?(-mini)?$/.exec(m);
+        if (!v || EXCLUS.test(m)) return null;
+        // Version, puis la version complete avant la « mini ».
+        return { m, note: parseFloat(v[1]) * 10 + (v[3] ? 0 : 1) };
+      })
+      .filter(Boolean)
+      .sort((a, b) => b.note - a.note);
+    return notes[0]?.m || "";
+  }
+  if (id === "mistral") {
+    const PREFERES = ["mistral-medium-latest", "pixtral-large-latest", "mistral-small-latest", "pixtral-12b-latest"];
+    return PREFERES.find((m) => ids.includes(m)) || "";
+  }
+  return "";
+}
+
+/** Demande la liste des modeles a une IA : "ok" (+ ids), "refusee" ou "injoignable". */
+async function sonder(id, cle) {
+  try {
+    if (id === "claude") {
+      const client = new Anthropic({ apiKey: cle, dangerouslyAllowBrowser: true, maxRetries: 1 });
+      await client.models.list({ limit: 1 });
+      return { etat: "ok", ids: [] };
+    }
+    const requete = {
+      gemini: ["https://generativelanguage.googleapis.com/v1beta/models", { "x-goog-api-key": cle }],
+      openai: [`${URL_OPENAI}/models`, { authorization: `Bearer ${cle}` }],
+      mistral: [`${URL_MISTRAL}/models`, { authorization: `Bearer ${cle}` }],
+    }[id];
+    const reponse = await fetch(requete[0], { headers: requete[1] });
+    if (!reponse.ok) {
+      return { etat: reponse.status === 400 || reponse.status === 401 || reponse.status === 403 ? "refusee" : "injoignable" };
+    }
+    const data = await reponse.json().catch(() => ({}));
+    return { etat: "ok", ids: (data.data || data.models || []).map((m) => m.id || m.name).filter(Boolean) };
+  } catch (e) {
+    if (e instanceof Anthropic.AuthenticationError || e instanceof Anthropic.PermissionDeniedError) {
+      return { etat: "refusee" };
+    }
+    return { etat: "injoignable" };
+  }
+}
+
+/** IA probables pour une cle, d'apres sa forme (la plus probable d'abord). */
+export function devinerFournisseurs(cle) {
+  if (cle.startsWith("sk-ant-")) return ["claude"];
+  if (cle.startsWith("AIza") || cle.startsWith("AQ.")) return ["gemini"];
+  if (cle.startsWith("sk-")) return ["openai"];
+  // Pas de prefixe connu (les cles Mistral n'en ont pas) : on essaie tout.
+  return ["mistral", ...IDS_FOURNISSEURS.filter((id) => id !== "mistral")];
+}
+
+/**
+ * Reconnait l'IA d'une cle collee par l'utilisateur, en la verifiant aupres
+ * du service. Rend { id, modele } ou leve une erreur au message lisible.
+ */
+export async function reconnaitreCle(brute) {
+  const cle = String(brute || "").trim();
+  if (!cle) throw new Error("Collez une clé API.");
+  const candidats = devinerFournisseurs(cle);
+  let injoignable = false;
+  for (const id of candidats) {
+    const r = await sonder(id, cle);
+    if (r.etat === "ok") return { id, cle, modele: choisirModele(id, r.ids) };
+    if (r.etat === "injoignable") injoignable = true;
+  }
+  if (injoignable) throw new Error("Impossible de vérifier la clé : réseau indisponible. Réessayez.");
+  const noms = candidats.map((id) => FOURNISSEURS[id].nom).join(", ");
+  throw new Error(`Clé refusée (${noms}). Vérifiez qu'elle est complète.`);
+}
+
 // --- Aiguillage ---------------------------------------------------------------
 
-const APPELS = { gemini: appelerGemini, claude: appelerClaude };
+const APPELS = { gemini: appelerGemini, claude: appelerClaude, openai: appelerOpenAI, mistral: appelerMistral };
 
 /**
  * Pose une question a l'IA et rend sa reponse JSON (conforme a `schema`).
@@ -203,8 +370,8 @@ const APPELS = { gemini: appelerGemini, claude: appelerClaude };
  * @param {string} [demande.image]  photo JPEG en base64 (facultative)
  * @param {string} demande.texte    consigne
  * @param {object} demande.schema   schema de la reponse, au format Gemini
- * @param {number} demande.temperature  0 = reproductible (Gemini seulement :
- *   les modeles Claude actuels n'acceptent plus ce reglage)
+ * @param {number} demande.temperature  0 = reproductible (Gemini et Mistral :
+ *   les modeles Claude et ChatGPT actuels n'acceptent plus ce reglage)
  */
 export async function appelerIA(demande) {
   const choisie = fournisseurActif();
@@ -212,10 +379,9 @@ export async function appelerIA(demande) {
   const ordre = [choisie, ...IDS_FOURNISSEURS.filter((id) => id !== choisie)]
     .filter((id) => cleDe(id));
   if (ordre.length === 0) {
-    const f = FOURNISSEURS[choisie];
-    throw new Error(
-      `Aucune clé API ${f.nom}. Ouvrez les Paramètres (roue crantée) et collez ` +
-      `votre clé. ${f.aide}`
+        throw new Error(
+      "Aucune clé d'IA. Ouvrez les Paramètres (roue crantée) et collez une clé " +
+      `API (Gemini, Claude, ChatGPT ou Mistral). ${FOURNISSEURS.gemini.aide}`
     );
   }
 

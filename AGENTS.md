@@ -22,15 +22,20 @@ Points clés :
   d'api.expo.dev ; sans réseau, aligner à la main sur
   `node_modules/expo/bundledNativeModules.json`.
 - IA vision **interchangeable** (`ia.js`) : **Google Gemini** (`gemini-flash-latest`,
-  API REST en `fetch`) ou **Claude** (`claude-opus-5-5`, SDK `@anthropic-ai/sdk`,
-  sorties structurées + `fallbacks: "default"`). L'utilisateur choisit dans les
-  Paramètres ; si l'IA choisie est surchargée/injoignable et qu'une clé existe
-  pour l'autre, `appelerIA` bascule (jamais sur une clé refusée). Les schémas
+  API REST en `fetch`), **Claude** (`claude-opus-5-5`, SDK `@anthropic-ai/sdk`,
+  sorties structurées + `fallbacks: "default"`), **ChatGPT** et **Mistral** (API
+  « chat completions » en `fetch`, modèle choisi à l'ajout de la clé parmi ceux
+  qu'elle autorise : `choisirModele`). L'utilisateur colle **une clé, n'importe
+  laquelle** dans les Paramètres : `reconnaitreCle` devine l'IA d'après son
+  préfixe (`sk-ant-`, `AIza`/`AQ.`, `sk-`, sinon on essaie tout) et la vérifie
+  en listant les modèles. Plusieurs clés → il touche celle à utiliser ; si elle
+  est surchargée/injoignable, `appelerIA` bascule sur une autre (jamais sur une
+  clé refusée). Les schémas
   sont écrits au format Gemini dans `analyse.js` et convertis pour Claude
   (`versJsonSchema`). Nouvelle IA → une fonction dans `APPELS` + une entrée dans
   `FOURNISSEURS` (`cle.js`).
 - Les clés API sont dans `secrets.js` (exclu de Git : `GEMINI_API_KEY`,
-  `ANTHROPIC_API_KEY`). Ne jamais les commiter, ne jamais les remettre en clair
+  `ANTHROPIC_API_KEY`, `OPENAI_API_KEY`, `MISTRAL_API_KEY`). Ne jamais les commiter, ne jamais les remettre en clair
   dans le code. `cle.js` les résout à l'exécution : clé saisie dans les
   Paramètres (persistée localement) sinon clé de `secrets.js`. La version web publiée sur GitHub Pages n'embarque AUCUNE clé.
 
@@ -66,7 +71,7 @@ passent dans le même affichage/bilan que les aliments d'une photo.
 |---|---|
 | `App.js` | les 4 onglets, l'onboarding, les paramètres |
 | `analyse.js` | passe 1 (vision) et passe 2 (choix de la fiche Ciqual) : prompts et schémas |
-| `ia.js` | appel à l'IA choisie (Gemini / Claude), bascule sur l'autre si surcharge |
+| `ia.js` | reconnaissance d'une clé collée + appel à l'IA choisie (Gemini / Claude / ChatGPT / Mistral), bascule sur une autre si surcharge |
 | `ciqual.js` | recherche floue dans la table + calcul nutritionnel |
 | `off.js` | scan de code-barres → produit **Open Food Facts** mis à la forme d'une fiche (compatible `calculer()`) |
 | `besoins.js` | BMR/objectif calorique + bilan du jour, garde-fous de sécurité |

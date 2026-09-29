@@ -2,7 +2,8 @@
 
 Prototype d'app mobile qui analyse une **photo de plat** et estime les
 **calories + macros** (protéines, glucides, lipides) via une IA vision : Google
-Gemini ou Claude d'Anthropic, au choix dans les Paramètres.
+Gemini, Claude, ChatGPT ou Mistral — on colle une clé API dans les Paramètres,
+l'app reconnaît l'IA toute seule.
 
 ## Ce que fait l'app
 
@@ -25,7 +26,7 @@ vérifier. Les deux métiers sont donc séparés :
 
 | Qui | Fait quoi |
 |---|---|
-| **L'IA** (Gemini ou Claude) | identifie les aliments, estime les masses (vision) |
+| **L'IA** (Gemini, Claude, ChatGPT ou Mistral) | identifie les aliments, estime les masses (vision) |
 | **Ciqual (ANSES)** | fournit les valeurs pour 100 g (source de vérité) |
 | **L'app** | calcule `masse / 100 × valeurs Ciqual`, et laisse corriger la masse |
 
@@ -68,7 +69,7 @@ attendant le build de développement, le sport peut être saisi à la main.
 |---|---|
 | Framework | **Expo (React Native)** — teste sur iPhone via l'app **Expo Go**, sans Mac |
 | Expo SDK | **57** (⚠️ doit être celui de l'Expo Go installé : sur iOS, seule la dernière version d'Expo Go existe) |
-| IA vision | **Google Gemini** (`gemini-flash-latest`, niveau gratuit) ou **Claude** (`claude-opus-5-5`, payant, via `@anthropic-ai/sdk`) — choix dans les Paramètres ; si l'IA choisie est surchargée et qu'une clé existe pour l'autre, elle prend le relais |
+| IA vision | **Google Gemini** (`gemini-flash-latest`, niveau gratuit), **Claude** (`claude-opus-5-5`, via `@anthropic-ai/sdk`), **ChatGPT** ou **Mistral** (modèle choisi parmi ceux de la clé) — on colle une clé, l'IA est reconnue ; si celle utilisée est surchargée, une autre prend le relais |
 | Base nutritionnelle | **Ciqual 2020 (ANSES)** — 2 298 aliments, embarquée, hors-ligne |
 | Clé API | Dans `secrets.js` (exclu de Git) — voir `secrets.example.js` |
 
@@ -78,7 +79,7 @@ attendant le build de développement, le sport peut être saisi à la main.
 |---|---|
 | `App.js` | l'écran : affichage et correction manuelle des portions |
 | `analyse.js` | les deux demandes à l'IA (vision, puis choix de la fiche Ciqual) : prompts et schémas |
-| `ia.js` | comment les poser à chaque IA (Gemini en REST, Claude par son SDK) + bascule si surcharge |
+| `ia.js` | reconnaissance d'une clé collée, et comment poser les demandes à chaque IA + bascule si surcharge |
 | `ciqual.js` | recherche dans la table et calcul nutritionnel |
 | `data/ciqual.json` | la table Ciqual réduite (235 Ko), versionnée dans Git |
 | `tools/build-ciqual.js` | régénère ce JSON depuis les fichiers officiels de l'ANSES |
@@ -147,8 +148,8 @@ Deux points importants :
 
 - **Aucune clé API n'est embarquée** dans le site publié — le bundle est public.
   Le workflow génère un `secrets.js` vide (copie du modèle) ; chaque visiteur
-  colle sa propre clé (Gemini ou Claude) dans **Paramètres → Intelligence
-  artificielle**, où elle reste
+  colle sa propre clé (Gemini, Claude, ChatGPT ou Mistral) dans **Paramètres →
+  Intelligence artificielle**, où elle reste
   dans le stockage local de SON navigateur. Sans clé, tout marche sauf l'analyse
   photo.
 - Le site est servi sous `/calorie-cam-app/` : le workflow injecte

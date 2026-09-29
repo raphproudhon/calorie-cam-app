@@ -1,8 +1,10 @@
 // Cles API des IA vision, et choix de l'IA utilisee.
 //
-// L'app sait parler a plusieurs IA (voir ia.js) : Gemini (Google) et Claude
-// (Anthropic). L'utilisateur choisit la sienne dans les Parametres ; si elle
-// est surchargee et qu'une cle existe pour l'autre, l'analyse bascule dessus.
+// L'app sait parler a plusieurs IA (voir ia.js) : Gemini (Google), Claude
+// (Anthropic), ChatGPT (OpenAI) et Mistral. Dans les Parametres, l'utilisateur
+// colle une cle, n'importe laquelle : ia.js reconnait l'IA (reconnaitreCle) et
+// la rend disponible. S'il en a plusieurs, il choisit celle a utiliser ; si
+// elle est surchargee, l'analyse bascule sur une autre.
 //
 // Pour chaque IA, deux provenances de cle, dans cet ordre de priorite :
 //   1. une cle saisie dans l'app (Parametres -> "Intelligence artificielle"),
@@ -34,6 +36,18 @@ export const FOURNISSEURS = {
     secret: "ANTHROPIC_API_KEY",
     aide: "Clé sur console.anthropic.com (payant : quelques centimes par photo).",
   },
+  openai: {
+    nom: "ChatGPT",
+    stockage: "caloriecam.cle_openai",
+    secret: "OPENAI_API_KEY",
+    aide: "Clé sur platform.openai.com (payant).",
+  },
+  mistral: {
+    nom: "Mistral",
+    stockage: "caloriecam.cle_mistral",
+    secret: "MISTRAL_API_KEY",
+    aide: "Clé sur console.mistral.ai.",
+  },
 };
 export const IDS_FOURNISSEURS = Object.keys(FOURNISSEURS);
 
@@ -47,11 +61,19 @@ const embarquees = Object.fromEntries(
   IDS_FOURNISSEURS.map((id) => [id, nettoyer(secrets[FOURNISSEURS[id].secret])])
 );
 const saisies = Object.fromEntries(IDS_FOURNISSEURS.map((id) => [id, ""]));
+// Modele retenu pour les IA dont on choisit le modele a l'enregistrement de la
+// cle, parmi ceux que la cle donne le droit d'utiliser (ChatGPT, Mistral).
+const modeles = Object.fromEntries(IDS_FOURNISSEURS.map((id) => [id, ""]));
 let actif = "gemini";
 
 /** Cle a utiliser pour une IA ("" si aucune n'est disponible). */
 export function cleDe(id) {
   return saisies[id] || embarquees[id] || "";
+}
+
+/** Modele retenu pour une IA ("" = modele par defaut de ia.js). */
+export function modeleDe(id) {
+  return modeles[id] || "";
 }
 
 /** IA choisie par l'utilisateur. */
@@ -65,6 +87,7 @@ export async function chargerCle() {
     IDS_FOURNISSEURS.map(async (id) => {
       try {
         saisies[id] = nettoyer(await AsyncStorage.getItem(FOURNISSEURS[id].stockage));
+        modeles[id] = (await AsyncStorage.getItem(FOURNISSEURS[id].stockage + ".modele")) || "";
       } catch {
         saisies[id] = "";
       }
@@ -78,16 +101,29 @@ export async function chargerCle() {
   }
 }
 
-/** Enregistre (ou efface, si vide) la cle saisie pour une IA. */
-export async function definirCle(id, valeur) {
+/** Enregistre (ou efface, si vide) la cle saisie pour une IA, et son modele. */
+export async function definirCle(id, valeur, modele = "") {
   saisies[id] = nettoyer(valeur);
+  modeles[id] = saisies[id] ? modele : "";
+  const k = FOURNISSEURS[id].stockage;
   try {
-    if (saisies[id]) await AsyncStorage.setItem(FOURNISSEURS[id].stockage, saisies[id]);
-    else await AsyncStorage.removeItem(FOURNISSEURS[id].stockage);
+    if (saisies[id]) {
+      await AsyncStorage.setItem(k, saisies[id]);
+      if (modele) await AsyncStorage.setItem(k + ".modele", modele);
+      else await AsyncStorage.removeItem(k + ".modele");
+    } else {
+      await AsyncStorage.removeItem(k);
+      await AsyncStorage.removeItem(k + ".modele");
+    }
   } catch {
     // Stockage indisponible : la cle reste valable pour la session en cours.
   }
   return saisies[id];
+}
+
+/** IA pour lesquelles une cle est disponible. */
+export function fournisseursDisponibles() {
+  return IDS_FOURNISSEURS.filter((id) => cleDe(id));
 }
 
 /** Change l'IA utilisee. */
