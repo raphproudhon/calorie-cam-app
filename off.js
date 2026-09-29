@@ -69,23 +69,52 @@ function ficheDepuisProduit(p, code) {
  * produits dont on connait les calories sont gardes.
  */
 export async function chercherProduits(texte, limite = 8) {
-  const params = [
-    `search_terms=${encodeURIComponent(texte)}`,
-    "search_simple=1",
-    "action=process",
-    "json=1",
-    `page_size=${limite * 2}`,
-    "fields=code,product_name,product_name_fr,brands,nutriments,quantity",
-  ].join("&");
-  const rep = await fetch(`https://world.openfoodfacts.org/cgi/search.pl?${params}`, {
-    headers: { "User-Agent": "CalorieCam - perso - github.com/raphproudhon" },
-  });
-  if (!rep.ok) throw new Error(`Open Food Facts : erreur ${rep.status}`);
-  const data = await rep.json();
+  const champs = "code,product_name,product_name_fr,brands,nutriments,quantity";
+  const entete = { "User-Agent": "CalorieCam - perso - github.com/raphproudhon" };
+  // Deux moteurs de recherche chez Open Food Facts : le classique, souvent
+  // sature (503), et le recent (search-a-licious). On essaie le classique, on
+  // retente une fois, puis on passe au recent.
+  const sources = [
+    async () => {
+      const params = [
+        `search_terms=${encodeURIComponent(texte)}`,
+        "search_simple=1", "action=process", "json=1",
+        `page_size=${limite * 2}`, `fields=${champs}`,
+      ].join("&");
+      const rep = await fetch(`https://world.openfoodfacts.org/cgi/search.pl?${params}`, { headers: entete });
+      if (!rep.ok) throw new Error(`Open Food Facts : erreur ${rep.status}`);
+      return (await rep.json()).products || [];
+    },
+    async () => {
+      const url = `https://search.openfoodfacts.org/search?q=${encodeURIComponent(texte)}` +
+        `&page_size=${limite * 2}&fields=${champs}`;
+      const rep = await fetch(url, { headers: entete });
+      if (!rep.ok) throw new Error(`Open Food Facts : erreur ${rep.status}`);
+      const data = await rep.json();
+      // Ici les marques arrivent parfois en tableau.
+      return (data.hits || data.products || []).map((p) => ({
+        ...p,
+        brands: Array.isArray(p.brands) ? p.brands.join(",") : p.brands,
+      }));
+    },
+  ];
+  const essais = [sources[0], sources[0], sources[1]];
+  let produits = null;
+  let erreur = null;
+  for (let i = 0; i < essais.length && produits === null; i++) {
+    try {
+      produits = await essais[i]();
+    } catch (e) {
+      erreur = e;
+      if (i === 0) await new Promise((r) => setTimeout(r, 1500));
+    }
+  }
+  if (produits === null) throw erreur;
+
   // Un meme produit existe en plusieurs formats (x8, x10, mini...) avec les
   // memes valeurs pour 100 g : on n'en garde qu'un, au nom le plus court.
   const parValeurs = new Map();
-  for (const p of data.products || []) {
+  for (const p of produits) {
     const f = ficheDepuisProduit(p, p.code);
     if (f.kcal == null || !f.code) continue;
     const cle = [f.kcal, f.prot, f.gluc, f.lip].join("|");

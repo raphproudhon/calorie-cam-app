@@ -851,6 +851,7 @@ function ChoixFiche({ visible, aliment, onChoisir, onFermer }) {
   const [marques, setMarques] = useState(null); // null = pas cherche, "..." = en cours, [] = rien
   const [proches, setProches] = useState(null);
   const cache = useRef(new Map());
+  const [relance, setRelance] = useState(0); // « Reessayer » apres une erreur
   useEffect(() => {
     setMarques(null);
     setProches(null);
@@ -871,7 +872,7 @@ function ChoixFiche({ visible, aliment, onChoisir, onFermer }) {
       if (fournisseursDisponibles().length) lancer("ia", () => alimentsProches(q), setProches);
     }, 800);
     return () => { annule = true; clearTimeout(t); };
-  }, [q, exacte]);
+  }, [q, exacte, relance]);
 
   const choisir = (f) => {
     setRecherche("");
@@ -899,7 +900,10 @@ function ChoixFiche({ visible, aliment, onChoisir, onFermer }) {
       {valeur === "..." ? (
         <ActivityIndicator style={{ marginVertical: 12 }} color={COULEURS.accent} />
       ) : valeur.erreur ? (
-        <Text style={styles.vide}>Indisponible : {valeur.erreur}</Text>
+        <Pressable onPress={() => setRelance((n) => n + 1)}>
+          <Text style={styles.vide}>Indisponible : {valeur.erreur}</Text>
+          <Text style={[styles.vide, { color: COULEURS.accent, marginTop: 0 }]}>Réessayer</Text>
+        </Pressable>
       ) : valeur.length ? (
         valeur.map(option)
       ) : (
