@@ -112,7 +112,7 @@ export const ETAPES_TUTO = [
     onglet: "bilan",
     defil: "bilan",
     titre: "Ce qu'il vous reste",
-    texte: "Objectif + sport − ce que vous avez mangé : voilà ce qu'il vous reste à manger aujourd'hui.",
+    texte: "Objectif + sport − ce que vous avez mangé : voilà ce qu'il vous reste à manger aujourd'hui. Pas besoin de tomber pile : la zone verte de la barre, c'est une journée validée.",
   },
   {
     cible: "bilan-sport",

@@ -54,6 +54,7 @@ import {
   etapePersonnage,
   NB_ETAPES,
   PERSOS,
+  zoneCible,
 } from "./jeu";
 import { SPRITES, ANIMS } from "./perso-sprites";
 import { VERSION, TEST } from "./version";
@@ -1406,6 +1407,14 @@ function EcranBilan({ objectif, consomme, sport, onSport }) {
     sport: parseInt(sport || "0", 10),
     consomme,
   });
+  // Zone ou la journee est validee (meme regle que le jeu, jourReussi) : pas
+  // besoin de tomber pile sur le budget.
+  const zone = zoneCible(objectif, sport);
+  const valide = consomme >= zone.min && consomme <= zone.max;
+  const trop = consomme > zone.max;
+  // La barre va jusqu'a la fin de la zone (110 % du budget), pour la montrer.
+  const echelle = Math.max(zone.max, 1);
+  const pct = (v) => `${Math.min(100, Math.round((v / echelle) * 100))}%`;
 
   return (
     <ScrollView contentContainerStyle={styles.contenu} keyboardShouldPersistTaps="handled" {...defil}>
@@ -1418,27 +1427,36 @@ function EcranBilan({ objectif, consomme, sport, onSport }) {
             <Text
               style={[
                 styles.objectifGros,
-                bilan.restant < 0 && { color: COULEURS.rouge },
+                trop && { color: COULEURS.rouge },
               ]}
             >
               {bilan.restant} kcal
             </Text>
             <Text style={styles.objectifSous}>
               {bilan.restant < 0
-                ? `Objectif dépassé de ${bilan.depassement} kcal`
+                ? `Budget dépassé de ${bilan.depassement} kcal`
                 : `sur un budget de ${bilan.budget} kcal`}
             </Text>
 
-            {/* Barre de progression du consomme sur le budget */}
+            {/* Barre : consomme, avec la zone ou la journee est validee */}
             <View style={styles.barreFond}>
+              <View style={[styles.barreZone, { left: pct(zone.min), right: 0 }]} />
               <View
                 style={[
                   styles.barreRemplie,
-                  { width: `${Math.round(bilan.part * 100)}%` },
-                  bilan.restant < 0 && { backgroundColor: COULEURS.rouge },
+                  { width: pct(consomme) },
+                  valide && { backgroundColor: COULEURS.vert },
+                  trop && { backgroundColor: COULEURS.rouge },
                 ]}
               />
             </View>
+            <Text style={[styles.bilanStatut, valide && { color: COULEURS.vert }, trop && { color: COULEURS.rouge }]}>
+              {trop
+                ? `Au-delà de la zone validée (${zone.min}–${zone.max} kcal)`
+                : valide
+                  ? `✓ Journée validée : vous êtes dans la zone ${zone.min}–${zone.max} kcal`
+                  : `Journée validée à partir de ${zone.min} kcal (jusqu'à ${zone.max}) : encore ${zone.min - consomme} kcal`}
+            </Text>
 
             <View style={styles.gridBesoins}>
               <View style={styles.besoinCase}>
@@ -2589,6 +2607,9 @@ function creerStyles() {
     overflow: "hidden",
   },
   barreRemplie: { height: 8, borderRadius: 4, backgroundColor: COULEURS.accent },
+  // Zone « journee validee » sur la barre du Bilan (derriere le remplissage).
+  barreZone: { position: "absolute", top: 0, bottom: 0, backgroundColor: COULEURS.vert, opacity: 0.25 },
+  bilanStatut: { fontSize: 13, color: COULEURS.doux, marginTop: 8, lineHeight: 18 },
 
   gridBesoins: { flexDirection: "row", gap: 10, marginTop: 18, marginBottom: 8 },
   besoinCase: {

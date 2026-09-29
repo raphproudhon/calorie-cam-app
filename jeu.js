@@ -91,11 +91,21 @@ function diffJours(a, b) {
   return Math.round((db - da) / 86400000);
 }
 
+/**
+ * Zone « journee validee » en kcal : de 80 % de l'objectif de base (jamais de
+ * recompense pour une sous-alimentation) a 110 % du budget (objectif + sport).
+ * Sert au jeu (jourReussi) et a l'affichage du Bilan : une seule regle.
+ */
+export function zoneCible(objectif, sport = 0) {
+  const budget = (objectif || 0) + (parseInt(sport || 0, 10) || 0);
+  return { min: Math.round((objectif || 0) * CIBLE_MIN), max: Math.round(budget * CIBLE_MAX) };
+}
+
 /** Une journee archivee est-elle "dans la cible" (ni trop peu, ni trop) ? */
 export function jourReussi(jour, objectif) {
-  const budget = (objectif || 0) + (parseInt(jour.sport || 0, 10) || 0);
+  const { min, max } = zoneCible(objectif, jour.sport);
   const c = jour.consomme || 0;
-  return c >= objectif * CIBLE_MIN && c <= budget * CIBLE_MAX;
+  return c >= min && c <= max;
 }
 
 /**

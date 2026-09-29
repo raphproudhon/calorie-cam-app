@@ -62,7 +62,9 @@ d'Open Food Facts (fiches aberrantes écartées : `sansAberrations`), puis — s
 si OFF ne trouve rien ou échoue — l'aliment générique le plus proche selon l'IA
 (`alimentsProches` dans `analyse.js` : l'IA ne donne que des mots, les valeurs
 restent Ciqual) et les fiches approchantes), **Progression** (niveau/XP/badges + courbe de poids + calories),
-**Bilan** (calories restantes du jour), **Journal** (calendrier Année/Mois/Semaine/Jour de tous les jours depuis le
+**Bilan** (calories restantes du jour ; la barre montre la zone « journée
+validée » — 80 % de l'objectif à 110 % du budget, `zoneCible` dans `jeu.js`,
+même règle que `jourReussi` — pour ne pas viser pile le budget), **Journal** (calendrier Année/Mois/Semaine/Jour de tous les jours depuis le
 premier lancement, pincer pour zoomer, détail des repas). Onboarding obligatoire au 1er lancement ;
 objectif réglable ensuite via la **roue crantée** (menu Paramètres, haut gauche).
 Tout est persisté localement (`stockage.js`).
