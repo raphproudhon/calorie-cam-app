@@ -15,9 +15,12 @@ désormais le **perso et le niveau** (`themePerso` dans `jeu.js`) : couleur qui 
 
 Points clés :
 
-- **Expo SDK 54** (imposé par la version d'Expo Go du téléphone de test). Ne pas
-  mettre à jour vers un SDK plus récent sans vérifier ce que supporte l'Expo Go
-  installé. Docs de la bonne version : https://docs.expo.dev/versions/v54.0.0/
+- **Expo SDK 57** (imposé par l'Expo Go du téléphone de test : sur iOS, seule la
+  dernière version d'Expo Go s'installe, donc le projet doit la suivre ; passé
+  de 54 à 57 quand Expo Go a refusé le projet). Docs de la bonne version :
+  https://docs.expo.dev/versions/v57.0.0/ — `npx expo install --fix` a besoin
+  d'api.expo.dev ; sans réseau, aligner à la main sur
+  `node_modules/expo/bundledNativeModules.json`.
 - IA vision : **Google Gemini**, modèle `gemini-flash-latest`. Le code appelle
   l'API REST directement (`fetch`) dans `gemini.js`.
 - La clé API est dans `secrets.js` (exclu de Git). Ne jamais la commiter, ne

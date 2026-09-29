@@ -94,6 +94,7 @@ async function sommeEnergie(hk, type, debut, fin) {
   if (typeof hk.queryQuantitySamples !== "function") return null;
   const echantillons = await hk.queryQuantitySamples(type, {
     filter: { date: { startDate: debut, endDate: fin } },
+    limit: 0, // 0 = tous les echantillons (champ obligatoire depuis la v16)
   });
   if (!Array.isArray(echantillons)) return null;
   // Chaque echantillon d'energie est en kcal ; on additionne les teneurs.

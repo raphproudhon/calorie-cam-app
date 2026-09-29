@@ -67,7 +67,7 @@ attendant le build de développement, le sport peut être saisi à la main.
 | Élément | Choix |
 |---|---|
 | Framework | **Expo (React Native)** — teste sur iPhone via l'app **Expo Go**, sans Mac |
-| Expo SDK | **54** (⚠️ ne PAS mettre à jour au-delà de ce que supporte l'Expo Go installé) |
+| Expo SDK | **57** (⚠️ doit être celui de l'Expo Go installé : sur iOS, seule la dernière version d'Expo Go existe) |
 | IA vision | **Google Gemini** — modèle `gemini-flash-latest` (niveau gratuit) |
 | Base nutritionnelle | **Ciqual 2020 (ANSES)** — 2 298 aliments, embarquée, hors-ligne |
 | Clé API | Dans `secrets.js` (exclu de Git) — voir `secrets.example.js` |
@@ -265,9 +265,10 @@ prompt ; une dispersion aléatoire ne se corrige que par la saisie manuelle.
   `curl http://localhost:8081/status` : s'il répond `packager-status:running`,
   il suffit de s'y connecter. Sinon, le libérer :
   `powershell -Command "Get-NetTCPConnection -LocalPort 8081 -State Listen | ForEach-Object { Stop-Process -Id $_.OwningProcess -Force }"`
-- **« incompatible with this version of Expo Go »** → le projet est sur un SDK
-  plus récent que l'Expo Go de l'iPhone. Aligner le projet :
-  `npm install expo@~54.0.0` puis `npx expo install --fix`.
+- **« incompatible with this version of Expo Go »** → le projet et l'Expo Go de
+  l'iPhone ne sont pas sur le même SDK. Sur iOS on ne peut pas installer un
+  ancien Expo Go : c'est le projet qui suit (`npm install expo@~<SDK>.0.0` puis
+  `npx expo install --fix`).
 - **« Unable to resolve ./secrets »** → le fichier `secrets.js` n'existe pas sur
   cette machine. Le recréer depuis `secrets.example.js`.
 - **« model ... is no longer available »** → le nom du modèle Gemini a changé ;

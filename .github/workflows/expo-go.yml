@@ -8,7 +8,7 @@
 #
 # Rien de tout ca n'est versionne : expo-updates, le lien vers le projet EAS et
 # le runtimeVersion ne sont ajoutes que dans la copie de travail du workflow.
-#   - runtimeVersion "sdkVersion" (= exposdk:54.0.0) : c'est ce qu'Expo Go sait
+#   - runtimeVersion "sdkVersion" (= exposdk:57.0.0) : c'est ce qu'Expo Go sait
 #     charger ; la politique par defaut (appVersion) ne marche que dans un build.
 #   - aucune cle API embarquee (secrets.js vient du modele) : on colle la sienne
 #     dans les Parametres, comme sur la version web.
@@ -58,7 +58,7 @@ jobs:
           echo "VERSION=$VERSION" >> "$GITHUB_ENV"
           printf 'export const VERSION = "%s";\nexport const TEST = true;\n' "$VERSION" > version.js
 
-      - name: expo-updates (version compatible SDK 54)
+      - name: expo-updates (version compatible avec le SDK du projet)
         run: npx expo install expo-updates
 
       - name: Lien avec le projet EAS (le cree au premier passage)
