@@ -470,6 +470,51 @@ descend d'un pixel en code. Les réactions ne sont pas encore branchées.
 Garder le même point d'appui (les pieds) sur les 8 frames, sinon le perso
 « saute » dans son cadre.
 
+### Prompts par groupe d'étapes (à utiliser en priorité)
+
+Le tableau ci-dessus donne l'idée générale ; ces prompts sont adaptés à ce que
+le perso possède à chaque étape (pas de faux avant H11, pas d'ailes avant C17…),
+pour que PixelLab n'invente pas d'objet absent. **Toujours commencer par le
+préfixe**, qui reprend les leçons des états (pieds fixes, visage visible) :
+
+```text
+Same character, same size, same position. Feet stay planted on the exact same spot. Face stays fully visible, never hidden.
+```
+
+Réglages : état de l'étape → animation par texte, **direction sud seulement**,
+**8 frames**, même canevas que l'état.
+
+**Idle — Nécromancien**
+
+| Étapes | Prompt (après le préfixe) |
+|---|---|
+| H1-H4 | `Breathing idle: chest rises and falls gently, messy hair sways slightly, blinks once. Seamless loop.` |
+| H5-H10 | `Breathing idle: chest rises and falls gently, floating spectral skulls and ghostly hands bob slowly up and down, green flames on the blades flicker, coat hem sways slightly. Seamless loop.` |
+| H11-H18 | `Breathing idle: chest rises and falls gently, holds the scythe steady, the scythe blade glows and flickers green, torn cape sways, green embers drift upward, spectral skulls bob slowly. Seamless loop.` |
+| H19-H20 | `Breathing idle: chest rises and falls gently, shadow and green fire wings pulse slowly, bone crown glows, green embers drift upward, spectral skulls bob slowly. Seamless loop.` |
+
+**Idle — Chat céleste**
+
+| Étapes | Prompt (après le préfixe) |
+|---|---|
+| C1-C3 | `Cute breathing idle: body rises and falls gently, slow blink, tail sways side to side, one ear twitches, bell wiggles slightly. Seamless loop.` |
+| C4-C10 | `Cute breathing idle: body rises and falls gently, slow blink, tail sways, the glowing tail tip flickers, small amber sparks drift upward, cape sways slightly. Seamless loop.` |
+| C11-C16 | `Cute breathing idle: body rises and falls gently, slow blink, the tails wave gently one after the other, paw flames flicker, amber will-o-wisps float slowly around. Seamless loop.` |
+| C17-C20 | `Cute breathing idle: body rises and falls gently, slow blink, wings flutter softly, halo and crown glow, tails wave gently, little stars twinkle. Seamless loop.` |
+
+**Réactions** (plus tard, une fois les idle faits ; même préfixe)
+
+| Réaction | Nécromancien | Chat céleste |
+|---|---|---|
+| content | `Confident nod and a small fist pump, eyes glow brighter for a moment, then returns to the exact starting pose.` | `Happy little hop in place, eyes closed smiling, tail wiggles, then returns to the exact starting pose.` |
+| level up (H1-H10) | `Power-up: raises one fist, shadows surge from the ground, burst of green ghost-fire, eyes flare, then returns to the exact starting pose.` | `Jumps up joyfully, burst of amber sparkles and little hearts, lands back in the exact starting pose.` |
+| level up (H11-H20) | `Power-up: raises the scythe high, shadows surge from the ground, burst of green ghost-fire, eyes flare, then returns to the exact starting pose.` | (idem) |
+| fatigué | `Shoulders drop, head lowers, sighs, green effects dim, then slowly straightens back to the exact starting pose.` | `Ears flatten, sad pout, tail curls, then looks up hopeful and returns to the exact starting pose.` |
+| miam | `Takes a bite of a small sandwich, satisfied expression, then returns to the exact starting pose.` | `Happily munches a tiny fish snack, cheeks puffed, then returns to the exact starting pose.` |
+
+Les réactions finissent sur la pose de départ : l'app enchaîne ensuite l'idle
+sans saut.
+
 ### Ordre de génération conseillé
 
 20 étapes × 2 persos × 5 animations = 200 animations. C'est beaucoup, donc
