@@ -109,6 +109,9 @@ passent dans le même affichage/bilan que les aliments d'une photo.
   compilé sur un Mac GitHub, publié en pre-release `ipa-<n>`, installé via
   SideStore. La signature gratuite retire l'entitlement HealthKit (vérifié : il
   est bien dans l'ipa) → Apple Santé passe par un raccourci iOS et `lien.js`.
+  ⚠️ **Ne jamais mettre `[ipa]` dans un commit sans demande explicite de
+  l'utilisateur** : chaque build macOS coûte ~12 min × 10 sur le quota gratuit
+  du dépôt privé. Pousser sans `[ipa]`, et ne lancer un build que sur demande.
 - **Build de développement** (EAS, voir README) : nécessaire pour HealthKit.
   Se lance ensuite avec `npx expo start --dev-client`.
 
