@@ -76,7 +76,7 @@ jobs:
 
       - name: Publication
         run: |
-          npx eas-cli@latest update --branch perso --platform ios \
+          npx eas-cli@latest update --channel perso --platform ios \
             --message "$VERSION" --non-interactive --json > update.json
           cat update.json
 
@@ -91,8 +91,10 @@ jobs:
               "## " + process.env.VERSION,
               "",
               "- Page de la version : " + projet.dashboardUrl + "/updates/" + maj.group,
-              "- Lien Expo Go : `exp://u.expo.dev/" + id + "/group/" + maj.group + "`",
+              "- Lien Expo Go (toujours la derniere version) : `exp://u.expo.dev/" + id + "?runtime-version=" + encodeURIComponent(maj.runtimeVersion) + "&channel-name=perso`",
+              "- Lien Expo Go (cette version precise) : `exp://u.expo.dev/" + id + "/group/" + maj.group + "`",
               "- runtimeVersion : " + maj.runtimeVersion,
             ];
             require("fs").appendFileSync(process.env.GITHUB_STEP_SUMMARY, lignes.join("\n") + "\n");
+            console.log(lignes.join("\n"));
           '
