@@ -51,7 +51,9 @@ const ANIMATIONS = ["idle", "content", "levelup", "fatigue", "miam"];
 const PERSOS = [
   { id: "humain", prefixe: "h", canevas: CANEVAS },
   { id: "chat", prefixe: "c", canevas: CANEVAS },
-  { id: "humain-realiste", prefixe: "r", canevas: 256, facultatif: true },
+  // lisse : images non pixel (realistes), agrandies en lissant plutot qu'au
+  // plus proche voisin. Etapes decoupees par tools/decouper-planche.js.
+  { id: "humain-realiste", prefixe: "r", canevas: 256, facultatif: true, lisse: true },
 ];
 const TAILLE_SORTIE = CANEVAS * ECHELLE; // 512 px, pour tous les persos
 
@@ -131,7 +133,8 @@ async function planche(source, destination, CANEVAS) {
 async function main() {
   const lignes = [];
   const lignesAnims = [];
-  for (const { id, prefixe, canevas: CANEVAS, facultatif } of PERSOS) {
+  for (const { id, prefixe, canevas: CANEVAS, facultatif, lisse } of PERSOS) {
+    const MODE = lisse ? Jimp.RESIZE_BICUBIC : Jimp.RESIZE_NEAREST_NEIGHBOR;
     const anims = [];
     for (let e = 1; e <= NB_ETAPES; e++) {
       const entrees = [];
@@ -170,7 +173,7 @@ async function main() {
       for (let d = 0; d < NB_DIRECTIONS; d++) {
         const toile = new Jimp(CANEVAS, CANEVAS, 0x00000000);
         toile.composite(images[d], dx, dy);
-        toile.resize(TAILLE_SORTIE, TAILLE_SORTIE, Jimp.RESIZE_NEAREST_NEIGHBOR);
+        toile.resize(TAILLE_SORTIE, TAILLE_SORTIE, MODE);
         await toile.writeAsync(path.join(dossier, `${d}.png`));
         requires.push(`require("./assets/perso/${id}/rot/${e}/${d}.png")`);
       }

@@ -534,6 +534,34 @@ on avance par couches :
 
 ## Style réaliste de l'humain (au choix)
 
+**Choix final : 100 % réaliste (pas du pixel art), généré avec Gemini** —
+PixelLab ne fait que du pixel. Méthode validée sur R1 :
+
+1. Dans Gemini, une **planche de vues** du perso sur **fond magenta uni**
+   (prompt ci-dessous). Gemini n'en fait pas toujours 8 ni dans l'ordre :
+   ce n'est pas grave.
+2. Copier l'image dans `assets/perso/humain-realiste/sources/rN-planche.jpg`.
+3. `node tools/decouper-planche.js <planche> assets/perso/humain-realiste/rN "<8 vues>"`
+   — l'outil repère les silhouettes (numérotées de gauche à droite, rangée
+   par rangée), retire le magenta (bords adoucis, anti-bavure), enlève la
+   ligne de sol, met les 8 vues à la même hauteur, pieds alignés. Une vue
+   précédée de `-` est prise en **miroir** (les IA ratent souvent la gauche).
+   R1 : `"0,1,2,6,4,-6,-2,8"`.
+4. `node tools/build-perso.js` (le jeu réaliste est agrandi en lissant).
+
+Prompt de la planche R1 (Gemini) :
+
+```text
+Photorealistic full-body character turnaround sheet of the same young man, 8 views in 2 rows of 4, evenly spaced, same scale, feet on the same baseline in each row. Order, left to right, top row then bottom row: 1 front view; 2 three-quarter view turned to the viewer's right; 3 profile facing right; 4 three-quarter back view facing right; 5 back view; 6 three-quarter back view facing left; 7 profile facing left; 8 three-quarter view turned to the viewer's left.
+A man in his twenties, messy brown hair, brown eyes, calm determined expression. Dark charcoal grey hoodie with an emerald green inner collar and drawstrings, dark jeans, white sneakers. No weapon, no armor. Neutral standing pose, arms relaxed at the sides. Soft even studio lighting.
+Plain flat solid magenta background (#FF00FF), no floor shadow, no text, no labels, no borders.
+```
+
+Étapes suivantes : dans la même conversation Gemini (ou en lui redonnant la
+planche R1), « same man, same face, now … » + l'équipement de l'étape H2…H20.
+
+*Ancienne piste (abandonnée) : pixel art « réaliste » dans PixelLab :*
+
 L'utilisateur choisit dans les Paramètres (« Style du héros ») entre le
 Nécromancien **pixel** (ci-dessus) et un Nécromancien **réaliste**
 (`etat.stylePerso`). Les images réalistes vont dans

@@ -49,7 +49,7 @@ export const SPRITES = {
     [require("./assets/perso/chat/rot/20/0.png"), require("./assets/perso/chat/rot/20/1.png"), require("./assets/perso/chat/rot/20/2.png"), require("./assets/perso/chat/rot/20/3.png"), require("./assets/perso/chat/rot/20/4.png"), require("./assets/perso/chat/rot/20/5.png"), require("./assets/perso/chat/rot/20/6.png"), require("./assets/perso/chat/rot/20/7.png")],
   ],
   "humain-realiste": [
-    null,
+    [require("./assets/perso/humain-realiste/rot/1/0.png"), require("./assets/perso/humain-realiste/rot/1/1.png"), require("./assets/perso/humain-realiste/rot/1/2.png"), require("./assets/perso/humain-realiste/rot/1/3.png"), require("./assets/perso/humain-realiste/rot/1/4.png"), require("./assets/perso/humain-realiste/rot/1/5.png"), require("./assets/perso/humain-realiste/rot/1/6.png"), require("./assets/perso/humain-realiste/rot/1/7.png")],
     null,
     null,
     null,
