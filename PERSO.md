@@ -588,6 +588,6 @@ deux à trois ans : c'est la longévité voulue.
 - [x] Chat : 20 étapes (`assets/perso/chat/c1..c20.gif`, 8 directions chacune)
 - [x] App : choix du perso, 20 paliers, affichage net, pieds alignés, rotation au doigt
 - [ ] Tester sur le téléphone (Expo Go) : taille du perso à l'écran, fluidité de la rotation
-- [ ] Animations (idle + content / level up / fatigué / miam) pour les deux persos — fait : idle H1 (13 frames, 120 ms)
+- [ ] Animations (idle + content / level up / fatigué / miam) pour les deux persos — fait : idle H1, H2, H3
 - [ ] Afficher le perso ailleurs (montée de niveau, Bilan…)
 - [ ] Éventuellement : raviver un peu la saturation (PixelLab rend des couleurs ternes)
