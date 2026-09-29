@@ -15,6 +15,7 @@
 import { createContext, useContext, useEffect, useMemo, useRef, useState } from "react";
 import {
   ActivityIndicator,
+  FlatList,
   Image,
   Linking,
   Modal,
@@ -54,6 +55,7 @@ import { SPRITES } from "./perso-sprites";
 import { VERSION, TEST } from "./version";
 import { kcalDepuisLien } from "./lien";
 import { Tutoriel, FournisseurCibles, useCible, useDefilTuto } from "./tuto";
+import { joursDuJournal, grouperJoursVides, resumeJournal, dateLisible } from "./journal";
 
 // Le theme "accent" de l'app suit le personnage : sa couleur evolue avec le
 // niveau (bleu -> cramoisi -> or). Fourni par App, lu partout via useContext.
@@ -145,8 +147,21 @@ export default function App() {
   const majJour = (champs) =>
     setEtat((e) => ({ ...e, jour: { ...e.jour, ...champs } }));
 
-  const ajouterConsomme = (kcal) =>
-    majJour({ consomme: (etat.jour.consomme || 0) + Math.max(0, Math.round(kcal || 0)) });
+  // « Ajouter au bilan » : cumule les kcal du jour et garde le repas pour le
+  // journal (heure, nom du plat, kcal).
+  const ajouterConsomme = (kcal, plat) => {
+    const k = Math.max(0, Math.round(kcal || 0));
+    const maintenant = new Date();
+    const heure = `${String(maintenant.getHours()).padStart(2, "0")}:${String(maintenant.getMinutes()).padStart(2, "0")}`;
+    setEtat((e) => ({
+      ...e,
+      jour: {
+        ...e.jour,
+        consomme: (e.jour.consomme || 0) + k,
+        repas: [...(e.jour.repas || []), { heure, plat: plat || "Repas", kcal: k }],
+      },
+    }));
+  };
 
   // Accent + fond du theme : propres a chaque perso (voir themePerso). Pour le
   // Necromancien ils progressent avec le niveau. Le fond reste tres sombre
@@ -206,6 +221,7 @@ export default function App() {
           ["photo", "Photo"],
           ["progression", "Progression"],
           ["bilan", "Bilan"],
+          ["journal", "Journal"],
         ].map(([cle, libelle]) => (
           <Pressable
             key={cle}
@@ -240,6 +256,9 @@ export default function App() {
           onSport={(v) => majJour({ sport: v })}
         />
       </View>
+      <View style={[styles.page, onglet !== "journal" && styles.pageCachee]}>
+        <EcranJournal etat={etat} />
+      </View>
 
       <MenuParametres
         visible={paramsOuverts}
@@ -259,7 +278,7 @@ export default function App() {
             };
           })
         }
-        onResetJour={() => majJour({ consomme: 0, sport: "" })}
+        onResetJour={() => majJour({ consomme: 0, sport: "", repas: [] })}
         onDevXp={(m) => setEtat((e) => ({ ...e, jeu: ajouterXp(e.jeu, m) }))}
         onResetHeros={() => setEtat((e) => ({ ...e, jeu: jeuParDefaut() }))}
         onDevPerso={() => setEtat((e) => ({ ...e, perso: e.perso === "chat" ? "humain" : "chat" }))}
@@ -583,7 +602,7 @@ function EcranPhoto({ onAjouterConsomme }) {
               style={[styles.bouton, !ajoute && { backgroundColor: accent }, ajoute && styles.boutonSecondaire, { marginTop: 16 }]}
               onPress={() => {
                 if (ajoute) return;
-                onAjouterConsomme?.(totaux.kcal);
+                onAjouterConsomme?.(totaux.kcal, analyse.plat);
                 setAjoute(true);
               }}
               disabled={ajoute}
@@ -1441,6 +1460,137 @@ function ChampNombre({ label, valeur, onChange, unite }) {
 //  ECRAN PROGRESSION — courbe de poids + historique des calories
 // =========================================================================
 
+// =========================================================================
+//  ECRAN JOURNAL — tous les jours depuis le premier lancement (journal.js)
+// =========================================================================
+
+const VERDICTS = {
+  cible: { libelle: "🎯 Dans la cible", couleur: () => COULEURS.vert },
+  dessus: { libelle: "Au-dessus", couleur: () => COULEURS.rouge },
+  dessous: { libelle: "Trop peu mangé", couleur: () => COULEURS.doux },
+};
+
+const majuscule = (t) => t.charAt(0).toUpperCase() + t.slice(1);
+
+function EcranJournal({ etat }) {
+  const cible = useCible();
+  const [ouverts, setOuverts] = useState({}); // dates dont le detail est deplie
+  const aujourdhui = dateDuJour();
+  const annee = Number(aujourdhui.slice(0, 4));
+  const jours = useMemo(() => joursDuJournal(etat, aujourdhui), [etat, aujourdhui]);
+  const lignes = useMemo(() => grouperJoursVides(jours), [jours]);
+  const resume = resumeJournal(jours);
+  const basculer = (d) => setOuverts((o) => ({ ...o, [d]: !o[d] }));
+
+  const entete = (
+    <>
+      <Text style={styles.titre}>Journal</Text>
+      <Text style={styles.sousTitre}>
+        Tous vos jours depuis le {resume.debut ? dateLisible(resume.debut, annee) : "début"}
+      </Text>
+      <View style={[styles.carte, styles.journalResume]} ref={cible("journal-resume")}>
+        <View style={styles.besoinCase}>
+          <Text style={styles.besoinValeur}>{resume.total}</Text>
+          <Text style={styles.besoinLabel}>jour{resume.total > 1 ? "s" : ""}{"\n"}depuis le début</Text>
+        </View>
+        <View style={styles.besoinCase}>
+          <Text style={styles.besoinValeur}>{resume.suivis}</Text>
+          <Text style={styles.besoinLabel}>jour{resume.suivis > 1 ? "s" : ""}{"\n"}suivi{resume.suivis > 1 ? "s" : ""}</Text>
+        </View>
+        <View style={styles.besoinCase}>
+          <Text style={[styles.besoinValeur, { color: COULEURS.vert }]}>{resume.dansLaCible}</Text>
+          <Text style={styles.besoinLabel}>dans{"\n"}la cible</Text>
+        </View>
+      </View>
+    </>
+  );
+
+  const rendreLigne = ({ item: l }) => {
+    // Jours sans suivi consecutifs, regroupes.
+    if (l.type === "trou") {
+      return (
+        <Text style={styles.journalTrou}>
+          {l.nb === 1
+            ? `${majuscule(dateLisible(l.au, annee))} · pas de suivi`
+            : `Du ${dateLisible(l.du, annee)} au ${dateLisible(l.au, annee)} · pas de suivi (${l.nb} jours)`}
+        </Text>
+      );
+    }
+    // Jour sans repas mais avec une pesee.
+    if (l.type === "vide") {
+      return (
+        <View style={styles.journalJour}>
+          <Text style={styles.journalDate}>{majuscule(dateLisible(l.date, annee))}</Text>
+          <Text style={styles.journalDetail}>Pas de repas enregistré · ⚖️ {l.poids} kg</Text>
+        </View>
+      );
+    }
+    const v = l.verdict ? VERDICTS[l.verdict] : null;
+    const ouvert = !!ouverts[l.date];
+    const part = l.budget > 0 ? Math.min(1, l.consomme / l.budget) : 0;
+    return (
+      <Pressable style={styles.journalJour} onPress={() => basculer(l.date)}>
+        <View style={styles.journalLigneHaut}>
+          <Text style={styles.journalDate}>
+            {l.type === "aujourdhui" ? "Aujourd'hui" : majuscule(dateLisible(l.date, annee))}
+          </Text>
+          {v ? (
+            <Text style={[styles.journalVerdict, { color: v.couleur() }]}>{v.libelle}</Text>
+          ) : (
+            <Text style={[styles.journalVerdict, { color: COULEURS.doux }]}>En cours</Text>
+          )}
+        </View>
+        <Text style={styles.journalKcal}>
+          {l.consomme} <Text style={styles.journalDetail}>/ {l.budget} kcal</Text>
+        </Text>
+        <View style={styles.journalBarreFond}>
+          <View
+            style={[
+              styles.journalBarre,
+              { width: `${Math.round(part * 100)}%` },
+              l.verdict === "dessus" && { backgroundColor: COULEURS.rouge },
+            ]}
+          />
+        </View>
+        <Text style={styles.journalDetail}>
+          objectif {l.objectif}
+          {l.sport ? ` · sport +${l.sport}` : ""}
+          {l.poids != null ? ` · ⚖️ ${l.poids} kg` : ""}
+          {"  "}{ouvert ? "▲" : "▼"}
+        </Text>
+        {ouvert ? (
+          <View style={styles.journalRepas}>
+            {l.repas.length ? (
+              l.repas.map((r, i) => (
+                <Text key={i} style={styles.journalRepasLigne}>
+                  {r.heure} · {r.plat} · <Text style={{ fontWeight: "700" }}>{r.kcal} kcal</Text>
+                </Text>
+              ))
+            ) : (
+              <Text style={styles.journalDetail}>
+                {l.consomme > 0
+                  ? "Détail des repas non disponible pour ce jour."
+                  : "Aucun repas ajouté pour l'instant."}
+              </Text>
+            )}
+          </View>
+        ) : null}
+      </Pressable>
+    );
+  };
+
+  return (
+    <FlatList
+      data={lignes}
+      keyExtractor={(l) => (l.type === "trou" ? `trou-${l.au}` : l.date)}
+      renderItem={rendreLigne}
+      ListHeaderComponent={entete}
+      contentContainerStyle={styles.contenu}
+      initialNumToRender={12}
+    />
+  );
+}
+
 function EcranProgression({ etat }) {
   const poids = etat.poids || [];
   const historique = etat.historique || [];
@@ -2127,6 +2277,26 @@ function creerStyles() {
   },
   barreCol: { flex: 1, alignItems: "center", justifyContent: "flex-end" },
   barreCal: { width: "70%", borderRadius: 3, minHeight: 2 },
+  // --- Journal ---
+  journalResume: { flexDirection: "row", gap: 8, paddingVertical: 14 },
+  journalJour: {
+    backgroundColor: COULEURS.carte,
+    borderRadius: 14,
+    padding: 14,
+    marginTop: 10,
+    borderWidth: 1,
+    borderColor: COULEURS.bord,
+  },
+  journalLigneHaut: { flexDirection: "row", justifyContent: "space-between", alignItems: "center" },
+  journalDate: { fontSize: 15, fontWeight: "700", color: COULEURS.texte },
+  journalVerdict: { fontSize: 12, fontWeight: "700" },
+  journalKcal: { fontSize: 22, fontWeight: "800", color: COULEURS.texte, marginTop: 6 },
+  journalDetail: { fontSize: 12, fontWeight: "400", color: COULEURS.doux, marginTop: 4 },
+  journalBarreFond: { height: 6, borderRadius: 3, backgroundColor: COULEURS.piste, marginTop: 8, overflow: "hidden" },
+  journalBarre: { height: 6, borderRadius: 3, backgroundColor: COULEURS.accent },
+  journalRepas: { marginTop: 10, paddingTop: 8, borderTopWidth: 1, borderTopColor: COULEURS.bord, gap: 4 },
+  journalRepasLigne: { fontSize: 13, color: COULEURS.texte },
+  journalTrou: { fontSize: 12, color: COULEURS.doux, textAlign: "center", marginTop: 12, fontStyle: "italic" },
   barreJour: { fontSize: 9, color: COULEURS.doux, marginTop: 4 },
 });
 }

@@ -9,8 +9,10 @@
 //     version: 1,
 //     profil:    { sexe, age, poids, taille, activite, but, rythme } | null,
 //     objectif:  number | null,          // objectif calorique du jour (kcal)
-//     jour:      { date, consomme, sport },   // journee EN COURS
-//     historique:[ { date, consomme, sport, objectif } ],  // jours passes
+//     debut:     "AAAA-MM-JJ",         // premier lancement (debut du journal)
+//     jour:      { date, consomme, sport, repas },   // journee EN COURS
+//     historique:[ { date, consomme, sport, objectif, repas } ],  // jours passes
+//       repas : [ { heure: "HH:MM", plat, kcal } ] (ajouts « Ajouter au bilan »)
 //     poids:     [ { date, valeur } ],   // journal de poids
 //     perso:     "humain" | "chat" | null, // personnage choisi (definitif)
 //   }
@@ -19,6 +21,7 @@
 
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { jeuParDefaut, recompenserJourArchive } from "./jeu";
+import { plusAncienneDate } from "./journal";
 
 const CLE = "caloriecam.etat.v1";
 
@@ -36,7 +39,8 @@ function etatParDefaut() {
     version: 1,
     profil: null,
     objectif: null,
-    jour: { date: dateDuJour(), consomme: 0, sport: "" },
+    debut: dateDuJour(),
+    jour: { date: dateDuJour(), consomme: 0, sport: "", repas: [] },
     tutoVu: false, // tutoriel du premier lancement deja vu (voir tuto.js)
     historique: [],
     poids: [],
@@ -69,6 +73,7 @@ export function appliquerRollover(etat) {
       consomme: Math.round(etat.jour.consomme || 0),
       sport: parseInt(etat.jour.sport || "0", 10) || 0,
       objectif: etat.objectif || 0,
+      repas: etat.jour.repas || [],
     };
     etat.historique.push(archive);
     // Garde-fou memoire : on borne l'historique aux ~730 derniers jours.
@@ -79,7 +84,7 @@ export function appliquerRollover(etat) {
     etat.jeu = recompenserJourArchive(etat.jeu || jeuParDefaut(), archive);
   }
 
-  etat.jour = { date: aujourdhui, consomme: 0, sport: "" };
+  etat.jour = { date: aujourdhui, consomme: 0, sport: "", repas: [] };
   return true;
 }
 
@@ -96,6 +101,10 @@ export async function chargerEtat() {
   } catch (e) {
     etat = etatParDefaut();
   }
+  // Installations d'avant le journal : le debut est la plus ancienne donnee
+  // connue (a defaut, aujourd'hui).
+  if (!etat.debut) etat.debut = plusAncienneDate(etat) || dateDuJour();
+
   // Complete les champs manquants (robustesse si le schema evolue).
   const base = etatParDefaut();
   etat = {

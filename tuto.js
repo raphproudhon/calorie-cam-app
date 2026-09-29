@@ -121,6 +121,21 @@ export const ETAPES_TUTO = [
     titre: "Consommé aujourd'hui",
     texte: "Tout ce que vous ajoutez depuis l'onglet Photo s'additionne ici. La journée est archivée à minuit.",
   },
+  // --- Journal ---
+  {
+    cible: "onglet-journal",
+    titre: "Votre journal",
+    texte: "Touchez l'onglet Journal.",
+    attendOnglet: "journal",
+    geste: "appui",
+  },
+  {
+    cible: "journal-resume",
+    onglet: "journal",
+    titre: "Tous vos jours",
+    texte:
+      "Chaque jour depuis le premier lancement : ce que vous avez mangé face à votre objectif, votre sport, votre poids. Touchez un jour pour voir le détail de ses repas.",
+  },
   // --- Parametres ---
   {
     cible: "roue",
