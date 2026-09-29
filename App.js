@@ -29,6 +29,7 @@ import {
   TextInput,
   TouchableOpacity,
   View,
+  useWindowDimensions,
 } from "react-native";
 import * as ImagePicker from "expo-image-picker";
 import { CameraView, useCameraPermissions } from "expo-camera";
@@ -2000,6 +2001,9 @@ function ChoixPerso({ onChoisir }) {
 /** Haut de Progression : le perso a meme l'ecran (niveau, XP, serie), puis la carte des badges. */
 function CarteHeros({ jeu, perso, onGeste }) {
   const cible = useCible();
+  // Perso en grand : 320 px, sans deborder sur les petits ecrans (marges 20).
+  const { width: largeurEcran } = useWindowDimensions();
+  const taillePerso = Math.min(320, largeurEcran - 40);
   const j = jeu || { xp: 0, streak: 0, badges: [] };
   const niv = niveauDepuisXp(j.xp);
   const theme = themePerso(perso, niv.niveau); // couleurs du theme (perso, niveau)
@@ -2014,7 +2018,7 @@ function CarteHeros({ jeu, perso, onGeste }) {
         {perso ? (
           <>
             <View ref={cible("perso")}>
-              <AvatarPerso perso={perso} etape={etape} onGeste={onGeste} />
+              <AvatarPerso perso={perso} etape={etape} onGeste={onGeste} taille={taillePerso} />
             </View>
             <Text style={[styles.herosTitreCentre, { color: theme.accentTexte }]}>{PERSOS[perso].etapes[etape]}</Text>
           </>
