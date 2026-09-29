@@ -121,7 +121,22 @@ export async function chercherProduits(texte, limite = 8) {
     const deja = parValeurs.get(cle);
     if (!deja || f.nom.length < deja.nom.length) parValeurs.set(cle, f);
   }
-  return [...parValeurs.values()].slice(0, limite);
+  return sansAberrations([...parValeurs.values()]).slice(0, limite);
+}
+
+/**
+ * Ecarte les fiches aux calories invraisemblables par rapport aux autres
+ * resultats (OFF est rempli par ses utilisateurs : un « Kinder bueno » a
+ * 122 kcal/100 g au milieu de fiches a ~570 est une erreur de saisie).
+ * Bornes larges (0,4x a 2,5x la mediane) pour garder les vraies variantes
+ * (yaourt 0 % et yaourt grec, par exemple). Rien n'est ecarte sous 3 fiches.
+ */
+export function sansAberrations(fiches) {
+  if (fiches.length < 3) return fiches;
+  const tries = fiches.map((f) => f.kcal).sort((a, b) => a - b);
+  const mediane = tries[Math.floor(tries.length / 2)];
+  if (!mediane) return fiches;
+  return fiches.filter((f) => f.kcal >= mediane * 0.4 && f.kcal <= mediane * 2.5);
 }
 
 /** Un aliment (forme attendue par l'affichage) a partir d'une fiche produit. */

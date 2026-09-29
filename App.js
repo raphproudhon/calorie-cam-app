@@ -867,10 +867,16 @@ function ChoixFiche({ visible, aliment, onChoisir, onFermer }) {
         // « pas de suggestion » ne dit pas pourquoi. Pas mise en cache.
         .catch((e) => { if (!annule) poser({ erreur: e.message }); });
     };
-    const t = setTimeout(() => {
-      lancer("off", () => chercherProduits(q), setMarques);
-      if (fournisseursDisponibles().length) lancer("ia", () => alimentsProches(q), setProches);
-    }, 800);
+    // L'IA ne sert qu'en secours : si Open Food Facts a trouve des produits,
+    // leurs vraies valeurs valent mieux qu'un equivalent generique (et on
+    // economise un appel). Elle intervient si OFF ne trouve rien ou echoue.
+    const posersMarques = (r) => {
+      setMarques(r);
+      if (r === "..." || annule) return;
+      const rien = !Array.isArray(r) || r.length === 0;
+      if (rien && fournisseursDisponibles().length) lancer("ia", () => alimentsProches(q), setProches);
+    };
+    const t = setTimeout(() => lancer("off", () => chercherProduits(q), posersMarques), 800);
     return () => { annule = true; clearTimeout(t); };
   }, [q, exacte, relance]);
 

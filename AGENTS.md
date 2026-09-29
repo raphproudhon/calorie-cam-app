@@ -58,7 +58,8 @@ explicitement.
 Quatre onglets — **Photo** (analyse d'un plat par photo, **scan de
 code-barres** ou **recherche manuelle** d'un aliment dans Ciqual — sans IA ;
 si l'aliment exact n'y est pas, la recherche propose les produits de marque
-d'Open Food Facts, l'aliment générique le plus proche selon l'IA
+d'Open Food Facts (fiches aberrantes écartées : `sansAberrations`), puis — seulement
+si OFF ne trouve rien ou échoue — l'aliment générique le plus proche selon l'IA
 (`alimentsProches` dans `analyse.js` : l'IA ne donne que des mots, les valeurs
 restent Ciqual) et les fiches approchantes), **Progression** (niveau/XP/badges + courbe de poids + calories),
 **Bilan** (calories restantes du jour), **Journal** (calendrier Année/Mois/Semaine/Jour de tous les jours depuis le
