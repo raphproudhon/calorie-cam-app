@@ -76,7 +76,7 @@ jobs:
 
       - name: Publication
         run: |
-          npx eas-cli@latest update --channel perso --platform ios \
+          npx eas-cli@latest update --channel perso --platform all \
             --message "$VERSION" --non-interactive --json > update.json
           cat update.json
 

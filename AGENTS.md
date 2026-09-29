@@ -83,7 +83,7 @@ passent dans le même affichage/bilan que les aliments d'une photo.
 | `ciqual.js` | recherche dans la table (`rechercher`, utilisée par l'analyse photo — ne pas en changer le classement à la légère) + recherche tolérante aux fautes pour la saisie manuelle (`rechercherApprochant`, `couverture`, `correspondExacte`) + calcul nutritionnel |
 | `off.js` | **Open Food Facts** : scan de code-barres et recherche de produits de marque par nom (`chercherProduits`), mis à la forme d'une fiche (compatible `calculer()`) |
 | `besoins.js` | BMR/objectif calorique + bilan du jour, garde-fous de sécurité |
-| `health.js` | lecture de la dépense via Apple Santé (HealthKit) |
+| `health.js` | lecture de la dépense : Apple Santé (HealthKit) sur iPhone, **Health Connect** (`react-native-health-connect`, permissions dans `app.json`, minSdk 26 via `expo-build-properties`) sur Android ; `NOM_SANTE` / `MESSAGE_SANTE_INDISPONIBLE` pour l'interface |
 | `stockage.js` | persistance locale (AsyncStorage) + bascule de journée à minuit |
 | `jeu.js` | gamification : XP, niveaux, badges, étapes du perso (`PALIERS_PERSO`, `PERSOS`, `etapePersonnage`) + palette du thème par niveau |
 | `perso-sprites.js` | **généré** par `tools/build-perso.js` : table des sprites `SPRITES[perso][étape][direction]` |
@@ -99,7 +99,7 @@ passent dans le même affichage/bilan que les aliments d'une photo.
 ## Invariants à ne pas casser
 
 - **`health.js` doit toujours se dégrader proprement dans Expo Go.** HealthKit
-  est natif et absent d'Expo Go : le module natif est chargé en *lazy require*
+  et Health Connect sont natifs et absents d'Expo Go : le module natif est chargé en *lazy require*
   dans un try/catch (et un garde `expo-constants` détecte Expo Go pour ne jamais
   tenter le require — NitroModules plante sinon au chargement). `estDisponible()`
   renvoie `false` si le natif manque, l'UI affiche un message au lieu de planter.
@@ -125,7 +125,7 @@ passent dans le même affichage/bilan que les aliments d'une photo.
 - **GitHub Pages** (`.github/workflows/pages.yml`, push sur `main`) : version web
   publique, sans clé API embarquée — chacun colle la sienne dans les Paramètres.
 - **Expo Go sans PC** (`.github/workflows/expo-go.yml`, push sur la branche du
-  perso) : publie la branche par EAS Update (secret `EXPO_TOKEN`), numérotée
+  perso) : publie la branche par EAS Update, **iOS et Android** (`--platform all`) (secret `EXPO_TOKEN`), numérotée
   `perso-<n>` — le numéro s'affiche en bas des Paramètres (`version.js`, réécrit
   par le workflow, qui y active aussi la section de test).
 - **.ipa non signé** (`.github/workflows/ipa.yml`, commit contenant `[ipa]`) :
@@ -135,6 +135,11 @@ passent dans le même affichage/bilan que les aliments d'une photo.
   ⚠️ **Ne jamais mettre `[ipa]` dans un commit sans demande explicite de
   l'utilisateur** : chaque build macOS coûte ~12 min × 10 sur le quota gratuit
   du dépôt privé. Pousser sans `[ipa]`, et ne lancer un build que sur demande.
+- **APK Android** (`.github/workflows/apk.yml`, commit contenant `[apk]` ou
+  « Run workflow ») : compilé sur Linux (minutes ×1), publié en pre-release
+  `apk-<n>`, installable directement (signé avec la clef de debug : pas pour
+  le Play Store). Health Connect y marche. Comme pour l'ipa, ne lancer un build
+  que quand c'est utile (pas à chaque commit).
 - **Build de développement** (EAS, voir README) : nécessaire pour HealthKit.
   Se lance ensuite avec `npx expo start --dev-client`.
 

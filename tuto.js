@@ -24,6 +24,7 @@
 
 import { createContext, useContext, useEffect, useRef, useState } from "react";
 import { Animated, Easing, Platform, Pressable, StyleSheet, Text, View, useWindowDimensions } from "react-native";
+import { NOM_SANTE } from "./health";
 
 export const ETAPES_TUTO = [
   // --- Photo ---
@@ -119,7 +120,7 @@ export const ETAPES_TUTO = [
     onglet: "bilan",
     defil: "bilan",
     titre: "Le sport compte",
-    texte: "Ajoutez les calories brûlées à la main, ou importez-les depuis Apple Santé.",
+    texte: `Ajoutez les calories brûlées à la main, ou importez-les depuis ${NOM_SANTE}.`,
   },
   {
     cible: "bilan-consomme",
@@ -186,7 +187,7 @@ export const ETAPES_TUTO = [
     cible: "params-sante",
     zone: "params",
     defil: "params",
-    titre: "Apple Santé",
+    titre: NOM_SANTE,
     texte: "Pour que vos calories brûlées remontent dans le Bilan.",
   },
   {

@@ -1,8 +1,9 @@
-// Lecture de la depense energetique depuis Apple Sante (HealthKit).
+// Lecture de la depense energetique : Apple Sante (HealthKit) sur iPhone,
+// Health Connect sur Android.
 //
-// IMPORTANT — ce module ne fonctionne PAS dans Expo Go : HealthKit est du code
-// natif, absent de l'app Expo Go. Il ne s'active que dans un "development build"
-// (voir README). Ici, tout est ecrit pour DEGRADER PROPREMENT : dans Expo Go,
+// IMPORTANT — ce module ne fonctionne PAS dans Expo Go : HealthKit et Health
+// Connect sont du code natif, absent de l'app Expo Go. Il ne s'active que dans
+// l'app installee (ipa, APK, build de developpement). Ici, tout est ecrit pour DEGRADER PROPREMENT : dans Expo Go,
 // aucune fonction ne plante, `estDisponible()` renvoie simplement false et
 // l'interface affiche un message au lieu de crasher.
 //
@@ -25,6 +26,22 @@ const DANS_EXPO_GO = Constants.executionEnvironment === "storeClient";
 const TYPE_ACTIVE = "HKQuantityTypeIdentifierActiveEnergyBurned";
 const TYPE_REPOS = "HKQuantityTypeIdentifierBasalEnergyBurned";
 
+// Health Connect (Android) : energie active, et depense totale (repos = total -
+// active). Il faut les permissions correspondantes dans app.json.
+const HC_ACTIVE = "ActiveCaloriesBurned";
+const HC_TOTALE = "TotalCaloriesBurned";
+const HC_DISPONIBLE = 3; // SdkAvailabilityStatus.SDK_AVAILABLE
+
+const ANDROID = Platform.OS === "android";
+
+/** Nom de la source de sante sur cette plateforme (pour l'interface). */
+export const NOM_SANTE = ANDROID ? "Health Connect" : "Apple Santé";
+
+/** Ce qu'on explique quand l'import automatique n'est pas possible ici. */
+export const MESSAGE_SANTE_INDISPONIBLE = ANDROID
+  ? "Dans Expo Go, l'import depuis Health Connect n'est pas possible : il faut l'APK de CalorieCam. En attendant, saisissez vos calories à la main."
+  : "Dans Expo Go, l'import depuis Apple Santé n'est pas possible : utilisez l'app installée (ou votre raccourci Santé). En attendant, saisissez vos calories à la main.";
+
 // Chargement paresseux et protege du module natif. Memoise apres le 1er appel.
 let _hk = null;
 let _charge = false;
@@ -39,7 +56,9 @@ function moduleNatif() {
   }
   try {
     // require (et non import) pour contenir toute erreur native ici meme.
-    _hk = require("@kingstinct/react-native-healthkit");
+    _hk = ANDROID
+      ? require("react-native-health-connect")
+      : require("@kingstinct/react-native-healthkit");
   } catch (e) {
     _hk = null;
   }
@@ -47,13 +66,15 @@ function moduleNatif() {
 }
 
 /**
- * HealthKit est-il utilisable ici ?
- * Faux dans Expo Go, sur Android, ou si le natif ne repond pas.
+ * La lecture de sante est-elle utilisable ici ?
+ * Faux dans Expo Go, sur le web, ou si le natif ne repond pas. Sur Android, la
+ * presence de l'app Health Connect est verifiee a la demande d'acces.
  */
 export function estDisponible() {
-  if (Platform.OS !== "ios") return false;
+  if (Platform.OS !== "ios" && !ANDROID) return false;
   const hk = moduleNatif();
   if (!hk) return false;
+  if (ANDROID) return typeof hk.initialize === "function";
   try {
     // Selon la version, la fonction est sync ou async ; on ne l'appelle que si
     // elle existe et est synchrone, sinon on se contente de la presence du module.
@@ -81,6 +102,7 @@ export function estDisponible() {
  * lisant les donnees.
  */
 export async function demanderAcces() {
+  if (ANDROID) return demanderAccesAndroid();
   const hk = moduleNatif();
   if (!hk || typeof hk.requestAuthorization !== "function") {
     throw new Error("HealthKit indisponible (build de développement requis).");
@@ -115,6 +137,7 @@ async function sommeEnergie(hk, type, debut, fin) {
  * ce jour-la). L'appelant distingue ainsi "0 kcal mesure" de "pas de donnee".
  */
 export async function depenseDuJour(date = new Date()) {
+  if (ANDROID) return depenseDuJourAndroid(date);
   const hk = moduleNatif();
   if (!hk) throw new Error("HealthKit indisponible (build de développement requis).");
 
@@ -128,5 +151,60 @@ export async function depenseDuJour(date = new Date()) {
   const totale =
     active == null && repos == null ? null : (active || 0) + (repos || 0);
 
+  return { active, repos, totale };
+}
+
+// --- Android : Health Connect ------------------------------------------------
+
+/** Initialise Health Connect, ou explique pourquoi c'est impossible. */
+async function healthConnect() {
+  const hc = moduleNatif();
+  if (!hc) throw new Error("Health Connect indisponible (il faut l'APK de CalorieCam).");
+  const statut = await hc.getSdkStatus();
+  if (statut !== HC_DISPONIBLE) {
+    throw new Error(
+      "Health Connect n'est pas installé ou doit être mis à jour : installez « Health Connect » depuis le Play Store, puis réessayez."
+    );
+  }
+  if (!(await hc.initialize())) throw new Error("Health Connect n'a pas pu démarrer.");
+  return hc;
+}
+
+async function demanderAccesAndroid() {
+  const hc = await healthConnect();
+  const accordees = await hc.requestPermission([
+    { accessType: "read", recordType: HC_ACTIVE },
+    { accessType: "read", recordType: HC_TOTALE },
+  ]);
+  // Contrairement a iOS, Android dit ce qui a ete accorde.
+  if (!accordees.some((p) => p.recordType === HC_ACTIVE)) {
+    throw new Error("Accès aux calories refusé dans Health Connect.");
+  }
+  return true;
+}
+
+/** Total en kcal d'un type d'enregistrement sur l'intervalle, ou null. */
+async function totalHC(hc, recordType, champ, debut, fin) {
+  try {
+    const r = await hc.aggregateRecord({
+      recordType,
+      timeRangeFilter: { operator: "between", startTime: debut.toISOString(), endTime: fin.toISOString() },
+    });
+    const v = Number(r?.[champ]?.inKilocalories);
+    return Number.isFinite(v) ? Math.round(v) : null;
+  } catch (e) {
+    return null; // permission refusee pour ce type, ou aucune donnee
+  }
+}
+
+async function depenseDuJourAndroid(date) {
+  const hc = await healthConnect();
+  const debut = new Date(date);
+  debut.setHours(0, 0, 0, 0);
+  const fin = new Date(date);
+  fin.setHours(23, 59, 59, 999);
+  const active = await totalHC(hc, HC_ACTIVE, "ACTIVE_CALORIES_TOTAL", debut, fin);
+  const totale = await totalHC(hc, HC_TOTALE, "ENERGY_TOTAL", debut, fin);
+  const repos = totale != null && active != null ? Math.max(0, totale - active) : null;
   return { active, repos, totale };
 }

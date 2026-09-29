@@ -17,7 +17,12 @@
         "foregroundImage": "./assets/android-icon-foreground.png",
         "backgroundImage": "./assets/android-icon-background.png",
         "monochromeImage": "./assets/android-icon-monochrome.png"
-      }
+      },
+      "package": "com.raphproudhon.caloriecam",
+      "permissions": [
+        "android.permission.health.READ_ACTIVE_CALORIES_BURNED",
+        "android.permission.health.READ_TOTAL_CALORIES_BURNED"
+      ]
     },
     "web": {
       "favicon": "./assets/favicon.png"
@@ -29,6 +34,15 @@
           "NSHealthShareUsageDescription": "CalorieCam lit votre dépense énergétique (calories actives et de repos) pour l'ajuster à vos apports et affiner votre objectif quotidien.",
           "NSHealthUpdateUsageDescription": "CalorieCam n'écrit aucune donnée dans Santé pour le moment.",
           "background": false
+        }
+      ],
+      "react-native-health-connect",
+      [
+        "expo-build-properties",
+        {
+          "android": {
+            "minSdkVersion": 26
+          }
         }
       ]
     ]

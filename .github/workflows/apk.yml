@@ -1,0 +1,74 @@
+# Fabrique un APK Android installable de l'app, sur une machine Linux de
+# GitHub Actions (bien moins couteuse en minutes que le Mac de l'ipa).
+#
+# Declenchement : un commit dont le message contient "[apk]" sur la branche du
+# perso, ou "Run workflow". Pas a chaque push.
+#
+# Sortie : une release GitHub "apk-<numero>" (pre-release) avec
+# CalorieCam-apk-<numero>.apk, telechargeable et installable directement depuis
+# le telephone (autoriser l'installation depuis le navigateur). Signe avec la clef
+# de debug du projet : suffisant pour installer, pas pour le Play Store. Health
+# Connect y fonctionne (contrairement a Expo Go). Aucune cle API embarquee.
+
+name: APK Android
+
+on:
+  push:
+    branches: [claude/refonte-systeme-perso-ets8q7]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: apk
+  cancel-in-progress: true
+
+jobs:
+  apk:
+    if: github.event_name == 'workflow_dispatch' || contains(github.event.head_commit.message, '[apk]')
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+
+      - uses: gradle/actions/setup-gradle@v4
+
+      - run: npm ci
+
+      - name: Fichier de secrets vide
+        run: cp secrets.example.js secrets.js
+
+      - name: Numero de version
+        run: |
+          VERSION="apk-${{ github.run_number }} · ${GITHUB_SHA::7}"
+          echo "VERSION=$VERSION" >> "$GITHUB_ENV"
+          echo "NUM=${{ github.run_number }}" >> "$GITHUB_ENV"
+          printf 'export const VERSION = "%s";\nexport const TEST = true;\n' "$VERSION" > version.js
+
+      - name: Projet Android natif
+        run: npx expo prebuild --platform android --clean
+
+      - name: Compilation (release, signee avec la clef de debug)
+        working-directory: android
+        run: ./gradlew assembleRelease --no-daemon -PreactNativeArchitectures=arm64-v8a,armeabi-v7a
+
+      - name: Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          cp android/app/build/outputs/apk/release/app-release.apk "CalorieCam-apk-$NUM.apk"
+          ls -lh "CalorieCam-apk-$NUM.apk"
+          gh release create "apk-$NUM" "CalorieCam-apk-$NUM.apk" \
+            --target "$GITHUB_SHA" --prerelease \
+            --title "CalorieCam $VERSION" \
+            --notes "APK Android, branche ${GITHUB_REF_NAME}. Téléchargez-le depuis le téléphone et installez-le."

@@ -40,7 +40,7 @@ import { analyserPhoto, alimentsProches } from "./analyse";
 import { produitParCodeBarres, analyseDepuisProduit, alimentDepuisProduit, chercherProduits } from "./off";
 import { calculer, totaliser, rechercher, rechercherApprochant, correspondExacte, couverture, NB_ALIMENTS, SOURCE } from "./ciqual";
 import { ACTIVITES, RYTHMES, calculerObjectif, bilanJournalier } from "./besoins";
-import { estDisponible as santeDisponible, demanderAcces, depenseDuJour } from "./health";
+import { estDisponible as santeDisponible, demanderAcces, depenseDuJour, NOM_SANTE, MESSAGE_SANTE_INDISPONIBLE } from "./health";
 import { chargerEtat, sauvegarderEtat, dateDuJour } from "./stockage";
 import { chargerCle, definirCle, modeleDe, fournisseursDisponibles, FOURNISSEURS } from "./cle";
 import { reconnaitreCle, ordreIA } from "./ia";
@@ -1038,7 +1038,7 @@ function FormulaireObjectif({ profilInitial, titre, sousTitre, libelleValider = 
         <Text style={styles.champLabel}>Niveau d'activité (indicatif)</Text>
         <Text style={styles.noteChamp}>
           N'entre pas dans le calcul : la dépense de sport est comptée à part,
-          via Apple Santé, dans l'onglet Bilan.
+          via {NOM_SANTE}, dans l'onglet Bilan.
         </Text>
         {ACTIVITES.map((a) => (
           <Pressable
@@ -1206,7 +1206,7 @@ function MenuParametres({ visible, etat, onFermer, onModifierObjectif, onAjouter
     setMessageSante("Connexion…");
     try {
       await demanderAcces();
-      setMessageSante("Autorisation Apple Santé demandée.");
+      setMessageSante(`Autorisation ${NOM_SANTE} demandée.`);
     } catch (e) {
       setMessageSante(e.message);
     }
@@ -1346,18 +1346,16 @@ function MenuParametres({ visible, etat, onFermer, onModifierObjectif, onAjouter
 
             {/* Apple Sante */}
             <View style={styles.carte} ref={cible("params-sante")}>
-              <Text style={styles.champLabel}>Apple Santé</Text>
+              <Text style={styles.champLabel}>{NOM_SANTE}</Text>
               {dispoSante ? (
                 <TouchableOpacity
                   style={[styles.bouton, styles.boutonSecondaire]}
                   onPress={reconnecterSante}
                 >
-                  <Text style={styles.boutonTexte}>Reconnecter Apple Santé</Text>
+                  <Text style={styles.boutonTexte}>Reconnecter {NOM_SANTE}</Text>
                 </TouchableOpacity>
               ) : (
-                <Text style={styles.disclaimer}>
-                  Disponible seulement dans un build de développement (voir README).
-                </Text>
+                <Text style={styles.disclaimer}>{MESSAGE_SANTE_INDISPONIBLE}</Text>
               )}
               {messageSante ? <Text style={styles.objectifDetail}>{messageSante}</Text> : null}
             </View>
@@ -1507,17 +1505,13 @@ function EcranBilan({ objectif, consomme, sport, onSport }) {
                   disabled={etatSante === "chargement"}
                 >
                   <Text style={styles.boutonTexte}>
-                    {etatSante === "chargement" ? "Lecture…" : "Importer depuis Apple Santé"}
+                    {etatSante === "chargement" ? "Lecture…" : `Importer depuis ${NOM_SANTE}`}
                   </Text>
                 </TouchableOpacity>
                 {erreurSante ? <Text style={styles.erreurLigne}>{erreurSante}</Text> : null}
               </>
             ) : (
-              <Text style={styles.disclaimer}>
-                L'import automatique depuis Apple Santé nécessite un build de
-                développement (voir README). En attendant, saisissez les calories
-                de votre séance à la main.
-              </Text>
+              <Text style={styles.disclaimer}>{MESSAGE_SANTE_INDISPONIBLE}</Text>
             )}
           </View>
 
