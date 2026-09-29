@@ -53,7 +53,7 @@ import {
   NB_ETAPES,
   PERSOS,
 } from "./jeu";
-import { SPRITES } from "./perso-sprites";
+import { SPRITES, ANIMS } from "./perso-sprites";
 import { VERSION, TEST } from "./version";
 import { kcalDepuisLien } from "./lien";
 import { Tutoriel, FournisseurCibles, useCible, useDefilTuto } from "./tuto";
@@ -1903,8 +1903,19 @@ const SEUIL_DECISION = 10; // px parcourus avant de trancher
  * l'autre) et pixels deja agrandis (pas de flou).
  */
 function AvatarPerso({ perso, etape, taille = 280, zoom = 1, tournable = true, onGeste }) {
-  const frames = SPRITES[perso][Math.max(0, Math.min(etape, NB_ETAPES - 1))];
+  const idx = Math.max(0, Math.min(etape, NB_ETAPES - 1));
+  const frames = SPRITES[perso][idx];
   const [direction, setDirection] = useState(0);
+  // Animation d'attente, de face seulement (les 7 autres directions restent
+  // des images fixes). Tant que le GIF « idle » de l'etape manque, le perso
+  // respire en code : il monte et descend d'un pixel de l'art.
+  const idle = direction === 0 ? ANIMS[perso]?.[idx]?.idle : null;
+  const [frame, setFrame] = useState(0);
+  useEffect(() => {
+    setFrame(0);
+    const t = setInterval(() => setFrame((f) => f + 1), idle ? idle.ms : 700);
+    return () => clearInterval(t);
+  }, [idle]);
   const directionRef = useRef(0); // valeur courante, lisible dans le geste
   const baseRef = useRef(0);      // direction au debut du glissement
   const modeRef = useRef(null);   // null (pas encore tranche) | "rotation" | "vertical"
@@ -1949,6 +1960,7 @@ function AvatarPerso({ perso, etape, taille = 280, zoom = 1, tournable = true, o
     })
   ).current;
 
+  const cote = taille * zoom; // cote affiche d'une image 128 x 128 de l'art
   return (
     // zoom > 1 recadre sur le centre du canevas : utile pour les premieres
     // etapes, ou le perso n'occupe que le milieu (la marge sert aux effets des
@@ -1957,7 +1969,27 @@ function AvatarPerso({ perso, etape, taille = 280, zoom = 1, tournable = true, o
       style={{ width: taille, height: taille, overflow: "hidden", alignItems: "center", justifyContent: "center" }}
       {...(tournable ? pan.panHandlers : {})}
     >
-      <Image source={frames[direction]} style={{ width: taille * zoom, height: taille * zoom }} fadeDuration={0} />
+      {idle ? (
+        <View style={{ width: cote, height: cote, overflow: "hidden" }}>
+          <Image
+            source={idle.planche}
+            fadeDuration={0}
+            style={{
+              position: "absolute",
+              width: cote * idle.colonnes,
+              height: cote * Math.ceil(idle.n / idle.colonnes),
+              left: -((frame % idle.n) % idle.colonnes) * cote,
+              top: -Math.floor((frame % idle.n) / idle.colonnes) * cote,
+            }}
+          />
+        </View>
+      ) : (
+        <Image
+          source={frames[direction]}
+          style={{ width: cote, height: cote, transform: [{ translateY: frame % 2 ? -cote / 128 : 0 }] }}
+          fadeDuration={0}
+        />
+      )}
     </View>
   );
 }

@@ -460,6 +460,13 @@ rotation au doigt utilise les 8 images fixes de l'état, pas besoin d'animer les
 | **fatigué** | série cassée | `shoulders drop, head lowers, sighs, effects dim, slowly straightens back` | `ears flatten, sad pout, sits down, tail curls, then looks up hopeful` |
 | **miam** | après une analyse de repas | `takes a bite of a small food item, satisfied expression, returns to idle` | `happily munches a tiny fish snack, cheeks puffed, returns to idle` |
 
+**Dans l'app (fait)** : déposer le GIF de l'animation (vue de face, exporté tel
+quel de PixelLab) dans `assets/perso/{humain,chat}/anim/{idle|content|levelup|fatigue|miam}/{h|c}{étape}.gif`
+puis relancer `node tools/build-perso.js` : chaque animation devient une planche
+PNG (`ANIMS` dans `perso-sprites.js`). L'**idle** est jouée en boucle quand le
+perso est de face ; tant qu'elle manque pour une étape, le perso monte et
+descend d'un pixel en code. Les réactions ne sont pas encore branchées.
+
 Garder le même point d'appui (les pieds) sur les 8 frames, sinon le perso
 « saute » dans son cadre.
 
