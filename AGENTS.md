@@ -28,9 +28,10 @@ Points clés :
   qu'elle autorise : `choisirModele`). L'utilisateur colle **une clé, n'importe
   laquelle** dans les Paramètres : `reconnaitreCle` devine l'IA d'après son
   préfixe (`sk-ant-`, `AIza`/`AQ.`, `sk-`, sinon on essaie tout) et la vérifie
-  en listant les modèles. Plusieurs clés → il touche celle à utiliser ; si elle
-  est surchargée/injoignable, `appelerIA` bascule sur une autre (jamais sur une
-  clé refusée). Les schémas
+  en listant les modèles. Plusieurs clés → **Gemini toujours en premier**
+  (`ordreIA`), puis les autres ; au moindre échec d'une IA (surcharge, clé
+  refusée, réponse illisible…), `appelerIA` passe à la suivante, et si toutes
+  échouent le message liste la réponse de chacune. Les schémas
   sont écrits au format Gemini dans `analyse.js` et convertis pour Claude
   (`versJsonSchema`). Nouvelle IA → une fonction dans `APPELS` + une entrée dans
   `FOURNISSEURS` (`cle.js`).
@@ -75,7 +76,7 @@ passent dans le même affichage/bilan que les aliments d'une photo.
 |---|---|
 | `App.js` | les 4 onglets, l'onboarding, les paramètres |
 | `analyse.js` | passe 1 (vision) et passe 2 (choix de la fiche Ciqual) : prompts et schémas |
-| `ia.js` | reconnaissance d'une clé collée + appel à l'IA choisie (Gemini / Claude / ChatGPT / Mistral), bascule sur une autre si surcharge |
+| `ia.js` | reconnaissance d'une clé collée + appel aux IA (Gemini en priorité, puis Claude / ChatGPT / Mistral), relais sur la suivante au moindre échec |
 | `ciqual.js` | recherche dans la table (`rechercher`, utilisée par l'analyse photo — ne pas en changer le classement à la légère) + recherche tolérante aux fautes pour la saisie manuelle (`rechercherApprochant`, `couverture`, `correspondExacte`) + calcul nutritionnel |
 | `off.js` | **Open Food Facts** : scan de code-barres et recherche de produits de marque par nom (`chercherProduits`), mis à la forme d'une fiche (compatible `calculer()`) |
 | `besoins.js` | BMR/objectif calorique + bilan du jour, garde-fous de sécurité |

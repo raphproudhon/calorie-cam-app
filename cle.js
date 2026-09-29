@@ -3,8 +3,8 @@
 // L'app sait parler a plusieurs IA (voir ia.js) : Gemini (Google), Claude
 // (Anthropic), ChatGPT (OpenAI) et Mistral. Dans les Parametres, l'utilisateur
 // colle une cle, n'importe laquelle : ia.js reconnait l'IA (reconnaitreCle) et
-// la rend disponible. S'il en a plusieurs, il choisit celle a utiliser ; si
-// elle est surchargee, l'analyse bascule sur une autre.
+// la rend disponible. S'il en a plusieurs, Gemini passe en premier et les
+// autres prennent le relais s'il echoue (ordreIA et appelerIA dans ia.js).
 //
 // Pour chaque IA, deux provenances de cle, dans cet ordre de priorite :
 //   1. une cle saisie dans l'app (Parametres -> "Intelligence artificielle"),

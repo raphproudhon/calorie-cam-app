@@ -69,7 +69,7 @@ attendant le build de développement, le sport peut être saisi à la main.
 |---|---|
 | Framework | **Expo (React Native)** — teste sur iPhone via l'app **Expo Go**, sans Mac |
 | Expo SDK | **57** (⚠️ doit être celui de l'Expo Go installé : sur iOS, seule la dernière version d'Expo Go existe) |
-| IA vision | **Google Gemini** (`gemini-flash-latest`, niveau gratuit), **Claude** (`claude-opus-5-5`, via `@anthropic-ai/sdk`), **ChatGPT** ou **Mistral** (modèle choisi parmi ceux de la clé) — on colle une clé, l'IA est reconnue ; si celle utilisée est surchargée, une autre prend le relais |
+| IA vision | **Google Gemini** (`gemini-flash-latest`, niveau gratuit), **Claude** (`claude-opus-5-5`, via `@anthropic-ai/sdk`), **ChatGPT** ou **Mistral** (modèle choisi parmi ceux de la clé) — on colle une clé, l'IA est reconnue ; Gemini passe en premier et, s'il échoue, l'IA suivante prend le relais |
 | Base nutritionnelle | **Ciqual 2020 (ANSES)** — 2 298 aliments, embarquée, hors-ligne |
 | Clé API | Dans `secrets.js` (exclu de Git) — voir `secrets.example.js` |
 

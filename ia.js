@@ -9,15 +9,15 @@
 // Elles identifient les aliments et estiment les masses ; les calories viennent
 // de la table CIQUAL. Changer d'IA ne change donc rien a ce principe.
 //
-// IA utilisee : celle choisie dans les Parametres (cle.js). Si elle est
-// surchargee ou injoignable et qu'une cle existe pour une autre, on bascule
-// dessus plutot que d'echouer.
+// IA utilisee : Gemini en priorite, puis les autres IA qui ont une cle (voir
+// ordreIA). Si l'une echoue, pour quelque raison que ce soit, on essaie la
+// suivante plutot que d'echouer.
 //
 // L'utilisateur n'a qu'a coller une cle : reconnaitreCle() devine l'IA d'apres
 // sa forme, puis le verifie aupres du service (et y choisit le modele).
 
 import Anthropic from "@anthropic-ai/sdk";
-import { cleDe, modeleDe, fournisseurActif, FOURNISSEURS, IDS_FOURNISSEURS } from "./cle";
+import { cleDe, modeleDe, FOURNISSEURS, IDS_FOURNISSEURS } from "./cle";
 
 const MODELE_GEMINI = "gemini-flash-latest";
 const MODELE_CLAUDE = "claude-opus-5-5";
@@ -362,6 +362,14 @@ export async function reconnaitreCle(brute) {
 
 // --- Aiguillage ---------------------------------------------------------------
 
+/**
+ * Ordre dans lequel on essaie les IA qui ont une cle : Gemini d'abord (gratuit,
+ * choix de l'utilisateur), puis les autres dans l'ordre de FOURNISSEURS.
+ */
+export function ordreIA() {
+  return ["gemini", ...IDS_FOURNISSEURS.filter((id) => id !== "gemini")].filter((id) => cleDe(id));
+}
+
 const APPELS = { gemini: appelerGemini, claude: appelerClaude, openai: appelerOpenAI, mistral: appelerMistral };
 
 /**
@@ -374,29 +382,30 @@ const APPELS = { gemini: appelerGemini, claude: appelerClaude, openai: appelerOp
  *   les modeles Claude et ChatGPT actuels n'acceptent plus ce reglage)
  */
 export async function appelerIA(demande) {
-  const choisie = fournisseurActif();
-  // L'IA choisie d'abord, puis les autres pour lesquelles on a une cle.
-  const ordre = [choisie, ...IDS_FOURNISSEURS.filter((id) => id !== choisie)]
-    .filter((id) => cleDe(id));
+  const ordre = ordreIA();
   if (ordre.length === 0) {
-        throw new Error(
+    throw new Error(
       "Aucune clé d'IA. Ouvrez les Paramètres (roue crantée) et collez une clé " +
       `API (Gemini, Claude, ChatGPT ou Mistral). ${FOURNISSEURS.gemini.aide}`
     );
   }
 
-  let erreur = null;
+  // Au moindre echec (surcharge, cle refusee, reponse illisible, refus...),
+  // on passe a l'IA suivante : une autre y arrivera peut-etre. Si toutes
+  // echouent, on montre ce que chacune a repondu.
+  const echecs = [];
   for (const id of ordre) {
     try {
       return await APPELS[id](cleDe(id), demande);
     } catch (e) {
-      erreur = e;
-      // Cle refusee, image refusee... : une autre IA ne ferait pas mieux sur le
-      // fond, et l'utilisateur doit voir le vrai message. Seules la surcharge
-      // et les pannes reseau justifient de passer a la suivante.
-      if (!e.transitoire) throw e;
-      console.warn(`IA ${id} indisponible, essai de la suivante :`, e.message);
+      echecs.push({ id, e });
+      console.warn(`IA ${id} en echec, essai de la suivante :`, e.message);
     }
   }
+  if (echecs.length === 1) throw echecs[0].e;
+  const erreur = new Error(
+    echecs.map(({ id, e }) => `${FOURNISSEURS[id].nom} : ${e.message}`).join(" — ")
+  );
+  erreur.transitoire = echecs.every(({ e }) => e.transitoire);
   throw erreur;
 }

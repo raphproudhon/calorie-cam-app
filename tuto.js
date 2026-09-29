@@ -180,7 +180,7 @@ export const ETAPES_TUTO = [
     zone: "params",
     defil: "params",
     titre: "Intelligence artificielle",
-    texte: "Collez ici une clé API d'IA (Gemini est gratuite, ou Claude, ChatGPT, Mistral) : l'app la reconnaît toute seule, et elle reste sur votre téléphone. Avec plusieurs clés, l'une prend le relais si l'autre est surchargée.",
+    texte: "Collez ici une clé API d'IA (Gemini est gratuite, ou Claude, ChatGPT, Mistral) : l'app la reconnaît toute seule, et elle reste sur votre téléphone. Avec plusieurs clés, Gemini passe en premier et les autres prennent le relais s'il n'y arrive pas.",
   },
   {
     cible: "params-sante",

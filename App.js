@@ -42,8 +42,8 @@ import { calculer, totaliser, rechercher, rechercherApprochant, correspondExacte
 import { ACTIVITES, RYTHMES, calculerObjectif, bilanJournalier } from "./besoins";
 import { estDisponible as santeDisponible, demanderAcces, depenseDuJour } from "./health";
 import { chargerEtat, sauvegarderEtat, dateDuJour } from "./stockage";
-import { chargerCle, definirCle, modeleDe, fournisseurActif, definirFournisseur, fournisseursDisponibles, FOURNISSEURS } from "./cle";
-import { reconnaitreCle } from "./ia";
+import { chargerCle, definirCle, modeleDe, fournisseursDisponibles, FOURNISSEURS } from "./cle";
+import { reconnaitreCle, ordreIA } from "./ia";
 import {
   niveauDepuisXp,
   themePerso,
@@ -1098,19 +1098,11 @@ function FormulaireObjectif({ profilInitial, titre, sousTitre, libelleValider = 
 // versions publiees n'embarquent aucune cle : elle reste sur l'appareil et
 // n'est envoyee qu'a l'IA concernee.
 function CarteIA() {
-  const [choisie, setChoisie] = useState(fournisseurActif());
   const [saisie, setSaisie] = useState("");
   const [message, setMessage] = useState(null);
   const [verif, setVerif] = useState(false);
   const [, rafraichir] = useState(0);
-  const dispo = fournisseursDisponibles();
-  // L'IA choisie n'a plus de cle : c'est la 1re disponible qui sert.
-  const utilisee = dispo.includes(choisie) ? choisie : dispo[0];
-
-  async function choisir(id) {
-    await definirFournisseur(id);
-    setChoisie(id);
-  }
+  const dispo = ordreIA(); // Gemini d'abord, puis les autres
 
   async function ajouter() {
     setVerif(true);
@@ -1118,9 +1110,8 @@ function CarteIA() {
     try {
       const { id, cle, modele } = await reconnaitreCle(saisie);
       await definirCle(id, cle, modele);
-      await choisir(id);
       setSaisie("");
-      setMessage(`Clé ${FOURNISSEURS[id].nom} reconnue : c'est elle qui analyse vos photos.`);
+      setMessage(`Clé ${FOURNISSEURS[id].nom} reconnue et ajoutée.`);
     } catch (e) {
       setMessage(e.message);
     } finally {
@@ -1140,13 +1131,10 @@ function CarteIA() {
       {dispo.length ? (
         dispo.map((id) => (
           <View key={id} style={styles.iaLigne}>
-            <Pressable style={{ flex: 1 }} onPress={() => choisir(id)}>
-              <Text style={styles.iaNom}>
-                {id === utilisee ? "● " : "○ "}
-                {FOURNISSEURS[id].nom}
-                {modeleDe(id) ? <Text style={styles.disclaimer}>  {modeleDe(id)}</Text> : null}
-              </Text>
-            </Pressable>
+            <Text style={[styles.iaNom, { flex: 1 }]}>
+              {dispo.indexOf(id) + 1}. {FOURNISSEURS[id].nom}
+              {modeleDe(id) ? <Text style={styles.disclaimer}>  {modeleDe(id)}</Text> : null}
+            </Text>
             <TouchableOpacity onPress={() => retirer(id)}>
               <Text style={styles.iaRetirer}>Retirer</Text>
             </TouchableOpacity>
@@ -1157,7 +1145,7 @@ function CarteIA() {
       )}
       {dispo.length > 1 ? (
         <Text style={styles.disclaimer}>
-          Touchez une IA pour l'utiliser. Si elle est surchargée, une autre prend le relais.
+          L'analyse commence par la 1re ; si elle n'y arrive pas, la suivante prend le relais.
         </Text>
       ) : null}
       <View style={[styles.champNombreBoite, { marginTop: 10 }]}>
