@@ -15,7 +15,8 @@
 //   - action : l'utilisateur fait le geste lui-meme (toucher un onglet, la roue
 //     crantee) ; le trou laisse passer le doigt et l'etape avance toute seule ;
 //   - sans cible : bulle au centre (ce qui n'est pas encore a l'ecran).
-// Une main animee montre le geste attendu (geste: "appui" ou "glisser").
+// Une main animee montre le geste attendu (geste: "appui", "glisser" ou
+// "pincer").
 //
 // Les Parametres s'ouvrent dans une Modal, qui passe au-dessus de tout : les
 // etapes zone: "params" sont donc dessinees par une seconde instance du
@@ -130,11 +131,13 @@ export const ETAPES_TUTO = [
     geste: "appui",
   },
   {
-    cible: "journal-resume",
+    cible: "journal-calendrier",
     onglet: "journal",
-    titre: "Tous vos jours",
+    titre: "Votre calendrier",
     texte:
-      "Chaque jour depuis le premier lancement : ce que vous avez mangé face à votre objectif, votre sport, votre poids. Touchez un jour pour voir le détail de ses repas.",
+      "Tous vos jours depuis le premier lancement, colorés selon votre objectif. Écartez deux doigts pour zoomer (année → mois → semaine → jour), rapprochez-les pour dézoomer : essayez !",
+    libre: true,
+    geste: "pincer",
   },
   // --- Parametres ---
   {
@@ -245,7 +248,8 @@ const ANIM_NATIVE = Platform.OS !== "web"; // le driver natif n'existe pas sur l
  * Main qui mime le geste attendu, en boucle, le bout du doigt sur (x, y) :
  *   - "appui"  : le doigt s'enfonce et une onde s'elargit sous lui ;
  *   - "glisser": le doigt part de la gauche et glisse vers la droite (sur
- *     `course` px), puis s'efface et recommence.
+ *     `course` px), puis s'efface et recommence ;
+ *   - "pincer" : deux doigts s'ecartent depuis (x, y) (zoom avant).
  * Purement decoratif : ne capte jamais le doigt de l'utilisateur.
  */
 function MainAnimee({ x, y, geste, course = 120, accent }) {
@@ -286,6 +290,26 @@ function MainAnimee({ x, y, geste, course = 120, accent }) {
       >
         <Text style={styles.doigt}>👆</Text>
       </Animated.View>
+    );
+  }
+
+  if (geste === "pincer") {
+    // Deux doigts qui s'ecartent depuis le centre (zoom avant), en diagonale.
+    const d = Math.min(course, 110) / 2;
+    const opacite = t.interpolate({ inputRange: [0, 0.1, 0.7, 0.85, 1], outputRange: [0, 1, 1, 0, 0] });
+    const decal = (sx, sy) => [
+      { translateX: t.interpolate({ inputRange: [0, 0.1, 0.7, 1], outputRange: [sx * 8, sx * 8, sx * d, sx * d] }) },
+      { translateY: t.interpolate({ inputRange: [0, 0.1, 0.7, 1], outputRange: [sy * 8, sy * 8, sy * d, sy * d] }) },
+    ];
+    return (
+      <>
+        <Animated.View pointerEvents="none" style={[styles.main, { left: x - TAILLE_DOIGT * 0.58, top: y - TAILLE_DOIGT * 1.1 }, { opacity: opacite, transform: decal(-1, -1) }]}>
+          <Text style={styles.doigt}>👇</Text>
+        </Animated.View>
+        <Animated.View pointerEvents="none" style={[styles.main, pos, { opacity: opacite, transform: decal(1, 1) }]}>
+          <Text style={styles.doigt}>👆</Text>
+        </Animated.View>
+      </>
     );
   }
 

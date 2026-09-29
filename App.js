@@ -15,11 +15,12 @@
 import { createContext, useContext, useEffect, useMemo, useRef, useState } from "react";
 import {
   ActivityIndicator,
-  FlatList,
+  Animated,
   Image,
   Linking,
   Modal,
   PanResponder,
+  Platform,
   Pressable,
   ScrollView,
   StatusBar,
@@ -55,7 +56,19 @@ import { SPRITES } from "./perso-sprites";
 import { VERSION, TEST } from "./version";
 import { kcalDepuisLien } from "./lien";
 import { Tutoriel, FournisseurCibles, useCible, useDefilTuto } from "./tuto";
-import { joursDuJournal, grouperJoursVides, resumeJournal, dateLisible } from "./journal";
+import {
+  joursDuJournal,
+  resumeJournal,
+  NIVEAUX_CALENDRIER,
+  JOURS_COURTS,
+  semaineDe,
+  lundiDe,
+  grilleMois,
+  titrePeriode,
+  nomMois,
+  decalerPeriode,
+  niveauVoisin,
+} from "./journal";
 
 // Le theme "accent" de l'app suit le personnage : sa couleur evolue avec le
 // niveau (bleu -> cramoisi -> or). Fourni par App, lu partout via useContext.
@@ -1461,7 +1474,10 @@ function ChampNombre({ label, valeur, onChange, unite }) {
 // =========================================================================
 
 // =========================================================================
-//  ECRAN JOURNAL — tous les jours depuis le premier lancement (journal.js)
+//  ECRAN JOURNAL — calendrier facon Apple (Annee / Mois / Semaine / Jour) de
+//  tous les jours depuis le premier lancement (donnees : journal.js). On
+//  change de niveau en pincant (ecarter = zoom avant), avec le selecteur, ou
+//  en touchant un mois / un jour.
 // =========================================================================
 
 const VERDICTS = {
@@ -1469,125 +1485,343 @@ const VERDICTS = {
   dessus: { libelle: "Au-dessus", couleur: () => COULEURS.rouge },
   dessous: { libelle: "Trop peu mangé", couleur: () => COULEURS.doux },
 };
+const LIBELLES_NIVEAUX = { jour: "Jour", semaine: "Semaine", mois: "Mois", annee: "Année" };
+const HEURE_DEBUT = 6;     // debut de la frise horaire (vue Semaine / Jour)
+const HAUTEUR_HEURE = 34;  // px par heure dans la frise
+const ANIM_NATIVE_CAL = Platform.OS !== "web";
 
-const majuscule = (t) => t.charAt(0).toUpperCase() + t.slice(1);
+// Cle de la periode d'une date, pour savoir si deux dates tombent dans la
+// meme annee / le meme mois / la meme semaine / le meme jour.
+const clePeriode = (niveau, s) =>
+  niveau === "annee" ? s.slice(0, 4) : niveau === "mois" ? s.slice(0, 7) : niveau === "semaine" ? lundiDe(s) : s;
+
+/** Couleur d'un jour dans le calendrier (null : rien a signaler). */
+function couleurJour(e) {
+  if (!e) return null;
+  if (e.type === "suivi") return VERDICTS[e.verdict].couleur();
+  if (e.type === "aujourdhui" && e.consomme > 0) return COULEURS.accent;
+  return null;
+}
+
+/** Position verticale d'un repas « HH:MM » dans la frise horaire. */
+function hautRepas(heure) {
+  const [h, m] = String(heure || "12:00").split(":").map(Number);
+  return Math.max(0, (h - HEURE_DEBUT + (m || 0) / 60) * HAUTEUR_HEURE);
+}
 
 function EcranJournal({ etat }) {
   const cible = useCible();
-  const [ouverts, setOuverts] = useState({}); // dates dont le detail est deplie
+  const accent = useAccent();
   const aujourdhui = dateDuJour();
-  const annee = Number(aujourdhui.slice(0, 4));
+  const [niveau, setNiveau] = useState("mois");
+  const [focus, setFocus] = useState(aujourdhui); // date au centre de la vue
+  const [defilement, setDefilement] = useState(true);
   const jours = useMemo(() => joursDuJournal(etat, aujourdhui), [etat, aujourdhui]);
-  const lignes = useMemo(() => grouperJoursVides(jours), [jours]);
+  const parDate = useMemo(() => new Map(jours.map((j) => [j.date, j])), [jours]);
   const resume = resumeJournal(jours);
-  const basculer = (d) => setOuverts((o) => ({ ...o, [d]: !o[d] }));
+  const debut = resume.debut || aujourdhui;
 
-  const entete = (
-    <>
-      <Text style={styles.titre}>Journal</Text>
-      <Text style={styles.sousTitre}>
-        Tous vos jours depuis le {resume.debut ? dateLisible(resume.debut, annee) : "début"}
-      </Text>
-      <View style={[styles.carte, styles.journalResume]} ref={cible("journal-resume")}>
-        <View style={styles.besoinCase}>
-          <Text style={styles.besoinValeur}>{resume.total}</Text>
-          <Text style={styles.besoinLabel}>jour{resume.total > 1 ? "s" : ""}{"\n"}depuis le début</Text>
-        </View>
-        <View style={styles.besoinCase}>
-          <Text style={styles.besoinValeur}>{resume.suivis}</Text>
-          <Text style={styles.besoinLabel}>jour{resume.suivis > 1 ? "s" : ""}{"\n"}suivi{resume.suivis > 1 ? "s" : ""}</Text>
-        </View>
-        <View style={styles.besoinCase}>
-          <Text style={[styles.besoinValeur, { color: COULEURS.vert }]}>{resume.dansLaCible}</Text>
-          <Text style={styles.besoinLabel}>dans{"\n"}la cible</Text>
-        </View>
-      </View>
-    </>
-  );
-
-  const rendreLigne = ({ item: l }) => {
-    // Jours sans suivi consecutifs, regroupes.
-    if (l.type === "trou") {
-      return (
-        <Text style={styles.journalTrou}>
-          {l.nb === 1
-            ? `${majuscule(dateLisible(l.au, annee))} · pas de suivi`
-            : `Du ${dateLisible(l.du, annee)} au ${dateLisible(l.au, annee)} · pas de suivi (${l.nb} jours)`}
-        </Text>
-      );
-    }
-    // Jour sans repas mais avec une pesee.
-    if (l.type === "vide") {
-      return (
-        <View style={styles.journalJour}>
-          <Text style={styles.journalDate}>{majuscule(dateLisible(l.date, annee))}</Text>
-          <Text style={styles.journalDetail}>Pas de repas enregistré · ⚖️ {l.poids} kg</Text>
-        </View>
-      );
-    }
-    const v = l.verdict ? VERDICTS[l.verdict] : null;
-    const ouvert = !!ouverts[l.date];
-    const part = l.budget > 0 ? Math.min(1, l.consomme / l.budget) : 0;
-    return (
-      <Pressable style={styles.journalJour} onPress={() => basculer(l.date)}>
-        <View style={styles.journalLigneHaut}>
-          <Text style={styles.journalDate}>
-            {l.type === "aujourdhui" ? "Aujourd'hui" : majuscule(dateLisible(l.date, annee))}
-          </Text>
-          {v ? (
-            <Text style={[styles.journalVerdict, { color: v.couleur() }]}>{v.libelle}</Text>
-          ) : (
-            <Text style={[styles.journalVerdict, { color: COULEURS.doux }]}>En cours</Text>
-          )}
-        </View>
-        <Text style={styles.journalKcal}>
-          {l.consomme} <Text style={styles.journalDetail}>/ {l.budget} kcal</Text>
-        </Text>
-        <View style={styles.journalBarreFond}>
-          <View
-            style={[
-              styles.journalBarre,
-              { width: `${Math.round(part * 100)}%` },
-              l.verdict === "dessus" && { backgroundColor: COULEURS.rouge },
-            ]}
-          />
-        </View>
-        <Text style={styles.journalDetail}>
-          objectif {l.objectif}
-          {l.sport ? ` · sport +${l.sport}` : ""}
-          {l.poids != null ? ` · ⚖️ ${l.poids} kg` : ""}
-          {"  "}{ouvert ? "▲" : "▼"}
-        </Text>
-        {ouvert ? (
-          <View style={styles.journalRepas}>
-            {l.repas.length ? (
-              l.repas.map((r, i) => (
-                <Text key={i} style={styles.journalRepasLigne}>
-                  {r.heure} · {r.plat} · <Text style={{ fontWeight: "700" }}>{r.kcal} kcal</Text>
-                </Text>
-              ))
-            ) : (
-              <Text style={styles.journalDetail}>
-                {l.consomme > 0
-                  ? "Détail des repas non disponible pour ce jour."
-                  : "Aucun repas ajouté pour l'instant."}
-              </Text>
-            )}
-          </View>
-        ) : null}
-      </Pressable>
-    );
+  // --- Changement de niveau, anime (zoom avant : la vue grossit en arrivant) ---
+  const anim = useRef(new Animated.Value(1)).current;
+  const sensRef = useRef(1);
+  const changerNiveau = (n, date) => {
+    if (date) setFocus(date);
+    if (n === niveau) return;
+    sensRef.current = NIVEAUX_CALENDRIER.indexOf(n) > NIVEAUX_CALENDRIER.indexOf(niveau) ? 1 : -1;
+    setNiveau(n);
   };
+  useEffect(() => {
+    anim.setValue(0);
+    Animated.timing(anim, { toValue: 1, duration: 220, useNativeDriver: ANIM_NATIVE_CAL }).start();
+  }, [niveau]);
+
+  // --- Pincer : deux doigts qui s'ecartent = zoom avant, qui se rapprochent =
+  // zoom arriere. Un seul cran par geste. Un doigt seul reste au defilement.
+  const niveauRef = useRef(niveau);
+  niveauRef.current = niveau;
+  const zoomerRef = useRef(null);
+  zoomerRef.current = (sens) => {
+    const n = niveauVoisin(niveauRef.current, sens);
+    if (n !== niveauRef.current) changerNiveau(n);
+  };
+  const pince = useRef({ d0: null, fait: false }).current;
+  const ecart = (t) => Math.hypot(t[0].pageX - t[1].pageX, t[0].pageY - t[1].pageY);
+  const deuxDoigts = (e) => (e.nativeEvent.touches || []).length >= 2;
+  const panPince = useRef(
+    PanResponder.create({
+      onStartShouldSetPanResponderCapture: deuxDoigts,
+      onMoveShouldSetPanResponderCapture: deuxDoigts,
+      onPanResponderGrant: () => {
+        pince.d0 = null;
+        pince.fait = false;
+        setDefilement(false);
+      },
+      // Un doigt de plus pose : on repart d'un nouveau pincement.
+      onPanResponderStart: () => {
+        pince.d0 = null;
+        pince.fait = false;
+      },
+      onPanResponderMove: (e) => {
+        const t = e.nativeEvent.touches || [];
+        // Moins de deux doigts : le pincement est fini (meme si la fin du geste
+        // n'a pas ete signalee), le prochain repartira de zero.
+        if (t.length < 2) { pince.d0 = null; pince.fait = false; return; }
+        if (pince.fait) return;
+        const d = ecart(t);
+        if (pince.d0 == null) { pince.d0 = d; return; }
+        const r = d / pince.d0;
+        if (r > 1.25) { pince.fait = true; zoomerRef.current(1); }
+        else if (r < 0.8) { pince.fait = true; zoomerRef.current(-1); }
+      },
+      onPanResponderTerminationRequest: () => false,
+      onPanResponderEnd: () => { pince.d0 = null; pince.fait = false; },
+      onPanResponderRelease: () => setDefilement(true),
+      onPanResponderTerminate: () => setDefilement(true),
+    })
+  ).current;
+
+  // --- Navigation ‹ › entre periodes, bornee au journal (debut -> aujourd'hui) ---
+  const periodeVoisine = (sens) => {
+    let d = decalerPeriode(niveau, focus, sens);
+    if (sens > 0 && d > aujourdhui) {
+      if (clePeriode(niveau, d) !== clePeriode(niveau, aujourdhui)) return null;
+      d = aujourdhui;
+    }
+    if (sens < 0 && clePeriode(niveau, d) < clePeriode(niveau, debut)) return null;
+    return d;
+  };
+  const precedente = periodeVoisine(-1);
+  const suivante = periodeVoisine(1);
+
+  const echelle = anim.interpolate({ inputRange: [0, 1], outputRange: [sensRef.current > 0 ? 0.9 : 1.1, 1] });
 
   return (
-    <FlatList
-      data={lignes}
-      keyExtractor={(l) => (l.type === "trou" ? `trou-${l.au}` : l.date)}
-      renderItem={rendreLigne}
-      ListHeaderComponent={entete}
-      contentContainerStyle={styles.contenu}
-      initialNumToRender={12}
-    />
+    <View style={{ flex: 1 }} {...panPince.panHandlers}>
+      <ScrollView contentContainerStyle={styles.contenu} scrollEnabled={defilement}>
+        <Text style={styles.titre}>Journal</Text>
+        <Text style={styles.sousTitre}>
+          {resume.total} jour{resume.total > 1 ? "s" : ""} depuis le début · {resume.suivis} suivi
+          {resume.suivis > 1 ? "s" : ""} · {resume.dansLaCible} dans la cible
+        </Text>
+
+        <View ref={cible("journal-calendrier")} style={styles.calBloc}>
+          {/* Periode + navigation */}
+          <View style={styles.calEntete}>
+            <Pressable onPress={() => precedente && setFocus(precedente)} hitSlop={12} disabled={!precedente}>
+              <Text style={[styles.calFleche, !precedente && styles.calFlecheInactive]}>‹</Text>
+            </Pressable>
+            <Text style={styles.calTitre}>{titrePeriode(niveau, focus)}</Text>
+            <Pressable onPress={() => suivante && setFocus(suivante)} hitSlop={12} disabled={!suivante}>
+              <Text style={[styles.calFleche, !suivante && styles.calFlecheInactive]}>›</Text>
+            </Pressable>
+          </View>
+
+          {/* Selecteur de niveau */}
+          <View style={styles.calSegments}>
+            {[...NIVEAUX_CALENDRIER].reverse().map((n) => (
+              <Pressable
+                key={n}
+                onPress={() => changerNiveau(n)}
+                style={[styles.calSegment, niveau === n && { backgroundColor: accent }]}
+              >
+                <Text style={[styles.calSegmentTexte, niveau === n && { color: COULEURS.surAccent }]}>
+                  {LIBELLES_NIVEAUX[n]}
+                </Text>
+              </Pressable>
+            ))}
+          </View>
+          <View style={styles.calAide}>
+            <Text style={styles.astuceCentre}>Pincez pour zoomer · touchez un jour pour l'ouvrir</Text>
+            {focus !== aujourdhui || niveau !== "jour" ? (
+              <Pressable onPress={() => setFocus(aujourdhui)} hitSlop={8}>
+                <Text style={[styles.astuceCentre, { color: COULEURS.accent, fontWeight: "700" }]}>Aujourd'hui</Text>
+              </Pressable>
+            ) : null}
+          </View>
+
+          <Animated.View style={{ opacity: anim, transform: [{ scale: echelle }] }}>
+            {niveau === "annee" ? (
+              <VueAnnee focus={focus} parDate={parDate} aujourdhui={aujourdhui}
+                onMois={(d) => changerNiveau("mois", d > aujourdhui ? aujourdhui : d)} />
+            ) : niveau === "mois" ? (
+              <VueMois focus={focus} parDate={parDate} aujourdhui={aujourdhui}
+                onJour={(d) => changerNiveau("jour", d)} />
+            ) : niveau === "semaine" ? (
+              <VueSemaine focus={focus} parDate={parDate} aujourdhui={aujourdhui} accent={accent}
+                onJour={(d) => changerNiveau("jour", d)} />
+            ) : (
+              <VueJour date={focus} e={parDate.get(focus)} accent={accent} />
+            )}
+          </Animated.View>
+        </View>
+      </ScrollView>
+    </View>
+  );
+}
+
+/** Vue Annee : 12 mini-mois ; touchez un mois pour l'ouvrir. */
+function VueAnnee({ focus, parDate, aujourdhui, onMois }) {
+  const annee = Number(focus.slice(0, 4));
+  return (
+    <View style={styles.calAnnee}>
+      {Array.from({ length: 12 }, (_, m) => {
+        const courant = aujourdhui.slice(0, 7) === `${annee}-${String(m + 1).padStart(2, "0")}`;
+        return (
+          <Pressable key={m} style={styles.calMiniMois} onPress={() => onMois(`${annee}-${String(m + 1).padStart(2, "0")}-01`)}>
+            <Text style={[styles.calMiniTitre, courant && { color: COULEURS.accent }]}>{nomMois(m)}</Text>
+            {grilleMois(annee, m).map((sem, i) => (
+              <View key={i} style={styles.calLigne}>
+                {sem.map((d, k) => {
+                  const c = d ? couleurJour(parDate.get(d)) : null;
+                  return (
+                    <View key={k} style={[styles.calMiniCase, c && { backgroundColor: c }, d === aujourdhui && styles.calMiniAujourdhui]}>
+                      <Text style={[styles.calMiniNum, c && { color: "#fff" }]}>{d ? Number(d.slice(8)) : ""}</Text>
+                    </View>
+                  );
+                })}
+              </View>
+            ))}
+          </Pressable>
+        );
+      })}
+    </View>
+  );
+}
+
+/** Vue Mois : grille lundi -> dimanche, pastille et kcal de chaque jour. */
+function VueMois({ focus, parDate, aujourdhui, onJour }) {
+  const [a, m] = focus.split("-").map(Number);
+  return (
+    <View>
+      <View style={styles.calLigne}>
+        {JOURS_COURTS.map((j, i) => (
+          <Text key={i} style={styles.calJourSemaine}>{j}</Text>
+        ))}
+      </View>
+      {grilleMois(a, m - 1).map((sem, i) => (
+        <View key={i} style={styles.calLigne}>
+          {sem.map((d, k) => {
+            if (!d) return <View key={k} style={styles.calCase} />;
+            const e = parDate.get(d);
+            const c = couleurJour(e);
+            const auj = d === aujourdhui;
+            return (
+              <Pressable key={k} style={[styles.calCase, d > aujourdhui && { opacity: 0.35 }]} onPress={() => onJour(d)} disabled={d > aujourdhui}>
+                <View style={[styles.calNumBoite, auj && { backgroundColor: COULEURS.accent }]}>
+                  <Text style={[styles.calNum, auj && { color: "#fff" }]}>{Number(d.slice(8))}</Text>
+                </View>
+                {c ? <View style={[styles.calPastille, { backgroundColor: c }]} /> : null}
+                {e && e.consomme > 0 ? <Text style={styles.calKcal}>{e.consomme}</Text> : null}
+              </Pressable>
+            );
+          })}
+        </View>
+      ))}
+      <View style={styles.calLegende}>
+        <Text style={[styles.calLegendeTexte, { color: COULEURS.vert }]}>● dans la cible</Text>
+        <Text style={[styles.calLegendeTexte, { color: COULEURS.rouge }]}>● au-dessus</Text>
+        <Text style={[styles.calLegendeTexte, { color: COULEURS.doux }]}>● trop peu</Text>
+      </View>
+    </View>
+  );
+}
+
+/** Vue Semaine : 7 colonnes, les repas places a leur heure sur une frise. */
+function VueSemaine({ focus, parDate, aujourdhui, accent, onJour }) {
+  const dates = semaineDe(focus);
+  const heures = Array.from({ length: 24 - HEURE_DEBUT }, (_, i) => HEURE_DEBUT + i);
+  return (
+    <View>
+      <View style={styles.calLigne}>
+        <View style={styles.calGouttiere} />
+        {dates.map((d, i) => {
+          const e = parDate.get(d);
+          const c = couleurJour(e);
+          const auj = d === aujourdhui;
+          return (
+            <Pressable key={d} style={styles.calColEntete} onPress={() => onJour(d)} disabled={d > aujourdhui}>
+              <Text style={styles.calJourSemaine}>{JOURS_COURTS[i]}</Text>
+              <View style={[styles.calNumBoite, auj && { backgroundColor: COULEURS.accent }]}>
+                <Text style={[styles.calNum, auj && { color: "#fff" }, d > aujourdhui && { opacity: 0.35 }]}>{Number(d.slice(8))}</Text>
+              </View>
+              <Text style={[styles.calKcal, c && { color: c, fontWeight: "700" }]}>{e && e.consomme > 0 ? e.consomme : " "}</Text>
+            </Pressable>
+          );
+        })}
+      </View>
+      <View style={[styles.calLigne, { height: heures.length * HAUTEUR_HEURE }]}>
+        <View style={styles.calGouttiere}>
+          {heures.map((h) => (
+            <Text key={h} style={[styles.calHeure, { top: (h - HEURE_DEBUT) * HAUTEUR_HEURE - 6 }]}>{h}h</Text>
+          ))}
+        </View>
+        {dates.map((d) => (
+          <Pressable key={d} style={styles.calColonne} onPress={() => onJour(d)} disabled={d > aujourdhui}>
+            {heures.map((h) => (
+              <View key={h} style={[styles.calTrait, { top: (h - HEURE_DEBUT) * HAUTEUR_HEURE }]} />
+            ))}
+            {(parDate.get(d)?.repas || []).map((r, i) => (
+              <View key={i} style={[styles.calBlocRepas, { top: hautRepas(r.heure), backgroundColor: accent }]}>
+                <Text style={[styles.calBlocTexte, { color: COULEURS.surAccent }]} numberOfLines={1}>{r.kcal}</Text>
+              </View>
+            ))}
+          </Pressable>
+        ))}
+      </View>
+    </View>
+  );
+}
+
+/** Vue Jour : le bilan de la journee et ses repas sur une frise horaire. */
+function VueJour({ date, e, accent }) {
+  if (!e || e.type === "vide") {
+    return (
+      <View style={styles.journalJour}>
+        <Text style={styles.journalDetail}>
+          {e?.poids != null ? `Pas de repas enregistré · ⚖️ ${e.poids} kg` : e ? "Pas de suivi ce jour-là." : "Hors de la période du journal."}
+        </Text>
+      </View>
+    );
+  }
+  const v = e.verdict ? VERDICTS[e.verdict] : null;
+  const part = e.budget > 0 ? Math.min(1, e.consomme / e.budget) : 0;
+  const repas = [...e.repas].sort((a, b) => String(a.heure).localeCompare(String(b.heure)));
+  return (
+    <View>
+      <View style={styles.journalJour}>
+        <View style={styles.journalLigneHaut}>
+          <Text style={styles.journalKcal}>
+            {e.consomme} <Text style={styles.journalDetail}>/ {e.budget} kcal</Text>
+          </Text>
+          <Text style={[styles.journalVerdict, { color: v ? v.couleur() : COULEURS.doux }]}>{v ? v.libelle : "En cours"}</Text>
+        </View>
+        <View style={styles.journalBarreFond}>
+          <View style={[styles.journalBarre, { width: `${Math.round(part * 100)}%` }, e.verdict === "dessus" && { backgroundColor: COULEURS.rouge }]} />
+        </View>
+        <Text style={styles.journalDetail}>
+          objectif {e.objectif}
+          {e.sport ? ` · sport +${e.sport}` : ""}
+          {e.poids != null ? ` · ⚖️ ${e.poids} kg` : ""}
+        </Text>
+      </View>
+
+      <Text style={[styles.champLabel, { marginTop: 18 }]}>Repas</Text>
+      {repas.length ? (
+        repas.map((r, i) => (
+          <View key={i} style={styles.calRepasLigne}>
+            <Text style={styles.calRepasHeure}>{r.heure}</Text>
+            <View style={[styles.calRepasBloc, { borderLeftColor: accent }]}>
+              <Text style={styles.journalRepasLigne}>{r.plat}</Text>
+              <Text style={styles.journalDetail}>{r.kcal} kcal</Text>
+            </View>
+          </View>
+        ))
+      ) : (
+        <Text style={styles.journalDetail}>
+          {e.consomme > 0 ? "Détail des repas non disponible pour ce jour." : "Aucun repas ajouté pour l'instant."}
+        </Text>
+      )}
+    </View>
   );
 }
 
@@ -2277,8 +2511,42 @@ function creerStyles() {
   },
   barreCol: { flex: 1, alignItems: "center", justifyContent: "flex-end" },
   barreCal: { width: "70%", borderRadius: 3, minHeight: 2 },
+  // --- Calendrier du journal ---
+  calBloc: { marginTop: 16 },
+  calEntete: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginBottom: 10 },
+  calTitre: { fontSize: 18, fontWeight: "800", color: COULEURS.texte, textAlign: "center", flex: 1 },
+  calFleche: { fontSize: 30, fontWeight: "300", color: COULEURS.accent, paddingHorizontal: 12, lineHeight: 34 },
+  calFlecheInactive: { opacity: 0.2 },
+  calSegments: { flexDirection: "row", backgroundColor: COULEURS.piste, borderRadius: 10, padding: 3 },
+  calSegment: { flex: 1, paddingVertical: 7, borderRadius: 8 },
+  calSegmentTexte: { textAlign: "center", fontSize: 13, fontWeight: "600", color: COULEURS.doux },
+  calAide: { flexDirection: "row", justifyContent: "center", gap: 12, marginTop: 6, marginBottom: 10 },
+  calLigne: { flexDirection: "row" },
+  calJourSemaine: { flex: 1, textAlign: "center", fontSize: 11, fontWeight: "700", color: COULEURS.doux, marginBottom: 4 },
+  calCase: { flex: 1, height: 64, alignItems: "center", paddingTop: 4, borderTopWidth: 1, borderTopColor: COULEURS.bord },
+  calNumBoite: { width: 28, height: 28, borderRadius: 14, alignItems: "center", justifyContent: "center" },
+  calNum: { fontSize: 15, fontWeight: "600", color: COULEURS.texte },
+  calPastille: { width: 7, height: 7, borderRadius: 4, marginTop: 3 },
+  calKcal: { fontSize: 9, color: COULEURS.doux, marginTop: 2 },
+  calLegende: { flexDirection: "row", justifyContent: "center", gap: 14, marginTop: 10 },
+  calLegendeTexte: { fontSize: 11, fontWeight: "600" },
+  calAnnee: { flexDirection: "row", flexWrap: "wrap", justifyContent: "space-between", rowGap: 14 },
+  calMiniMois: { width: "31%" },
+  calMiniTitre: { fontSize: 13, fontWeight: "800", color: COULEURS.texte, marginBottom: 4 },
+  calMiniCase: { flex: 1, aspectRatio: 1, alignItems: "center", justifyContent: "center", borderRadius: 20 },
+  calMiniAujourdhui: { borderWidth: 1.5, borderColor: COULEURS.accent },
+  calMiniNum: { fontSize: 8, color: COULEURS.texte },
+  calGouttiere: { width: 28 },
+  calColEntete: { flex: 1, alignItems: "center", paddingBottom: 4 },
+  calColonne: { flex: 1, borderLeftWidth: 1, borderLeftColor: COULEURS.bord },
+  calTrait: { position: "absolute", left: 0, right: 0, height: 1, backgroundColor: COULEURS.bord },
+  calHeure: { position: "absolute", left: 0, fontSize: 9, color: COULEURS.doux },
+  calBlocRepas: { position: "absolute", left: 2, right: 2, height: 26, borderRadius: 6, justifyContent: "center" },
+  calBlocTexte: { fontSize: 9, fontWeight: "700", textAlign: "center" },
+  calRepasLigne: { flexDirection: "row", alignItems: "stretch", marginTop: 8 },
+  calRepasHeure: { width: 48, fontSize: 13, fontWeight: "700", color: COULEURS.doux, paddingTop: 10 },
+  calRepasBloc: { flex: 1, backgroundColor: COULEURS.carte, borderRadius: 10, padding: 10, borderLeftWidth: 4, borderWidth: 1, borderColor: COULEURS.bord },
   // --- Journal ---
-  journalResume: { flexDirection: "row", gap: 8, paddingVertical: 14 },
   journalJour: {
     backgroundColor: COULEURS.carte,
     borderRadius: 14,
@@ -2296,7 +2564,6 @@ function creerStyles() {
   journalBarre: { height: 6, borderRadius: 3, backgroundColor: COULEURS.accent },
   journalRepas: { marginTop: 10, paddingTop: 8, borderTopWidth: 1, borderTopColor: COULEURS.bord, gap: 4 },
   journalRepasLigne: { fontSize: 13, color: COULEURS.texte },
-  journalTrou: { fontSize: 12, color: COULEURS.doux, textAlign: "center", marginTop: 12, fontStyle: "italic" },
   barreJour: { fontSize: 9, color: COULEURS.doux, marginTop: 4 },
 });
 }

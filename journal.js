@@ -160,3 +160,87 @@ export function resumeJournal(jours) {
     debut: jours.length ? jours[jours.length - 1].date : null,
   };
 }
+
+// --- Calendrier (vues Jour / Semaine / Mois / Annee) ------------------------------
+
+export const NIVEAUX_CALENDRIER = ["annee", "mois", "semaine", "jour"]; // du plus large au plus fin
+export const JOURS_COURTS = ["L", "M", "M", "J", "V", "S", "D"]; // semaine commencant lundi
+const MOIS_COURTS = ["janv.", "févr.", "mars", "avr.", "mai", "juin", "juil.", "août", "sept.", "oct.", "nov.", "déc."];
+
+/** Date AAAA-MM-JJ decalee de n jours. */
+export function ajouterJours(s, n) {
+  const d = versDate(s);
+  d.setDate(d.getDate() + n);
+  return versTexte(d);
+}
+
+/** Date decalee de n mois (jour ramene a la fin du mois si besoin : 31 -> 30). */
+export function ajouterMois(s, n) {
+  const d = versDate(s);
+  const jour = d.getDate();
+  const cible = new Date(d.getFullYear(), d.getMonth() + n, 1);
+  const dernier = new Date(cible.getFullYear(), cible.getMonth() + 1, 0).getDate();
+  cible.setDate(Math.min(jour, dernier));
+  return versTexte(cible);
+}
+
+/** Lundi de la semaine d'une date. */
+export function lundiDe(s) {
+  const d = versDate(s);
+  d.setDate(d.getDate() - ((d.getDay() + 6) % 7));
+  return versTexte(d);
+}
+
+/** Les 7 dates de la semaine (lundi -> dimanche) contenant s. */
+export function semaineDe(s) {
+  const lundi = lundiDe(s);
+  return Array.from({ length: 7 }, (_, i) => ajouterJours(lundi, i));
+}
+
+/**
+ * Grille d'un mois (mois de 0 a 11) : semaines de 7 cases, lundi en premier ;
+ * null pour les cases hors du mois.
+ */
+export function grilleMois(annee, mois) {
+  const premier = new Date(annee, mois, 1);
+  const nbJours = new Date(annee, mois + 1, 0).getDate();
+  const decalage = (premier.getDay() + 6) % 7;
+  const cases = Array(decalage).fill(null);
+  for (let j = 1; j <= nbJours; j++) cases.push(versTexte(new Date(annee, mois, j)));
+  while (cases.length % 7) cases.push(null);
+  const semaines = [];
+  for (let i = 0; i < cases.length; i += 7) semaines.push(cases.slice(i, i + 7));
+  return semaines;
+}
+
+/** Titre de la periode affichee, selon le niveau de zoom. */
+export function titrePeriode(niveau, s) {
+  const d = versDate(s);
+  if (niveau === "annee") return String(d.getFullYear());
+  if (niveau === "mois") return `${MOIS[d.getMonth()].charAt(0).toUpperCase()}${MOIS[d.getMonth()].slice(1)} ${d.getFullYear()}`;
+  if (niveau === "semaine") {
+    const [l, dim] = [versDate(lundiDe(s)), versDate(ajouterJours(lundiDe(s), 6))];
+    return `${l.getDate()} ${MOIS_COURTS[l.getMonth()]} – ${dim.getDate()} ${MOIS_COURTS[dim.getMonth()]} ${dim.getFullYear()}`;
+  }
+  const t = dateLisible(s);
+  return `${t.charAt(0).toUpperCase()}${t.slice(1)} ${d.getFullYear()}`;
+}
+
+/** Nom du mois (0..11), avec majuscule. */
+export function nomMois(mois) {
+  return MOIS[mois].charAt(0).toUpperCase() + MOIS[mois].slice(1);
+}
+
+/** Periode suivante (sens = +1) ou precedente (-1) au niveau donne. */
+export function decalerPeriode(niveau, s, sens) {
+  if (niveau === "jour") return ajouterJours(s, sens);
+  if (niveau === "semaine") return ajouterJours(s, 7 * sens);
+  if (niveau === "mois") return ajouterMois(s, sens);
+  return ajouterMois(s, 12 * sens);
+}
+
+/** Niveau voisin : +1 = zoom avant (vers le jour), -1 = zoom arriere (vers l'annee). */
+export function niveauVoisin(niveau, sens) {
+  const i = NIVEAUX_CALENDRIER.indexOf(niveau);
+  return NIVEAUX_CALENDRIER[Math.max(0, Math.min(NIVEAUX_CALENDRIER.length - 1, i + sens))];
+}
