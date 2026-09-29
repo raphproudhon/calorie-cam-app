@@ -36,9 +36,9 @@ import * as ImagePicker from "expo-image-picker";
 import { CameraView, useCameraPermissions } from "expo-camera";
 import Svg, { Polyline, Circle, Line as SvgLine } from "react-native-svg";
 
-import { analyserPhoto } from "./analyse";
-import { produitParCodeBarres, analyseDepuisProduit, alimentDepuisProduit } from "./off";
-import { calculer, totaliser, rechercher, NB_ALIMENTS, SOURCE } from "./ciqual";
+import { analyserPhoto, alimentsProches } from "./analyse";
+import { produitParCodeBarres, analyseDepuisProduit, alimentDepuisProduit, chercherProduits } from "./off";
+import { calculer, totaliser, rechercher, rechercherApprochant, correspondExacte, couverture, NB_ALIMENTS, SOURCE } from "./ciqual";
 import { ACTIVITES, RYTHMES, calculerObjectif, bilanJournalier } from "./besoins";
 import { estDisponible as santeDisponible, demanderAcces, depenseDuJour } from "./health";
 import { chargerEtat, sauvegarderEtat, dateDuJour } from "./stockage";
@@ -823,15 +823,86 @@ const AJOUT_MANUEL = { nom: "Ajouter un aliment", candidates: [], fiche: null };
 
 function ChoixFiche({ visible, aliment, onChoisir, onFermer }) {
   const [recherche, setRecherche] = useState("");
+  const q = recherche.trim();
 
-  const liste = useMemo(() => {
-    if (!aliment) return [];
+  // Ciqual d'abord (local, instantane). Si l'aliment exact n'y est pas (une
+  // marque, une faute de frappe...), on propose le plus proche.
+  const { liste, exacte } = useMemo(() => {
+    if (!aliment) return { liste: [], exacte: true };
     // Tant que l'utilisateur n'a rien tape, on montre les candidates deja
     // calculees ; des qu'il tape, on cherche dans toute la table.
-    return recherche.trim().length >= 2
-      ? rechercher(recherche, 25)
-      : aliment.candidates;
-  }, [aliment, recherche]);
+    if (q.length < 2) return { liste: aliment.candidates, exacte: true };
+    const trouves = rechercher(q, 25);
+    if (trouves.length && correspondExacte(q, trouves[0])) return { liste: trouves, exacte: true };
+    // Recherche normale + tolerante aux fautes de frappe, classees par nombre
+    // de mots retrouves (a egalite, l'ordre de la recherche normale).
+    const vus = new Set();
+    const approchants = [...trouves, ...rechercherApprochant(q, 10)]
+      .filter((f) => !vus.has(f.code) && vus.add(f.code))
+      .map((f, i) => ({ f, i, c: couverture(q, f) }))
+      .sort((a, b) => b.c - a.c || a.i - b.i)
+      .map((x) => x.f);
+    return { liste: approchants.slice(0, 15), exacte: false };
+  }, [aliment, q]);
+
+  // Pas d'aliment exact : produits de marque (Open Food Facts) et aliment
+  // generique le plus proche selon l'IA. En reseau, donc apres une courte
+  // pause de frappe, et gardes en memoire (OFF limite le nombre de recherches).
+  const [marques, setMarques] = useState(null); // null = pas cherche, "..." = en cours, [] = rien
+  const [proches, setProches] = useState(null);
+  const cache = useRef(new Map());
+  useEffect(() => {
+    setMarques(null);
+    setProches(null);
+    if (exacte || q.length < 3) return;
+    let annule = false;
+    const lancer = (cle, promesse, poser) => {
+      const k = cle + ":" + q.toLowerCase();
+      if (cache.current.has(k)) { poser(cache.current.get(k)); return; }
+      poser("...");
+      promesse()
+        .then((r) => { cache.current.set(k, r); if (!annule) poser(r); })
+        .catch(() => { if (!annule) poser([]); });
+    };
+    const t = setTimeout(() => {
+      lancer("off", () => chercherProduits(q), setMarques);
+      if (fournisseursDisponibles().length) lancer("ia", () => alimentsProches(q), setProches);
+    }, 800);
+    return () => { annule = true; clearTimeout(t); };
+  }, [q, exacte]);
+
+  const choisir = (f) => {
+    setRecherche("");
+    onChoisir(f);
+  };
+
+  const option = (f) => {
+    const actif = aliment?.fiche?.code === f.code;
+    return (
+      <Pressable key={f.code} style={[styles.option, actif && styles.optionActive]} onPress={() => choisir(f)}>
+        <Text style={styles.optionNom}>{f.nom}</Text>
+        <Text style={styles.optionMeta}>
+          {f.kcal} kcal/100 g · P {f.prot ?? "?"} · G {f.gluc ?? "?"} · L{" "}
+          {f.lip ?? "?"}
+          {f.groupe ? ` · ${f.groupe}` : ""}
+          {f.quantite ? ` · ${f.quantite}` : ""}
+        </Text>
+      </Pressable>
+    );
+  };
+
+  const section = (titre, valeur, vide) => (
+    <>
+      <Text style={styles.choixSection}>{titre}</Text>
+      {valeur === "..." ? (
+        <ActivityIndicator style={{ marginVertical: 12 }} color={COULEURS.accent} />
+      ) : valeur.length ? (
+        valeur.map(option)
+      ) : (
+        <Text style={styles.vide}>{vide}</Text>
+      )}
+    </>
+  );
 
   return (
     <Modal visible={visible} animationType="slide" onRequestClose={onFermer}>
@@ -849,39 +920,29 @@ function ChoixFiche({ visible, aliment, onChoisir, onFermer }) {
           style={styles.champRecherche}
           value={recherche}
           onChangeText={setRecherche}
-          placeholder="Chercher un aliment dans la table Ciqual…"
+          placeholder="Chercher un aliment ou un produit…"
           placeholderTextColor={COULEURS.doux}
           autoCorrect={false}
         />
 
-        <ScrollView>
-          {liste.length === 0 ? (
-            <Text style={styles.vide}>
-              {recherche.trim().length < 2
-                ? "Tapez le nom d'un aliment, avec sa cuisson (ex. « riz blanc cuit »)."
-                : "Aucun aliment trouvé."}
-            </Text>
+        <ScrollView keyboardShouldPersistTaps="handled">
+          {exacte ? (
+            liste.length === 0 ? (
+              <Text style={styles.vide}>
+                {q.length < 2
+                  ? "Tapez le nom d'un aliment, avec sa cuisson (ex. « riz blanc cuit »), ou d'un produit (ex. « Kinder Bueno »)."
+                  : "Aucun aliment trouvé."}
+              </Text>
+            ) : (
+              liste.map(option)
+            )
           ) : (
-            liste.map((f) => {
-              const actif = aliment?.fiche?.code === f.code;
-              return (
-                <Pressable
-                  key={f.code}
-                  style={[styles.option, actif && styles.optionActive]}
-                  onPress={() => {
-                    setRecherche("");
-                    onChoisir(f);
-                  }}
-                >
-                  <Text style={styles.optionNom}>{f.nom}</Text>
-                  <Text style={styles.optionMeta}>
-                    {f.kcal} kcal/100 g · P {f.prot ?? "?"} · G {f.gluc ?? "?"} · L{" "}
-                    {f.lip ?? "?"}
-                    {f.groupe ? ` · ${f.groupe}` : ""}
-                  </Text>
-                </Pressable>
-              );
-            })
+            <>
+              <Text style={styles.vide}>« {q} » n'est pas tel quel dans la table Ciqual : voici le plus proche.</Text>
+              {marques !== null ? section("Produits de marque (Open Food Facts)", marques, "Aucun produit trouvé.") : null}
+              {proches !== null ? section("Le plus proche selon l'IA (Ciqual)", proches, "Pas de suggestion.") : null}
+              {section("Approchant dans la table Ciqual", liste, "Rien d'approchant.")}
+            </>
           )}
         </ScrollView>
       </View>
@@ -2271,6 +2332,7 @@ function BarresCalories({ historique }) {
 // Feuille de styles, recalculee a chaque changement de palette.
 function creerStyles() {
   return StyleSheet.create({
+    choixSection: { color: COULEURS.accent, fontSize: 13, fontWeight: "700", textTransform: "uppercase", marginTop: 16, marginBottom: 4, marginHorizontal: 16 },
     iaLigne: { flexDirection: "row", alignItems: "center", paddingVertical: 8, borderBottomWidth: 1, borderBottomColor: COULEURS.bord },
     iaNom: { color: COULEURS.texte, fontSize: 16, fontWeight: "600" },
     iaRetirer: { color: COULEURS.rouge, fontSize: 14, paddingLeft: 12 },

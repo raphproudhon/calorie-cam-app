@@ -210,6 +210,73 @@ export function rechercher(requete, limite = 8) {
   return resultats.slice(0, limite).map((r) => r.aliment);
 }
 
+/**
+ * true si la fiche contient TOUS les mots demandes (forme exacte, racine ou
+ * debut de mot) : la recherche a trouve l'aliment lui-meme, pas un voisin.
+ */
+export function correspondExacte(requete, aliment) {
+  const mots = motsCles(requete || "");
+  if (!aliment || mots.length === 0) return false;
+  const cibles = motsCles(aliment.nom);
+  return mots.every((m) =>
+    cibles.some((c) => c.brut === m.brut || c.racine === m.racine ||
+      c.racine.startsWith(m.racine) || m.racine.startsWith(c.racine))
+  );
+}
+
+/** Distance d'edition (Levenshtein) entre deux mots courts. */
+function distance(a, b) {
+  if (Math.abs(a.length - b.length) > 2) return 3;
+  let prec = Array.from({ length: b.length + 1 }, (_, j) => j);
+  for (let i = 1; i <= a.length; i++) {
+    const cour = [i];
+    for (let j = 1; j <= b.length; j++) {
+      cour[j] = Math.min(prec[j] + 1, cour[j - 1] + 1, prec[j - 1] + (a[i - 1] === b[j - 1] ? 0 : 1));
+    }
+    prec = cour;
+  }
+  return prec[b.length];
+}
+
+/**
+ * Recherche tolerante aux fautes de frappe ("choclat", "yaourth") : un mot
+ * est retrouve s'il differe d'une lettre (deux pour les mots longs). Sert a la
+ * recherche manuelle quand rechercher() ne trouve pas l'aliment exact ; la
+ * recherche de l'analyse photo, elle, reste rechercher() tel quel.
+ */
+export function rechercherApprochant(requete, limite = 10) {
+  const mots = motsCles(requete || "").filter((m) => m.brut.length >= 4);
+  if (mots.length === 0) return [];
+  const resultats = [];
+  for (const entree of INDEX) {
+    let total = 0;
+    for (const mot of mots) {
+      const tolere = mot.brut.length >= 7 ? 2 : 1;
+      let meilleur = 0;
+      entree.mots.forEach((cible, i) => {
+        if (cible.brut.length < 3) return;
+        const d = Math.min(distance(mot.brut, cible.brut), distance(mot.racine, cible.racine));
+        if (d <= tolere) meilleur = Math.max(meilleur, (tolere + 1 - d) / (1 + i * 0.35));
+      });
+      total += meilleur;
+    }
+    if (total > 0) resultats.push({ aliment: entree.aliment, score: total / (1 + entree.mots.length * 0.05) });
+  }
+  resultats.sort((a, b) => b.score - a.score);
+  return resultats.slice(0, limite).map((r) => r.aliment);
+}
+
+/** Nombre de mots demandes presents dans la fiche, fautes de frappe tolerees. */
+export function couverture(requete, aliment) {
+  const cibles = motsCles(aliment?.nom || "");
+  return motsCles(requete || "").filter((m) =>
+    cibles.some((c) => c.brut === m.brut || c.racine === m.racine ||
+      c.racine.startsWith(m.racine) || m.racine.startsWith(c.racine) ||
+      (m.brut.length >= 4 && c.brut.length >= 3 &&
+        distance(m.brut, c.brut) <= (m.brut.length >= 7 ? 2 : 1)))
+  ).length;
+}
+
 /** Recupere une fiche par son code CIQUAL. */
 export function parCode(code) {
   return PAR_CODE.get(Number(code)) || null;

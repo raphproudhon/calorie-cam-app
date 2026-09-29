@@ -28,7 +28,11 @@ export async function produitParCodeBarres(code) {
   const data = await rep.json();
   if (data.status !== 1 || !data.product) return null;
 
-  const p = data.product;
+  return ficheDepuisProduit(data.product, code);
+}
+
+/** Produit Open Food Facts -> fiche (valeurs pour 100 g), ou null sans calories. */
+function ficheDepuisProduit(p, code) {
   const n = p.nutriments || {};
   const nom = (p.product_name_fr || p.product_name || "Produit").trim();
   const marque = (p.brands || "").split(",")[0].trim();
@@ -54,6 +58,38 @@ export async function produitParCodeBarres(code) {
     source: "Open Food Facts",
     quantite: p.quantity || null, // ex "300 g" (informatif)
   };
+}
+
+/**
+ * Cherche des produits de marque par leur nom ("kinder bueno"), pour ce que la
+ * table Ciqual, faite d'aliments generiques, ne contient pas. Seuls les
+ * produits dont on connait les calories sont gardes.
+ */
+export async function chercherProduits(texte, limite = 8) {
+  const params = [
+    `search_terms=${encodeURIComponent(texte)}`,
+    "search_simple=1",
+    "action=process",
+    "json=1",
+    `page_size=${limite * 2}`,
+    "fields=code,product_name,product_name_fr,brands,nutriments,quantity",
+  ].join("&");
+  const rep = await fetch(`https://world.openfoodfacts.org/cgi/search.pl?${params}`, {
+    headers: { "User-Agent": "CalorieCam - perso - github.com/raphproudhon" },
+  });
+  if (!rep.ok) throw new Error(`Open Food Facts : erreur ${rep.status}`);
+  const data = await rep.json();
+  const vus = new Set();
+  return (data.products || [])
+    .map((p) => ficheDepuisProduit(p, p.code))
+    .filter((f) => {
+      if (f.kcal == null || !f.code) return false;
+      const cle = f.nom.toLowerCase();
+      if (vus.has(cle)) return false; // meme produit en plusieurs formats
+      vus.add(cle);
+      return true;
+    })
+    .slice(0, limite);
 }
 
 /** Un aliment (forme attendue par l'affichage) a partir d'une fiche produit. */

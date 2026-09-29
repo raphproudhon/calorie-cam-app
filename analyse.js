@@ -160,6 +160,39 @@ ${listes}`;
   return appelerIA({ texte: prompt, schema: SCHEMA_CHOIX, temperature: 0 });
 }
 
+// --- Aliment introuvable : le plus proche dans CIQUAL ------------------------
+
+const SCHEMA_PROCHE = {
+  type: "OBJECT",
+  properties: { requetes: { type: "ARRAY", items: { type: "STRING" } } },
+  required: ["requetes"],
+};
+
+/**
+ * Pour un aliment absent de CIQUAL (une marque, un plat regional...), demande
+ * a l'IA quel aliment GENERIQUE de la table s'en rapproche le plus, puis
+ * cherche ces termes dans la table. L'IA ne propose que des mots : les valeurs
+ * restent celles de CIQUAL.
+ */
+export async function alimentsProches(nom, limite = 8) {
+  const prompt = `L'utilisateur cherche "${nom}" dans la table CIQUAL de l'ANSES,
+qui ne contient que des aliments generiques (pas de marques ni de noms
+commerciaux). Donne 1 a 3 requetes de recherche courtes (2 a 5 mots, en
+francais) decrivant l'aliment generique le plus proche, du plus au moins
+ressemblant. Precise l'etat de cuisson quand il compte.
+Exemple : "Kinder Bueno" -> "barre chocolatee", "gaufrette chocolat noisette".
+Ne donne AUCUNE valeur nutritionnelle.`;
+  const rep = await appelerIA({ texte: prompt, schema: SCHEMA_PROCHE, temperature: 0 });
+  const vus = new Set();
+  const out = [];
+  for (const q of (rep.requetes || []).slice(0, 3)) {
+    for (const f of rechercher(q, 4)) {
+      if (!vus.has(f.code)) { vus.add(f.code); out.push(f); }
+    }
+  }
+  return out.slice(0, limite);
+}
+
 // --- Orchestration ---------------------------------------------------------
 
 /**

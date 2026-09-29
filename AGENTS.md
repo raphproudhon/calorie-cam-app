@@ -55,7 +55,11 @@ explicitement.
 ## Structure de l'app
 
 Quatre onglets — **Photo** (analyse d'un plat par photo, **scan de
-code-barres** ou **recherche manuelle** d'un aliment dans Ciqual — sans IA), **Progression** (niveau/XP/badges + courbe de poids + calories),
+code-barres** ou **recherche manuelle** d'un aliment dans Ciqual — sans IA ;
+si l'aliment exact n'y est pas, la recherche propose les produits de marque
+d'Open Food Facts, l'aliment générique le plus proche selon l'IA
+(`alimentsProches` dans `analyse.js` : l'IA ne donne que des mots, les valeurs
+restent Ciqual) et les fiches approchantes), **Progression** (niveau/XP/badges + courbe de poids + calories),
 **Bilan** (calories restantes du jour), **Journal** (calendrier Année/Mois/Semaine/Jour de tous les jours depuis le
 premier lancement, pincer pour zoomer, détail des repas). Onboarding obligatoire au 1er lancement ;
 objectif réglable ensuite via la **roue crantée** (menu Paramètres, haut gauche).
@@ -72,8 +76,8 @@ passent dans le même affichage/bilan que les aliments d'une photo.
 | `App.js` | les 4 onglets, l'onboarding, les paramètres |
 | `analyse.js` | passe 1 (vision) et passe 2 (choix de la fiche Ciqual) : prompts et schémas |
 | `ia.js` | reconnaissance d'une clé collée + appel à l'IA choisie (Gemini / Claude / ChatGPT / Mistral), bascule sur une autre si surcharge |
-| `ciqual.js` | recherche floue dans la table + calcul nutritionnel |
-| `off.js` | scan de code-barres → produit **Open Food Facts** mis à la forme d'une fiche (compatible `calculer()`) |
+| `ciqual.js` | recherche dans la table (`rechercher`, utilisée par l'analyse photo — ne pas en changer le classement à la légère) + recherche tolérante aux fautes pour la saisie manuelle (`rechercherApprochant`, `couverture`, `correspondExacte`) + calcul nutritionnel |
+| `off.js` | **Open Food Facts** : scan de code-barres et recherche de produits de marque par nom (`chercherProduits`), mis à la forme d'une fiche (compatible `calculer()`) |
 | `besoins.js` | BMR/objectif calorique + bilan du jour, garde-fous de sécurité |
 | `health.js` | lecture de la dépense via Apple Santé (HealthKit) |
 | `stockage.js` | persistance locale (AsyncStorage) + bascule de journée à minuit |
