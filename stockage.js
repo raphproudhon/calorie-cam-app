@@ -45,7 +45,6 @@ function etatParDefaut() {
     historique: [],
     poids: [],
     perso: null,
-    stylePerso: "pixel", // humain : "pixel" | "realiste" (Parametres)
     jeu: jeuParDefaut(),
   };
 }

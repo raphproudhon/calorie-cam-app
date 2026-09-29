@@ -1,6 +1,5 @@
 // FICHIER GENERE par tools/build-perso.js — ne pas modifier a la main.
 // SPRITES[perso][etape 0..19][direction 0..7] : image 512 x 512 du perso
-// (null : etape pas encore dessinee dans ce style, voir humain-realiste).
 // Directions : 0 = face, puis on tourne (sud-est, est, nord-est, dos, ...).
 
 export const SPRITES = {
@@ -48,28 +47,6 @@ export const SPRITES = {
     [require("./assets/perso/chat/rot/19/0.png"), require("./assets/perso/chat/rot/19/1.png"), require("./assets/perso/chat/rot/19/2.png"), require("./assets/perso/chat/rot/19/3.png"), require("./assets/perso/chat/rot/19/4.png"), require("./assets/perso/chat/rot/19/5.png"), require("./assets/perso/chat/rot/19/6.png"), require("./assets/perso/chat/rot/19/7.png")],
     [require("./assets/perso/chat/rot/20/0.png"), require("./assets/perso/chat/rot/20/1.png"), require("./assets/perso/chat/rot/20/2.png"), require("./assets/perso/chat/rot/20/3.png"), require("./assets/perso/chat/rot/20/4.png"), require("./assets/perso/chat/rot/20/5.png"), require("./assets/perso/chat/rot/20/6.png"), require("./assets/perso/chat/rot/20/7.png")],
   ],
-  "humain-realiste": [
-    [require("./assets/perso/humain-realiste/rot/1/0.png"), require("./assets/perso/humain-realiste/rot/1/1.png"), require("./assets/perso/humain-realiste/rot/1/2.png"), require("./assets/perso/humain-realiste/rot/1/3.png"), require("./assets/perso/humain-realiste/rot/1/4.png"), require("./assets/perso/humain-realiste/rot/1/5.png"), require("./assets/perso/humain-realiste/rot/1/6.png"), require("./assets/perso/humain-realiste/rot/1/7.png")],
-    null,
-    null,
-    null,
-    null,
-    null,
-    null,
-    null,
-    null,
-    null,
-    null,
-    null,
-    null,
-    null,
-    null,
-    null,
-    null,
-    null,
-    null,
-    null,
-  ],
 };
 
 // ANIMS[perso][etape 0..19][nom] : planche de l'animation vue de face
@@ -98,28 +75,6 @@ export const ANIMS = {
     {  },
   ],
   "chat": [
-    {  },
-    {  },
-    {  },
-    {  },
-    {  },
-    {  },
-    {  },
-    {  },
-    {  },
-    {  },
-    {  },
-    {  },
-    {  },
-    {  },
-    {  },
-    {  },
-    {  },
-    {  },
-    {  },
-    {  },
-  ],
-  "humain-realiste": [
     {  },
     {  },
     {  },

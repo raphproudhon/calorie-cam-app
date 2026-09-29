@@ -45,15 +45,9 @@ const NB_ETAPES = 20;
 const NB_DIRECTIONS = 8;
 const COLONNES = 4;
 const ANIMATIONS = ["idle", "content", "levelup", "fatigue", "miam"];
-// humain-realiste : le meme Necromancien dans un style realiste, au choix de
-// l'utilisateur (Parametres). Facultatif : une etape sans image retombe sur
-// le style pixel. Canevas plus grand (un perso realiste a besoin de pixels).
 const PERSOS = [
   { id: "humain", prefixe: "h", canevas: CANEVAS },
   { id: "chat", prefixe: "c", canevas: CANEVAS },
-  // lisse : images non pixel (realistes), agrandies en lissant plutot qu'au
-  // plus proche voisin. Etapes decoupees par tools/decouper-planche.js.
-  { id: "humain-realiste", prefixe: "r", canevas: 256, facultatif: true, lisse: true },
 ];
 const TAILLE_SORTIE = CANEVAS * ECHELLE; // 512 px, pour tous les persos
 
@@ -133,8 +127,7 @@ async function planche(source, destination, CANEVAS) {
 async function main() {
   const lignes = [];
   const lignesAnims = [];
-  for (const { id, prefixe, canevas: CANEVAS, facultatif, lisse } of PERSOS) {
-    const MODE = lisse ? Jimp.RESIZE_BICUBIC : Jimp.RESIZE_NEAREST_NEIGHBOR;
+  for (const { id, prefixe, canevas: CANEVAS } of PERSOS) {
     const anims = [];
     for (let e = 1; e <= NB_ETAPES; e++) {
       const entrees = [];
@@ -153,10 +146,6 @@ async function main() {
     const etapes = [];
     for (let e = 1; e <= NB_ETAPES; e++) {
       const source = path.join(RACINE, "assets/perso", id, `${prefixe}${e}`);
-      if (facultatif && !fs.existsSync(source + ".gif") && !fs.existsSync(source)) {
-        etapes.push("    null,");
-        continue;
-      }
       const { images, largeur, hauteur } = await directionsEtape(source);
       if (images.length !== NB_DIRECTIONS) {
         throw new Error(`${source} : ${images.length} frames, 8 attendues`);
@@ -173,7 +162,7 @@ async function main() {
       for (let d = 0; d < NB_DIRECTIONS; d++) {
         const toile = new Jimp(CANEVAS, CANEVAS, 0x00000000);
         toile.composite(images[d], dx, dy);
-        toile.resize(TAILLE_SORTIE, TAILLE_SORTIE, MODE);
+        toile.resize(TAILLE_SORTIE, TAILLE_SORTIE, Jimp.RESIZE_NEAREST_NEIGHBOR);
         await toile.writeAsync(path.join(dossier, `${d}.png`));
         requires.push(`require("./assets/perso/${id}/rot/${e}/${d}.png")`);
       }
@@ -186,7 +175,6 @@ async function main() {
   const module =
     "// FICHIER GENERE par tools/build-perso.js — ne pas modifier a la main.\n" +
     "// SPRITES[perso][etape 0..19][direction 0..7] : image 512 x 512 du perso\n" +
-    "// (null : etape pas encore dessinee dans ce style, voir humain-realiste).\n" +
     "// Directions : 0 = face, puis on tourne (sud-est, est, nord-est, dos, ...).\n\n" +
     `export const SPRITES = {\n${lignes.join("\n")}\n};\n\n` +
     "// ANIMS[perso][etape 0..19][nom] : planche de l'animation vue de face\n" +
