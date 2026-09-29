@@ -41,6 +41,12 @@ export const ETAPES_TUTO = [
     texte: "Pour un produit emballé, scannez son code-barres. Vous pouvez en enchaîner plusieurs dans la même analyse.",
   },
   {
+    cible: "photo-recherche",
+    onglet: "photo",
+    titre: "Ou cherchez un aliment",
+    texte: "Pas besoin de photo pour un aliment simple : tapez son nom, choisissez-le dans la table officielle Ciqual et indiquez le poids. Ça marche même sans IA.",
+  },
+  {
     cible: null,
     onglet: "photo",
     titre: "Après l'analyse",

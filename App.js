@@ -402,6 +402,7 @@ function EcranPhoto({ onAjouterConsomme }) {
   const [editionFiche, setEditionFiche] = useState(null); // index de l'aliment en cours de correction
   const [ajoute, setAjoute] = useState(false); // ce plat a-t-il ete envoye au bilan ?
   const [scanOuvert, setScanOuvert] = useState(false);
+  const [rechercheOuverte, setRechercheOuverte] = useState(false); // ajout d'un aliment a la main
   const [scanMsg, setScanMsg] = useState(null); // banniere dans la camera : { texte, type }
   const [permCam, demanderPermCam] = useCameraPermissions();
   const scanEnCours = useRef(false); // onBarcodeScanned se declenche en rafale
@@ -507,6 +508,31 @@ function EcranPhoto({ onAjouterConsomme }) {
     });
   }
 
+  /**
+   * Ajoute a la main un aliment choisi dans la table Ciqual : sans IA ni
+   * code-barres, l'app reste utilisable pour un aliment simple.
+   */
+  function ajouterAlimentManuel(fiche) {
+    const aliment = {
+      nom: fiche.nom,
+      requete: "",
+      grammes: 100, // point de depart, l'utilisateur ajuste
+      grammesMin: 0,
+      grammesMax: 0,
+      baseEstimation: "",
+      confiance: "",
+      fiche,
+      candidates: [fiche],
+    };
+    setErreur(null);
+    setAnalyse((a) =>
+      a
+        ? { ...a, aliments: [...a.aliments, aliment] }
+        : { plat: "Mon repas", remarques: "", aliments: [aliment], id: Date.now() }
+    );
+    setAjoute(false); // le total a change
+  }
+
   /** Retire un aliment de l'analyse en cours. */
   function supprimerAliment(index) {
     setAnalyse((a) => {
@@ -554,6 +580,14 @@ function EcranPhoto({ onAjouterConsomme }) {
             <Text style={styles.boutonTexte}>Scanner un code-barres</Text>
           </TouchableOpacity>
         </View>
+        <View ref={cible("photo-recherche")}>
+          <TouchableOpacity
+            style={[styles.bouton, styles.boutonSecondaire]}
+            onPress={() => setRechercheOuverte(true)}
+          >
+            <Text style={styles.boutonTexte}>Chercher un aliment</Text>
+          </TouchableOpacity>
+        </View>
 
         {etape && (
           <View style={styles.centre}>
@@ -587,6 +621,14 @@ function EcranPhoto({ onAjouterConsomme }) {
             >
               <Text style={styles.boutonAjoutScanTexte}>
                 + Scanner un autre produit
+              </Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={styles.boutonAjoutScan}
+              onPress={() => setRechercheOuverte(true)}
+            >
+              <Text style={styles.boutonAjoutScanTexte}>
+                + Ajouter un aliment
               </Text>
             </TouchableOpacity>
 
@@ -646,6 +688,16 @@ function EcranPhoto({ onAjouterConsomme }) {
           setEditionFiche(null);
         }}
         onFermer={() => setEditionFiche(null)}
+      />
+
+      <ChoixFiche
+        visible={rechercheOuverte}
+        aliment={rechercheOuverte ? AJOUT_MANUEL : null}
+        onChoisir={(fiche) => {
+          ajouterAlimentManuel(fiche);
+          setRechercheOuverte(false);
+        }}
+        onFermer={() => setRechercheOuverte(false)}
       />
 
       <Modal
@@ -765,6 +817,10 @@ function LigneAliment({ aliment, portion, onGrammes, onOuvrirFiches, onSupprimer
  * Indispensable : meme avec le reranking, un aliment sur cinq environ merite
  * d'etre requalifie a la main (plats composes, preparations regionales…).
  */
+// Pseudo-aliment passe a ChoixFiche pour un ajout a la main : pas de candidates,
+// la liste se remplit des qu'on tape.
+const AJOUT_MANUEL = { nom: "Ajouter un aliment", candidates: [], fiche: null };
+
 function ChoixFiche({ visible, aliment, onChoisir, onFermer }) {
   const [recherche, setRecherche] = useState("");
 
@@ -800,7 +856,11 @@ function ChoixFiche({ visible, aliment, onChoisir, onFermer }) {
 
         <ScrollView>
           {liste.length === 0 ? (
-            <Text style={styles.vide}>Aucun aliment trouvé.</Text>
+            <Text style={styles.vide}>
+              {recherche.trim().length < 2
+                ? "Tapez le nom d'un aliment, avec sa cuisson (ex. « riz blanc cuit »)."
+                : "Aucun aliment trouvé."}
+            </Text>
           ) : (
             liste.map((f) => {
               const actif = aliment?.fiche?.code === f.code;

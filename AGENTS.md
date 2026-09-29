@@ -54,8 +54,8 @@ explicitement.
 
 ## Structure de l'app
 
-Quatre onglets — **Photo** (analyse d'un plat par photo **ou scan de
-code-barres**), **Progression** (niveau/XP/badges + courbe de poids + calories),
+Quatre onglets — **Photo** (analyse d'un plat par photo, **scan de
+code-barres** ou **recherche manuelle** d'un aliment dans Ciqual — sans IA), **Progression** (niveau/XP/badges + courbe de poids + calories),
 **Bilan** (calories restantes du jour), **Journal** (calendrier Année/Mois/Semaine/Jour de tous les jours depuis le
 premier lancement, pincer pour zoomer, détail des repas). Onboarding obligatoire au 1er lancement ;
 objectif réglable ensuite via la **roue crantée** (menu Paramètres, haut gauche).
@@ -80,7 +80,7 @@ passent dans le même affichage/bilan que les aliments d'une photo.
 | `jeu.js` | gamification : XP, niveaux, badges, étapes du perso (`PALIERS_PERSO`, `PERSOS`, `etapePersonnage`) + palette du thème par niveau |
 | `perso-sprites.js` | **généré** par `tools/build-perso.js` : table des sprites `SPRITES[perso][étape][direction]` |
 | `assets/perso/` | GIF PixelLab sources (`humain/h1..20.gif`, `chat/c1..20.gif`) + PNG générés dans `rot/` |
-| `tuto.js` | tutoriel du 1er lancement en « projecteur » (écran assombri sauf l'élément montré), 22 étapes sur toute l'app (`ETAPES_TUTO`) ; les vues s'enregistrent via `ref={cible("id")}`, les pages qui défilent via `useDefilTuto` ; une 2ᵉ instance dans la Modal des Paramètres ; `etat.tutoVu`, « Revoir le tutoriel » dans les Paramètres. **Nouvel élément d'interface → lui ajouter une étape.** |
+| `tuto.js` | tutoriel du 1er lancement en « projecteur » (écran assombri sauf l'élément montré), 23 étapes sur toute l'app (`ETAPES_TUTO`) ; les vues s'enregistrent via `ref={cible("id")}`, les pages qui défilent via `useDefilTuto` ; une 2ᵉ instance dans la Modal des Paramètres ; `etat.tutoVu`, « Revoir le tutoriel » dans les Paramètres. **Nouvel élément d'interface → lui ajouter une étape.** |
 | `journal.js` | onglet **Journal**, calendrier façon Apple (Année / Mois / Semaine / Jour, on pince pour zoomer ; grilles et navigation : `grilleMois`, `semaineDe`, `decalerPeriode`…) : tous les jours depuis `etat.debut` (1er lancement), verdict par jour via `jourReussi` (jamais de félicitations pour une sous-alimentation), repas de chaque jour (`jour.repas`, archivés à minuit) |
 | `lien.js` | lien entrant `caloriecam://sport?kcal=N` (raccourci iOS qui lit Apple Santé quand l'app sideloadée n'a pas HealthKit) → remplace le sport du jour |
 | `version.js` | numéro de version affiché dans les Paramètres (`local` ; réécrit par le workflow Expo Go) |
