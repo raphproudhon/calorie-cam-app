@@ -1,12 +1,13 @@
 // CalorieCam — onglets :
-//   - "Photo"       : photo d'un plat -> calories et macros (gemini.js/ciqual.js)
+//   - "Photo"       : photo d'un plat -> calories et macros (analyse.js/ia.js/ciqual.js)
 //   - "Progression" : courbe de poids + historique des calories jour par jour
 //   - "Bilan"       : calories restantes du jour (objectif + sport - consomme)
 // L'objectif se regle au premier lancement (onboarding), puis via la roue
 // crantee en haut a gauche (menu parametres).
 //
 // Repartition des roles (voir README) :
-//   - gemini.js   : l'IA identifie les aliments et estime les portions
+//   - analyse.js  : l'IA identifie les aliments et estime les portions
+//   - ia.js       : les IA interchangeables (Gemini, Claude), choisies dans les Parametres
 //   - ciqual.js   : la table officielle de l'ANSES fournit les valeurs nutritionnelles
 //   - besoins.js  : calcul du besoin calorique et de l'objectif, avec garde-fous
 //   - stockage.js : persistance locale (profil, historique, poids) + bascule de jour
@@ -35,13 +36,13 @@ import * as ImagePicker from "expo-image-picker";
 import { CameraView, useCameraPermissions } from "expo-camera";
 import Svg, { Polyline, Circle, Line as SvgLine } from "react-native-svg";
 
-import { analyserPhoto } from "./gemini";
+import { analyserPhoto } from "./analyse";
 import { produitParCodeBarres, analyseDepuisProduit, alimentDepuisProduit } from "./off";
 import { calculer, totaliser, rechercher, NB_ALIMENTS, SOURCE } from "./ciqual";
 import { ACTIVITES, RYTHMES, calculerObjectif, bilanJournalier } from "./besoins";
 import { estDisponible as santeDisponible, demanderAcces, depenseDuJour } from "./health";
 import { chargerEtat, sauvegarderEtat, dateDuJour } from "./stockage";
-import { chargerCle, definirCle, cleGemini, cleEmbarqueePresente } from "./cle";
+import { chargerCle, definirCle, cleDe, fournisseurActif, definirFournisseur, FOURNISSEURS, IDS_FOURNISSEURS } from "./cle";
 import {
   niveauDepuisXp,
   themePerso,
@@ -962,36 +963,53 @@ function FormulaireObjectif({ profilInitial, titre, sousTitre, libelleValider = 
 //  MENU PARAMETRES — roue crantee : objectif, poids, reset, Apple Sante
 // =========================================================================
 
-// Saisie de la cle API Gemini (version web publiee : le bundle n'en contient
-// aucune). La cle est persistee localement, jamais envoyee ailleurs qu'a Google.
-function CarteCleApi() {
+// Choix de l'IA vision (Gemini ou Claude) et saisie de sa cle. Les versions
+// publiees n'embarquent aucune cle : chacun colle la sienne, elle reste sur
+// l'appareil et n'est envoyee qu'a l'IA concernee.
+function CarteIA() {
+  const [choisie, setChoisie] = useState(fournisseurActif());
   const [saisie, setSaisie] = useState("");
   const [message, setMessage] = useState(null);
-  const configuree = cleGemini() !== "";
+  const f = FOURNISSEURS[choisie];
+  const configuree = cleDe(choisie) !== "";
+  const autres = IDS_FOURNISSEURS.filter((id) => id !== choisie && cleDe(id));
+
+  async function choisir(id) {
+    await definirFournisseur(id);
+    setChoisie(id);
+    setSaisie("");
+    setMessage(null);
+  }
 
   async function enregistrer() {
-    const cle = await definirCle(saisie);
+    const cle = await definirCle(choisie, saisie);
     setSaisie("");
-    setMessage(cle ? "Cle enregistree." : "Cle effacee.");
+    setMessage(cle ? "Clé enregistrée." : "Clé effacée.");
   }
 
   return (
     <View style={styles.carte}>
-      <Text style={styles.champLabel}>Cle API Gemini</Text>
-      <Text style={styles.objectifDetail}>
+      <Text style={styles.champLabel}>Intelligence artificielle</Text>
+      <Segment
+        options={IDS_FOURNISSEURS.map((id) => [id, FOURNISSEURS[id].nom])}
+        valeur={choisie}
+        onChange={choisir}
+      />
+      <Text style={[styles.objectifDetail, { marginTop: 10 }]}>
         {configuree
-          ? "Une cle est enregistree sur cet appareil."
-          : "Aucune cle : l'analyse photo est indisponible."}
+          ? `Une clé ${f.nom} est enregistrée sur cet appareil.`
+          : `Aucune clé ${f.nom} : collez-la ci-dessous.`}
+        {autres.length
+          ? ` Si ${f.nom} est surchargé, l'analyse passe sur ${autres.map((id) => FOURNISSEURS[id].nom).join(", ")}.`
+          : ""}
       </Text>
-      <Text style={styles.disclaimer}>
-        Cle gratuite sur aistudio.google.com/apikey. Elle reste sur cet appareil.
-      </Text>
+      <Text style={styles.disclaimer}>{f.aide} Elle reste sur cet appareil.</Text>
       <View style={[styles.champNombreBoite, { marginTop: 10 }]}>
         <TextInput
           style={styles.champNombreSaisie}
           value={saisie}
           onChangeText={setSaisie}
-          placeholder={configuree ? "Remplacer la cle" : "Coller la cle"}
+          placeholder={configuree ? `Remplacer la clé ${f.nom}` : `Coller la clé ${f.nom}`}
           placeholderTextColor={COULEURS.doux}
           autoCapitalize="none"
           autoCorrect={false}
@@ -1002,7 +1020,7 @@ function CarteCleApi() {
         style={[styles.bouton, styles.boutonSecondaire, { marginTop: 10 }]}
         onPress={enregistrer}
       >
-        <Text style={styles.boutonTexte}>Enregistrer la cle</Text>
+        <Text style={styles.boutonTexte}>Enregistrer la clé</Text>
       </TouchableOpacity>
       {message ? <Text style={styles.objectifDetail}>{message}</Text> : null}
     </View>
@@ -1166,14 +1184,10 @@ function MenuParametres({ visible, etat, onFermer, onModifierObjectif, onAjouter
               </View>
             ) : null}
 
-            {/* Cle API Gemini — utile seulement quand le build n'en embarque
-                pas (version web publiee) : chacun colle la sienne, elle reste
-                dans son navigateur. */}
-            {cleEmbarqueePresente() ? null : (
-              <View ref={cible("params-cle")}>
-                <CarteCleApi />
-              </View>
-            )}
+            {/* IA vision : choix (Gemini / Claude) et cle */}
+            <View ref={cible("params-cle")}>
+              <CarteIA />
+            </View>
 
             {/* Apple Sante */}
             <View style={styles.carte} ref={cible("params-sante")}>

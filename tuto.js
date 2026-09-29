@@ -173,9 +173,8 @@ export const ETAPES_TUTO = [
     cible: "params-cle",
     zone: "params",
     defil: "params",
-    facultative: true, // absente quand l'app embarque deja une cle
-    titre: "Clé API",
-    texte: "L'analyse photo a besoin d'une clé Gemini (gratuite). Collez-la ici : elle reste sur votre téléphone.",
+    titre: "Intelligence artificielle",
+    texte: "Choisissez l'IA qui analyse vos photos (Gemini, gratuite, ou Claude) et collez sa clé : elle reste sur votre téléphone. Avec deux clés, l'une prend le relais si l'autre est surchargée.",
   },
   {
     cible: "params-sante",

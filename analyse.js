@@ -1,6 +1,6 @@
-// Appels a l'IA vision de Google Gemini.
+// Analyse d'une photo de repas par l'IA vision (Gemini ou Claude, voir ia.js).
 //
-// Principe directeur : Gemini ne calcule PLUS les calories. Il fait ce qu'il
+// Principe directeur : l'IA ne calcule PLUS les calories. Il fait ce qu'il
 // sait faire (reconnaitre un aliment sur une photo, estimer un volume) et rien
 // d'autre. Les valeurs nutritionnelles viennent de CIQUAL (voir ciqual.js).
 //
@@ -12,10 +12,9 @@
 // parmi 2 298 (elle en inventerait), mais qu'elle choisit tres bien dans une
 // liste de 8.
 
-import { cleGemini } from "./cle";
+import { appelerIA } from "./ia";
 import { rechercher, parCode } from "./ciqual";
 
-const MODELE = "gemini-flash-latest";
 const NB_CANDIDATES = 8;
 
 // --- Passe 1 : vision ------------------------------------------------------
@@ -97,102 +96,14 @@ IMPORTANT : ne donne AUCUNE valeur nutritionnelle (ni calories, ni macros).
 Elles sont calculees ailleurs a partir d'une base officielle. Ton seul travail
 est d'identifier les aliments et d'estimer leurs masses.`;
 
-const pause = (ms) => new Promise((r) => setTimeout(r, ms));
-
-// Erreur transitoire cote Google (modele surcharge, quota momentane) : ca vaut
-// le coup de reessayer. Sinon (cle invalide, requete malformee), inutile.
-function estTransitoire(status, message) {
-  if (status === 429 || status === 500 || status === 503) return true;
-  const m = (message || "").toLowerCase();
-  return m.includes("overload") || m.includes("high demand") ||
-    m.includes("unavailable") || m.includes("try again") || m.includes("rate limit");
-}
-
-async function appelerGemini(corps) {
-  const cle = cleGemini();
-  if (!cle) {
-    throw new Error(
-      "Aucune cle API Gemini. Ouvrez les Parametres (roue crantee) et collez " +
-      "votre cle (https://aistudio.google.com/apikey)."
-    );
-  }
-
-  const url =
-    `https://generativelanguage.googleapis.com/v1beta/models/${MODELE}:generateContent`;
-
-  // La cle passe par l'en-tete x-goog-api-key, jamais par l'URL.
-  //
-  // Deux raisons. D'abord les clefs creees depuis 2025 dans AI Studio sont des
-  // "auth keys" (prefixe "AQ.") et sont refusees en parametre ?key= ; seul
-  // l'en-tete fonctionne. Ensuite une cle placee dans une URL se retrouve dans
-  // les journaux des serveurs et des proxys traverses.
-  //
-  // Le modele Gemini gratuit est souvent surcharge ("high demand") : on reessaie
-  // automatiquement quelques fois avec un delai croissant avant d'abandonner.
-  const MAX_ESSAIS = 4;
-  let derniere = null;
-
-  for (let essai = 1; essai <= MAX_ESSAIS; essai++) {
-    let reponse;
-    try {
-      reponse = await fetch(url, {
-        method: "POST",
-        headers: { "content-type": "application/json", "x-goog-api-key": cle },
-        body: JSON.stringify(corps),
-      });
-    } catch (e) {
-      // Erreur reseau : transitoire, on retente.
-      derniere = e.message;
-      if (essai < MAX_ESSAIS) { await pause(essai * 1200); continue; }
-      throw new Error("Reseau indisponible. Verifiez votre connexion.");
-    }
-
-    const data = await reponse.json().catch(() => ({}));
-
-    if (data.error) {
-      derniere = data.error.message || "Erreur API";
-      if (estTransitoire(reponse.status, derniere) && essai < MAX_ESSAIS) {
-        await pause(essai * 1500); // 1.5s, 3s, 4.5s
-        continue;
-      }
-      // Message clair pour le cas le plus frequent (surcharge).
-      if (estTransitoire(reponse.status, derniere)) {
-        throw new Error("Le service d'IA est surchargé. Réessayez dans un instant.");
-      }
-      throw new Error(derniere);
-    }
-
-    const parts = data?.candidates?.[0]?.content?.parts || [];
-    const texte = parts.map((p) => p.text).filter(Boolean).join("");
-    if (!texte) {
-      // Reponse vide : parfois transitoire aussi, on retente une fois.
-      derniere = "Reponse vide";
-      if (essai < MAX_ESSAIS) { await pause(essai * 1200); continue; }
-      throw new Error("Reponse vide de l'IA. Réessayez.");
-    }
-    return JSON.parse(texte);
-  }
-
-  throw new Error(derniere || "Échec de l'analyse. Réessayez.");
-}
-
 async function passeVision(base64) {
-  return appelerGemini({
-    contents: [
-      {
-        parts: [
-          { inline_data: { mime_type: "image/jpeg", data: base64 } },
-          { text: PROMPT_VISION },
-        ],
-      },
-    ],
-    generationConfig: {
-      // Temperature basse : on veut une estimation reproductible, pas de la
-      // creativite. Deux analyses de la meme photo doivent se ressembler.
-      temperature: 0.2,
-      response_mime_type: "application/json",
-      response_schema: SCHEMA_VISION,
-    },
+  return appelerIA({
+    image: base64,
+    texte: PROMPT_VISION,
+    schema: SCHEMA_VISION,
+    // Temperature basse : on veut une estimation reproductible, pas de la
+    // creativite. Deux analyses de la meme photo doivent se ressembler.
+    temperature: 0.2,
   });
 }
 
@@ -246,14 +157,7 @@ Si aucune candidate ne convient vraiment, prends quand meme la moins mauvaise.
 
 ${listes}`;
 
-  return appelerGemini({
-    contents: [{ parts: [{ text: prompt }] }],
-    generationConfig: {
-      temperature: 0,
-      response_mime_type: "application/json",
-      response_schema: SCHEMA_CHOIX,
-    },
-  });
+  return appelerIA({ texte: prompt, schema: SCHEMA_CHOIX, temperature: 0 });
 }
 
 // --- Orchestration ---------------------------------------------------------

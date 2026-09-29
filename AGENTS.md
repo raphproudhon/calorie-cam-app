@@ -21,12 +21,18 @@ Points clés :
   https://docs.expo.dev/versions/v57.0.0/ — `npx expo install --fix` a besoin
   d'api.expo.dev ; sans réseau, aligner à la main sur
   `node_modules/expo/bundledNativeModules.json`.
-- IA vision : **Google Gemini**, modèle `gemini-flash-latest`. Le code appelle
-  l'API REST directement (`fetch`) dans `gemini.js`.
-- La clé API est dans `secrets.js` (exclu de Git). Ne jamais la commiter, ne
-  jamais la remettre en clair dans le code. `cle.js` la résout à l'exécution :
-  clé saisie dans les Paramètres (persistée localement) sinon clé de
-  `secrets.js`. La version web publiée sur GitHub Pages n'embarque AUCUNE clé.
+- IA vision **interchangeable** (`ia.js`) : **Google Gemini** (`gemini-flash-latest`,
+  API REST en `fetch`) ou **Claude** (`claude-opus-5-5`, SDK `@anthropic-ai/sdk`,
+  sorties structurées + `fallbacks: "default"`). L'utilisateur choisit dans les
+  Paramètres ; si l'IA choisie est surchargée/injoignable et qu'une clé existe
+  pour l'autre, `appelerIA` bascule (jamais sur une clé refusée). Les schémas
+  sont écrits au format Gemini dans `analyse.js` et convertis pour Claude
+  (`versJsonSchema`). Nouvelle IA → une fonction dans `APPELS` + une entrée dans
+  `FOURNISSEURS` (`cle.js`).
+- Les clés API sont dans `secrets.js` (exclu de Git : `GEMINI_API_KEY`,
+  `ANTHROPIC_API_KEY`). Ne jamais les commiter, ne jamais les remettre en clair
+  dans le code. `cle.js` les résout à l'exécution : clé saisie dans les
+  Paramètres (persistée localement) sinon clé de `secrets.js`. La version web publiée sur GitHub Pages n'embarque AUCUNE clé.
 
 ## Règle d'architecture à ne pas casser
 
@@ -58,8 +64,9 @@ passent dans le même affichage/bilan que les aliments d'une photo.
 
 | Fichier | Rôle |
 |---|---|
-| `App.js` | les 3 onglets, l'onboarding, les paramètres |
-| `gemini.js` | passe 1 (vision) et passe 2 (choix de la fiche Ciqual) |
+| `App.js` | les 4 onglets, l'onboarding, les paramètres |
+| `analyse.js` | passe 1 (vision) et passe 2 (choix de la fiche Ciqual) : prompts et schémas |
+| `ia.js` | appel à l'IA choisie (Gemini / Claude), bascule sur l'autre si surcharge |
 | `ciqual.js` | recherche floue dans la table + calcul nutritionnel |
 | `off.js` | scan de code-barres → produit **Open Food Facts** mis à la forme d'une fiche (compatible `calculer()`) |
 | `besoins.js` | BMR/objectif calorique + bilan du jour, garde-fous de sécurité |
@@ -72,7 +79,7 @@ passent dans le même affichage/bilan que les aliments d'une photo.
 | `journal.js` | onglet **Journal**, calendrier façon Apple (Année / Mois / Semaine / Jour, on pince pour zoomer ; grilles et navigation : `grilleMois`, `semaineDe`, `decalerPeriode`…) : tous les jours depuis `etat.debut` (1er lancement), verdict par jour via `jourReussi` (jamais de félicitations pour une sous-alimentation), repas de chaque jour (`jour.repas`, archivés à minuit) |
 | `lien.js` | lien entrant `caloriecam://sport?kcal=N` (raccourci iOS qui lit Apple Santé quand l'app sideloadée n'a pas HealthKit) → remplace le sport du jour |
 | `version.js` | numéro de version affiché dans les Paramètres (`local` ; réécrit par le workflow Expo Go) |
-| `cle.js` | résolution de la clé API Gemini (saisie dans l'app ou `secrets.js`) |
+| `cle.js` | clés API par IA (saisies dans l'app ou `secrets.js`) + IA choisie |
 | `data/ciqual.json` | table réduite (235 Ko), **versionnée** — ne pas régénérer sans raison |
 | `tools/` | outils hors-app : `build-ciqual.js` (conversion de la table ANSES), `build-perso.js` (GIF PixelLab → sprites de l'app) |
 

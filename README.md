@@ -1,13 +1,13 @@
 # CalorieCam
 
 Prototype d'app mobile qui analyse une **photo de plat** et estime les
-**calories + macros** (protéines, glucides, lipides) via l'IA vision de Google
-Gemini.
+**calories + macros** (protéines, glucides, lipides) via une IA vision : Google
+Gemini ou Claude d'Anthropic, au choix dans les Paramètres.
 
 ## Ce que fait l'app
 
 1. On prend une photo d'un plat (ou on la choisit dans la galerie)
-2. Gemini identifie les aliments et **estime leurs portions en grammes**
+2. L'IA identifie les aliments et **estime leurs portions en grammes**
 3. Chaque aliment est rattaché à sa fiche de la table **Ciqual de l'ANSES**
 4. Les calories et macros sont calculées à partir de cette base officielle
 5. On peut **corriger le poids** de chaque aliment : tout se recalcule aussitôt
@@ -25,12 +25,12 @@ vérifier. Les deux métiers sont donc séparés :
 
 | Qui | Fait quoi |
 |---|---|
-| **Gemini** | identifie les aliments, estime les masses (vision) |
+| **L'IA** (Gemini ou Claude) | identifie les aliments, estime les masses (vision) |
 | **Ciqual (ANSES)** | fournit les valeurs pour 100 g (source de vérité) |
 | **L'app** | calcule `masse / 100 × valeurs Ciqual`, et laisse corriger la masse |
 
 Le rattachement aliment → fiche Ciqual se fait en deux temps : une recherche
-locale sort ~8 fiches candidates, puis un second appel Gemini (texte seul,
+locale sort ~8 fiches candidates, puis un second appel à l'IA (texte seul,
 rapide) choisit la bonne. Une recherche textuelle seule trouve la bonne fiche
 en 1ʳᵉ position dans 84 % des cas, mais elle est dans le top 8 dans 96 % des
 cas — d'où le choix de faire trancher le modèle dans une liste courte plutôt
@@ -68,7 +68,7 @@ attendant le build de développement, le sport peut être saisi à la main.
 |---|---|
 | Framework | **Expo (React Native)** — teste sur iPhone via l'app **Expo Go**, sans Mac |
 | Expo SDK | **57** (⚠️ doit être celui de l'Expo Go installé : sur iOS, seule la dernière version d'Expo Go existe) |
-| IA vision | **Google Gemini** — modèle `gemini-flash-latest` (niveau gratuit) |
+| IA vision | **Google Gemini** (`gemini-flash-latest`, niveau gratuit) ou **Claude** (`claude-opus-5-5`, payant, via `@anthropic-ai/sdk`) — choix dans les Paramètres ; si l'IA choisie est surchargée et qu'une clé existe pour l'autre, elle prend le relais |
 | Base nutritionnelle | **Ciqual 2020 (ANSES)** — 2 298 aliments, embarquée, hors-ligne |
 | Clé API | Dans `secrets.js` (exclu de Git) — voir `secrets.example.js` |
 
@@ -77,7 +77,8 @@ attendant le build de développement, le sport peut être saisi à la main.
 | Fichier | Rôle |
 |---|---|
 | `App.js` | l'écran : affichage et correction manuelle des portions |
-| `gemini.js` | les deux appels à l'IA (vision, puis choix de la fiche Ciqual) |
+| `analyse.js` | les deux demandes à l'IA (vision, puis choix de la fiche Ciqual) : prompts et schémas |
+| `ia.js` | comment les poser à chaque IA (Gemini en REST, Claude par son SDK) + bascule si surcharge |
 | `ciqual.js` | recherche dans la table et calcul nutritionnel |
 | `data/ciqual.json` | la table Ciqual réduite (235 Ko), versionnée dans Git |
 | `tools/build-ciqual.js` | régénère ce JSON depuis les fichiers officiels de l'ANSES |
@@ -108,7 +109,8 @@ notepad secrets.js
 ```
 
 Coller sa clé Gemini (gratuite : https://aistudio.google.com/apikey) dans
-`secrets.js`, enregistrer. Les clés récentes commencent par `AQ.` au lieu de
+`secrets.js`, enregistrer (et, facultatif, une clé Claude dans
+`ANTHROPIC_API_KEY`). Les clés Gemini récentes commencent par `AQ.` au lieu de
 `AIza` — les deux fonctionnent.
 
 Enfin, lancer le serveur :
@@ -145,7 +147,8 @@ Deux points importants :
 
 - **Aucune clé API n'est embarquée** dans le site publié — le bundle est public.
   Le workflow génère un `secrets.js` vide (copie du modèle) ; chaque visiteur
-  colle sa propre clé Gemini dans **Paramètres → Clé API Gemini**, où elle reste
+  colle sa propre clé (Gemini ou Claude) dans **Paramètres → Intelligence
+  artificielle**, où elle reste
   dans le stockage local de SON navigateur. Sans clé, tout marche sauf l'analyse
   photo.
 - Le site est servi sous `/calorie-cam-app/` : le workflow injecte
@@ -272,7 +275,7 @@ prompt ; une dispersion aléatoire ne se corrige que par la saisie manuelle.
 - **« Unable to resolve ./secrets »** → le fichier `secrets.js` n'existe pas sur
   cette machine. Le recréer depuis `secrets.example.js`.
 - **« model ... is no longer available »** → le nom du modèle Gemini a changé ;
-  mettre à jour la constante `MODELE` dans `gemini.js`.
+  mettre à jour la constante `MODELE_GEMINI` (ou `MODELE_CLAUDE`) dans `ia.js`.
 - **Fichiers `-<nom-machine>` qui apparaissent** (`secrets-ordiraph.js`) → ce
   sont des copies de conflit créées par OneDrive. Signe que le dossier est
   synchronisé : voir l'avertissement plus haut.
