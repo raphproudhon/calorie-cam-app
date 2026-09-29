@@ -298,6 +298,7 @@ export default function App() {
         onDevXp={(m) => setEtat((e) => ({ ...e, jeu: ajouterXp(e.jeu, m) }))}
         onResetHeros={() => setEtat((e) => ({ ...e, jeu: jeuParDefaut() }))}
         onDevPerso={() => setEtat((e) => ({ ...e, perso: e.perso === "chat" ? "humain" : "chat" }))}
+        onStylePerso={(stylePerso) => setEtat((e) => ({ ...e, stylePerso }))}
         onRevoirTuto={() => {
           setParamsOuverts(false);
           setOnglet("photo");
@@ -1181,7 +1182,7 @@ function CarteIA() {
   );
 }
 
-function MenuParametres({ visible, etat, onFermer, onModifierObjectif, onAjouterPoids, onResetJour, onDevXp, onResetHeros, onDevPerso, onRevoirTuto, tuto }) {
+function MenuParametres({ visible, etat, onFermer, onModifierObjectif, onAjouterPoids, onResetJour, onDevXp, onResetHeros, onDevPerso, onStylePerso, onRevoirTuto, tuto }) {
   const accent = useAccent();
   const cible = useCible();
   const defil = useDefilTuto("params");
@@ -1296,6 +1297,25 @@ function MenuParametres({ visible, etat, onFermer, onModifierObjectif, onAjouter
                 <Text style={styles.boutonTexte}>Remettre le jour à zéro</Text>
               </TouchableOpacity>
             </View>
+
+            {/* Style du heros (humain seulement) : pixel ou realiste */}
+            {etat.perso === "humain" ? (
+              <View style={styles.carte} ref={cible("params-style")}>
+                <Text style={styles.champLabel}>Style du héros</Text>
+                <Segment
+                  options={[["pixel", "Pixel"], ["realiste", "Réaliste"]]}
+                  valeur={etat.stylePerso || "pixel"}
+                  onChange={onStylePerso}
+                />
+                {etat.stylePerso === "realiste" ? (
+                  <Text style={styles.disclaimer}>
+                    {etapesRealistes() === 0
+                      ? "Le style réaliste arrive bientôt : en attendant, le héros reste en pixel."
+                      : `Style réaliste dessiné pour ${etapesRealistes()} étape(s) sur ${NB_ETAPES} ; les autres restent en pixel.`}
+                  </Text>
+                ) : null}
+              </View>
+            ) : null}
 
             {/* Tutoriel */}
             <View style={styles.carte} ref={cible("params-tuto")}>
@@ -2026,7 +2046,7 @@ function EcranProgression({ etat }) {
       <Text style={styles.sousTitre}>Votre poids et vos calories dans le temps</Text>
 
       {/* --- Personnage & niveau --- */}
-      <CarteHeros jeu={etat.jeu} perso={etat.perso} onGeste={onGestePerso} />
+      <CarteHeros jeu={etat.jeu} perso={etat.perso} style={etat.stylePerso} onGeste={onGestePerso} />
 
       {/* --- Courbe de poids --- */}
       <View style={styles.carte} ref={cible("prog-poids")}>
@@ -2070,14 +2090,30 @@ const SEUIL_DECISION = 10; // px parcourus avant de trancher
  * meme canevas pour toutes les etapes (le perso ne saute pas d'une etape a
  * l'autre) et pixels deja agrandis (pas de flou).
  */
-function AvatarPerso({ perso, etape, taille = 280, zoom = 1, tournable = true, onGeste }) {
+/** Nombre d'etapes deja dessinees dans le style realiste. */
+function etapesRealistes() {
+  return (SPRITES["humain-realiste"] || []).filter(Boolean).length;
+}
+
+/**
+ * Jeu d'images a afficher : le style realiste de l'humain s'il est choisi et
+ * dessine pour cette etape, sinon le style pixel (repli etape par etape).
+ */
+function jeuSprites(perso, style, idx) {
+  return perso === "humain" && style === "realiste" && SPRITES["humain-realiste"]?.[idx]
+    ? "humain-realiste"
+    : perso;
+}
+
+function AvatarPerso({ perso, style, etape, taille = 280, zoom = 1, tournable = true, onGeste }) {
   const idx = Math.max(0, Math.min(etape, NB_ETAPES - 1));
-  const frames = SPRITES[perso][idx];
+  const jeu = jeuSprites(perso, style, idx);
+  const frames = SPRITES[jeu][idx];
   const [direction, setDirection] = useState(0);
   // Animation d'attente, de face seulement (les 7 autres directions restent
   // des images fixes). Tant que le GIF « idle » de l'etape manque, le perso
   // respire en code : il monte et descend d'un pixel de l'art.
-  const idle = direction === 0 ? ANIMS[perso]?.[idx]?.idle : null;
+  const idle = direction === 0 ? ANIMS[jeu]?.[idx]?.idle : null;
   const [frame, setFrame] = useState(0);
   useEffect(() => {
     setFrame(0);
@@ -2199,7 +2235,7 @@ function ChoixPerso({ onChoisir }) {
 }
 
 /** Haut de Progression : le perso a meme l'ecran (niveau, XP, serie), puis la carte des badges. */
-function CarteHeros({ jeu, perso, onGeste }) {
+function CarteHeros({ jeu, perso, style, onGeste }) {
   const cible = useCible();
   // Perso en grand : 320 px, sans deborder sur les petits ecrans (marges 20).
   const { width: largeurEcran } = useWindowDimensions();
@@ -2218,7 +2254,7 @@ function CarteHeros({ jeu, perso, onGeste }) {
         {perso ? (
           <>
             <View ref={cible("perso")}>
-              <AvatarPerso perso={perso} etape={etape} onGeste={onGeste} taille={taillePerso} />
+              <AvatarPerso perso={perso} style={style} etape={etape} onGeste={onGeste} taille={taillePerso} />
             </View>
             <Text style={[styles.herosTitreCentre, { color: theme.accentTexte }]}>{PERSOS[perso].etapes[etape]}</Text>
           </>

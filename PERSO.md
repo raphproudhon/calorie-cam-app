@@ -532,6 +532,31 @@ on avance par couches :
    l'app joue l'idle avec un petit effet en code (rebond, secousse) : rien ne
    bloque.
 
+## Style réaliste de l'humain (au choix)
+
+L'utilisateur choisit dans les Paramètres (« Style du héros ») entre le
+Nécromancien **pixel** (ci-dessus) et un Nécromancien **réaliste**
+(`etat.stylePerso`). Les images réalistes vont dans
+`assets/perso/humain-realiste/` : `r1.gif`… ou, plus simple, le dossier
+`rotations/` de l'export ZIP de PixelLab copié en `r1/` (south.png,
+south-east.png…). Canevas **256 × 256** maximum. Chaque étape est facultative :
+tant qu'une étape n'existe pas en réaliste, l'app affiche la version pixel.
+Animations : `humain-realiste/anim/idle/r1/` (dossier `south/` de l'export).
+
+Réglages PixelLab : nouveau personnage, **128 × 128** (agrandir le canevas
+plus tard si les effets manquent de place, sans redessiner), 8 directions,
+vue low top-down. Prompt de R1 :
+
+```text
+Detailed realistic pixel art sprite, high resolution. Realistic human proportions, about seven heads tall, natural anatomy, no chibi, not super-deformed. Realistic face: defined jaw and nose, natural-size eyes, calm determined expression. Detailed multi-tone shading with soft light from the top-left, muted natural colors with one vivid emerald green accent. Thin dark outline.
+A young man in his twenties, ordinary student: messy brown hair, brown eyes. Dark charcoal grey hoodie with an emerald green inner collar and drawstrings, dark jeans, white sneakers. No weapon, no armor, no powers.
+Full body, facing forward, standing straight, arms relaxed at the sides, centered, feet near the bottom edge, leave empty space around him for future effects. Transparent background. Single character only.
+```
+
+Étapes suivantes : comme pour le pixel, un **état** par étape créé depuis le
+précédent, en reprenant l'équipement de H2…H20 et en commençant par
+`Same character, same realistic style, same size.`
+
 ## Paliers des 20 étapes
 
 Les 10 paliers existants (`PALIERS_COULEUR`) sont gardés tels quels (en

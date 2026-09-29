@@ -1,9 +1,10 @@
 // FICHIER GENERE par tools/build-perso.js — ne pas modifier a la main.
-// SPRITES[perso][etape 0..19][direction 0..7] : image 512 x 512 du perso.
+// SPRITES[perso][etape 0..19][direction 0..7] : image 512 x 512 du perso
+// (null : etape pas encore dessinee dans ce style, voir humain-realiste).
 // Directions : 0 = face, puis on tourne (sud-est, est, nord-est, dos, ...).
 
 export const SPRITES = {
-  humain: [
+  "humain": [
     [require("./assets/perso/humain/rot/1/0.png"), require("./assets/perso/humain/rot/1/1.png"), require("./assets/perso/humain/rot/1/2.png"), require("./assets/perso/humain/rot/1/3.png"), require("./assets/perso/humain/rot/1/4.png"), require("./assets/perso/humain/rot/1/5.png"), require("./assets/perso/humain/rot/1/6.png"), require("./assets/perso/humain/rot/1/7.png")],
     [require("./assets/perso/humain/rot/2/0.png"), require("./assets/perso/humain/rot/2/1.png"), require("./assets/perso/humain/rot/2/2.png"), require("./assets/perso/humain/rot/2/3.png"), require("./assets/perso/humain/rot/2/4.png"), require("./assets/perso/humain/rot/2/5.png"), require("./assets/perso/humain/rot/2/6.png"), require("./assets/perso/humain/rot/2/7.png")],
     [require("./assets/perso/humain/rot/3/0.png"), require("./assets/perso/humain/rot/3/1.png"), require("./assets/perso/humain/rot/3/2.png"), require("./assets/perso/humain/rot/3/3.png"), require("./assets/perso/humain/rot/3/4.png"), require("./assets/perso/humain/rot/3/5.png"), require("./assets/perso/humain/rot/3/6.png"), require("./assets/perso/humain/rot/3/7.png")],
@@ -25,7 +26,7 @@ export const SPRITES = {
     [require("./assets/perso/humain/rot/19/0.png"), require("./assets/perso/humain/rot/19/1.png"), require("./assets/perso/humain/rot/19/2.png"), require("./assets/perso/humain/rot/19/3.png"), require("./assets/perso/humain/rot/19/4.png"), require("./assets/perso/humain/rot/19/5.png"), require("./assets/perso/humain/rot/19/6.png"), require("./assets/perso/humain/rot/19/7.png")],
     [require("./assets/perso/humain/rot/20/0.png"), require("./assets/perso/humain/rot/20/1.png"), require("./assets/perso/humain/rot/20/2.png"), require("./assets/perso/humain/rot/20/3.png"), require("./assets/perso/humain/rot/20/4.png"), require("./assets/perso/humain/rot/20/5.png"), require("./assets/perso/humain/rot/20/6.png"), require("./assets/perso/humain/rot/20/7.png")],
   ],
-  chat: [
+  "chat": [
     [require("./assets/perso/chat/rot/1/0.png"), require("./assets/perso/chat/rot/1/1.png"), require("./assets/perso/chat/rot/1/2.png"), require("./assets/perso/chat/rot/1/3.png"), require("./assets/perso/chat/rot/1/4.png"), require("./assets/perso/chat/rot/1/5.png"), require("./assets/perso/chat/rot/1/6.png"), require("./assets/perso/chat/rot/1/7.png")],
     [require("./assets/perso/chat/rot/2/0.png"), require("./assets/perso/chat/rot/2/1.png"), require("./assets/perso/chat/rot/2/2.png"), require("./assets/perso/chat/rot/2/3.png"), require("./assets/perso/chat/rot/2/4.png"), require("./assets/perso/chat/rot/2/5.png"), require("./assets/perso/chat/rot/2/6.png"), require("./assets/perso/chat/rot/2/7.png")],
     [require("./assets/perso/chat/rot/3/0.png"), require("./assets/perso/chat/rot/3/1.png"), require("./assets/perso/chat/rot/3/2.png"), require("./assets/perso/chat/rot/3/3.png"), require("./assets/perso/chat/rot/3/4.png"), require("./assets/perso/chat/rot/3/5.png"), require("./assets/perso/chat/rot/3/6.png"), require("./assets/perso/chat/rot/3/7.png")],
@@ -47,12 +48,34 @@ export const SPRITES = {
     [require("./assets/perso/chat/rot/19/0.png"), require("./assets/perso/chat/rot/19/1.png"), require("./assets/perso/chat/rot/19/2.png"), require("./assets/perso/chat/rot/19/3.png"), require("./assets/perso/chat/rot/19/4.png"), require("./assets/perso/chat/rot/19/5.png"), require("./assets/perso/chat/rot/19/6.png"), require("./assets/perso/chat/rot/19/7.png")],
     [require("./assets/perso/chat/rot/20/0.png"), require("./assets/perso/chat/rot/20/1.png"), require("./assets/perso/chat/rot/20/2.png"), require("./assets/perso/chat/rot/20/3.png"), require("./assets/perso/chat/rot/20/4.png"), require("./assets/perso/chat/rot/20/5.png"), require("./assets/perso/chat/rot/20/6.png"), require("./assets/perso/chat/rot/20/7.png")],
   ],
+  "humain-realiste": [
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+  ],
 };
 
 // ANIMS[perso][etape 0..19][nom] : planche de l'animation vue de face
 // (frames 512 x 512 en grille de `colonnes`), `n` frames de `ms` ms.
 export const ANIMS = {
-  humain: [
+  "humain": [
     { idle: { planche: require("./assets/perso/humain/anim/idle/1.png"), n: 13, colonnes: 4, ms: 120 } },
     {  },
     {  },
@@ -74,7 +97,29 @@ export const ANIMS = {
     {  },
     {  },
   ],
-  chat: [
+  "chat": [
+    {  },
+    {  },
+    {  },
+    {  },
+    {  },
+    {  },
+    {  },
+    {  },
+    {  },
+    {  },
+    {  },
+    {  },
+    {  },
+    {  },
+    {  },
+    {  },
+    {  },
+    {  },
+    {  },
+    {  },
+  ],
+  "humain-realiste": [
     {  },
     {  },
     {  },

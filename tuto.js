@@ -190,6 +190,14 @@ export const ETAPES_TUTO = [
     texte: "Pour que vos calories brûlées remontent dans le Bilan.",
   },
   {
+    cible: "params-style",
+    zone: "params",
+    defil: "params",
+    facultative: true, // seulement pour l'humain
+    titre: "Style du héros",
+    texte: "Préférez-vous votre héros en pixel ou en réaliste ? Changez quand vous voulez.",
+  },
+  {
     cible: "params-tuto",
     zone: "params",
     defil: "params",

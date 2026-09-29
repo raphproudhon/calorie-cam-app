@@ -45,10 +45,28 @@ const NB_ETAPES = 20;
 const NB_DIRECTIONS = 8;
 const COLONNES = 4;
 const ANIMATIONS = ["idle", "content", "levelup", "fatigue", "miam"];
+// humain-realiste : le meme Necromancien dans un style realiste, au choix de
+// l'utilisateur (Parametres). Facultatif : une etape sans image retombe sur
+// le style pixel. Canevas plus grand (un perso realiste a besoin de pixels).
 const PERSOS = [
-  { id: "humain", prefixe: "h" },
-  { id: "chat", prefixe: "c" },
+  { id: "humain", prefixe: "h", canevas: CANEVAS },
+  { id: "chat", prefixe: "c", canevas: CANEVAS },
+  { id: "humain-realiste", prefixe: "r", canevas: 256, facultatif: true },
 ];
+const TAILLE_SORTIE = CANEVAS * ECHELLE; // 512 px, pour tous les persos
+
+// Ordre des directions dans les GIF (et dans l'app) ; noms des fichiers du
+// dossier "rotations" de l'export ZIP de PixelLab.
+const DIRECTIONS = ["south", "south-east", "east", "north-east", "north", "north-west", "west", "south-west"];
+
+/** Les 8 directions d'une etape : GIF, ou dossier rotations/ de l'export ZIP. */
+async function directionsEtape(base) {
+  if (fs.existsSync(base + ".gif")) return framesPleines(base + ".gif");
+  const images = [];
+  for (const d of DIRECTIONS) images.push(await Jimp.read(path.join(base, `${d}.png`)));
+  const { width, height } = images[0].bitmap;
+  return { images, largeur: width, hauteur: height };
+}
 
 /** Reconstitue les 8 images pleines d'un GIF (les frames peuvent etre decalees). */
 async function framesPleines(fichier) {
@@ -85,7 +103,7 @@ async function framesDossier(dossier) {
 }
 
 /** Une animation -> une planche PNG (grille de COLONNES colonnes, cases 512 x 512). */
-async function planche(source, destination) {
+async function planche(source, destination, CANEVAS) {
   const { images, largeur, hauteur, delais } = fs.statSync(source).isDirectory()
     ? await framesDossier(source)
     : await framesPleines(source);
@@ -102,7 +120,8 @@ async function planche(source, destination) {
   images.forEach((img, k) => {
     toile.composite(img, (k % colonnes) * CANEVAS + dx, Math.floor(k / colonnes) * CANEVAS + dy);
   });
-  toile.resize(toile.bitmap.width * ECHELLE, toile.bitmap.height * ECHELLE, Jimp.RESIZE_NEAREST_NEIGHBOR);
+  const echelle = TAILLE_SORTIE / CANEVAS;
+  toile.resize(toile.bitmap.width * echelle, toile.bitmap.height * echelle, Jimp.RESIZE_NEAREST_NEIGHBOR);
   await toile.writeAsync(destination);
   // Duree d'une frame : la mediane des delais du GIF (PixelLab les met egaux).
   const tries = [...delais].sort((a, b) => a - b);
@@ -112,7 +131,7 @@ async function planche(source, destination) {
 async function main() {
   const lignes = [];
   const lignesAnims = [];
-  for (const { id, prefixe } of PERSOS) {
+  for (const { id, prefixe, canevas: CANEVAS, facultatif } of PERSOS) {
     const anims = [];
     for (let e = 1; e <= NB_ETAPES; e++) {
       const entrees = [];
@@ -121,17 +140,21 @@ async function main() {
         const source = [base + ".gif", base].find((f) => fs.existsSync(f));
         if (!source) continue;
         const dest = path.join(RACINE, "assets/perso", id, "anim", nom, `${e}.png`);
-        const { n, colonnes, ms } = await planche(source, dest);
+        const { n, colonnes, ms } = await planche(source, dest, CANEVAS);
         entrees.push(`${nom}: { planche: require("./assets/perso/${id}/anim/${nom}/${e}.png"), n: ${n}, colonnes: ${colonnes}, ms: ${ms} }`);
         console.log(`${id} ${e} ${nom} : ${n} frames, ${ms} ms`);
       }
       anims.push(`    { ${entrees.join(", ")} },`);
     }
-    lignesAnims.push(`  ${id}: [\n${anims.join("\n")}\n  ],`);
+    lignesAnims.push(`  "${id}": [\n${anims.join("\n")}\n  ],`);
     const etapes = [];
     for (let e = 1; e <= NB_ETAPES; e++) {
-      const source = path.join(RACINE, "assets/perso", id, `${prefixe}${e}.gif`);
-      const { images, largeur, hauteur } = await framesPleines(source);
+      const source = path.join(RACINE, "assets/perso", id, `${prefixe}${e}`);
+      if (facultatif && !fs.existsSync(source + ".gif") && !fs.existsSync(source)) {
+        etapes.push("    null,");
+        continue;
+      }
+      const { images, largeur, hauteur } = await directionsEtape(source);
       if (images.length !== NB_DIRECTIONS) {
         throw new Error(`${source} : ${images.length} frames, 8 attendues`);
       }
@@ -147,19 +170,20 @@ async function main() {
       for (let d = 0; d < NB_DIRECTIONS; d++) {
         const toile = new Jimp(CANEVAS, CANEVAS, 0x00000000);
         toile.composite(images[d], dx, dy);
-        toile.resize(CANEVAS * ECHELLE, CANEVAS * ECHELLE, Jimp.RESIZE_NEAREST_NEIGHBOR);
+        toile.resize(TAILLE_SORTIE, TAILLE_SORTIE, Jimp.RESIZE_NEAREST_NEIGHBOR);
         await toile.writeAsync(path.join(dossier, `${d}.png`));
         requires.push(`require("./assets/perso/${id}/rot/${e}/${d}.png")`);
       }
       etapes.push(`    [${requires.join(", ")}],`);
-      console.log(`${id} ${e} : ${largeur}x${hauteur} -> ${CANEVAS * ECHELLE}px`);
+      console.log(`${id} ${e} : ${largeur}x${hauteur} -> ${TAILLE_SORTIE}px`);
     }
-    lignes.push(`  ${id}: [\n${etapes.join("\n")}\n  ],`);
+    lignes.push(`  "${id}": [\n${etapes.join("\n")}\n  ],`);
   }
 
   const module =
     "// FICHIER GENERE par tools/build-perso.js — ne pas modifier a la main.\n" +
-    "// SPRITES[perso][etape 0..19][direction 0..7] : image 512 x 512 du perso.\n" +
+    "// SPRITES[perso][etape 0..19][direction 0..7] : image 512 x 512 du perso\n" +
+    "// (null : etape pas encore dessinee dans ce style, voir humain-realiste).\n" +
     "// Directions : 0 = face, puis on tourne (sud-est, est, nord-est, dos, ...).\n\n" +
     `export const SPRITES = {\n${lignes.join("\n")}\n};\n\n` +
     "// ANIMS[perso][etape 0..19][nom] : planche de l'animation vue de face\n" +
