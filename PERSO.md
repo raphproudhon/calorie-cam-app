@@ -462,7 +462,11 @@ rotation au doigt utilise les 8 images fixes de l'état, pas besoin d'animer les
 
 **Dans l'app (fait)** : déposer le GIF de l'animation (vue de face, exporté tel
 quel de PixelLab) dans `assets/perso/{humain,chat}/anim/{idle|content|levelup|fatigue|miam}/{h|c}{étape}.gif`
-puis relancer `node tools/build-perso.js` : chaque animation devient une planche
+— ou, plus simple, **le dossier `south/` de l'export ZIP de PixelLab**
+(`frame_000.png`…) copié sous `…/anim/idle/h1/` : les frames de l'export font
+84 × 84 pour un état 64 × 64 (10 px de marge, centrées), l'outil les recentre
+comme les états, la frame 0 retombe pile sur l'état — puis relancer
+`node tools/build-perso.js` : chaque animation devient une planche
 PNG (`ANIMS` dans `perso-sprites.js`). L'**idle** est jouée en boucle quand le
 perso est de face ; tant qu'elle manque pour une étape, le perso monte et
 descend d'un pixel en code. Les réactions ne sont pas encore branchées.
@@ -584,6 +588,6 @@ deux à trois ans : c'est la longévité voulue.
 - [x] Chat : 20 étapes (`assets/perso/chat/c1..c20.gif`, 8 directions chacune)
 - [x] App : choix du perso, 20 paliers, affichage net, pieds alignés, rotation au doigt
 - [ ] Tester sur le téléphone (Expo Go) : taille du perso à l'écran, fluidité de la rotation
-- [ ] Animations (idle + content / level up / fatigué / miam) pour les deux persos
+- [ ] Animations (idle + content / level up / fatigué / miam) pour les deux persos — fait : idle H1 (13 frames, 120 ms)
 - [ ] Afficher le perso ailleurs (montée de niveau, Bilan…)
 - [ ] Éventuellement : raviver un peu la saturation (PixelLab rend des couleurs ternes)

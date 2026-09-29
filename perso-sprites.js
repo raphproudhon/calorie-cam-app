@@ -53,7 +53,7 @@ export const SPRITES = {
 // (frames 512 x 512 en grille de `colonnes`), `n` frames de `ms` ms.
 export const ANIMS = {
   humain: [
-    {  },
+    { idle: { planche: require("./assets/perso/humain/anim/idle/1.png"), n: 13, colonnes: 4, ms: 120 } },
     {  },
     {  },
     {  },

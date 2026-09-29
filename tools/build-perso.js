@@ -14,7 +14,9 @@
 //
 // Animations (facultatives) : assets/perso/{humain,chat}/anim/{nom}/{h,c}{etape}.gif
 // — nom = idle, content, levelup, fatigue ou miam — un GIF PixelLab de
-// l'animation vue de face, autant de frames que voulu. Chacune devient UNE
+// l'animation vue de face, autant de frames que voulu. A la place du GIF, on
+// peut deposer le dossier de frames de l'export ZIP de PixelLab (le dossier
+// "south" de l'animation) sous le nom {h,c}{etape}/ : frame_000.png, ... Chacune devient UNE
 // planche (frames en grille de COLONNES colonnes) dans
 // assets/perso/{humain,chat}/anim/{nom}/{etape}.png : une seule image par
 // animation, pour rester loin de la limite de 2000 fichiers d'une mise a jour
@@ -68,9 +70,25 @@ async function framesPleines(fichier) {
   return { images, largeur: gif.width, hauteur: gif.height, delais };
 }
 
+// Duree d'une frame quand l'animation vient d'un dossier de PNG (l'export ZIP
+// de PixelLab ne la donne pas) : ~8 images par seconde.
+const MS_FRAME_PNG = 120;
+
+/** Frames d'un dossier frame_000.png, frame_001.png... (export ZIP PixelLab). */
+async function framesDossier(dossier) {
+  const noms = fs.readdirSync(dossier).filter((n) => /\.png$/i.test(n)).sort();
+  const images = [];
+  for (const n of noms) images.push(await Jimp.read(path.join(dossier, n)));
+  if (!images.length) throw new Error(`${dossier} : aucune frame PNG`);
+  const { width, height } = images[0].bitmap;
+  return { images, largeur: width, hauteur: height, delais: images.map(() => MS_FRAME_PNG) };
+}
+
 /** Une animation -> une planche PNG (grille de COLONNES colonnes, cases 512 x 512). */
 async function planche(source, destination) {
-  const { images, largeur, hauteur, delais } = await framesPleines(source);
+  const { images, largeur, hauteur, delais } = fs.statSync(source).isDirectory()
+    ? await framesDossier(source)
+    : await framesPleines(source);
   if (largeur > CANEVAS || hauteur > CANEVAS) {
     throw new Error(`${source} : ${largeur}x${hauteur}, plus grand que ${CANEVAS}`);
   }
@@ -99,8 +117,9 @@ async function main() {
     for (let e = 1; e <= NB_ETAPES; e++) {
       const entrees = [];
       for (const nom of ANIMATIONS) {
-        const source = path.join(RACINE, "assets/perso", id, "anim", nom, `${prefixe}${e}.gif`);
-        if (!fs.existsSync(source)) continue;
+        const base = path.join(RACINE, "assets/perso", id, "anim", nom, `${prefixe}${e}`);
+        const source = [base + ".gif", base].find((f) => fs.existsSync(f));
+        if (!source) continue;
         const dest = path.join(RACINE, "assets/perso", id, "anim", nom, `${e}.png`);
         const { n, colonnes, ms } = await planche(source, dest);
         entrees.push(`${nom}: { planche: require("./assets/perso/${id}/anim/${nom}/${e}.png"), n: ${n}, colonnes: ${colonnes}, ms: ${ms} }`);
