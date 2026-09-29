@@ -563,12 +563,7 @@ function EcranPhoto({ onAjouterConsomme }) {
 
         {analyse && (
           <View style={styles.carte}>
-            <Text style={styles.plat}>{analyse.plat}</Text>
-            <Text style={styles.aide}>
-              Touchez un poids pour le corriger, ou le nom de la fiche pour
-              changer d'aliment. Le résultat reste ici, même si vous changez
-              d'onglet, jusqu'à ce que vous le fermiez.
-            </Text>
+            <Text style={[styles.plat, { marginBottom: 14 }]}>{analyse.plat}</Text>
 
             {analyse.aliments.map((al, i) => (
               <LigneAliment
@@ -1246,9 +1241,6 @@ function EcranBilan({ objectif, consomme, sport, onSport }) {
   return (
     <ScrollView contentContainerStyle={styles.contenu} keyboardShouldPersistTaps="handled" {...defil}>
       <Text style={styles.titre}>Bilan du jour</Text>
-      <Text style={styles.sousTitre}>
-        Ce qu'il vous reste à manger = objectif + sport − déjà consommé
-      </Text>
 
       {(
         <>
@@ -1344,14 +1336,7 @@ function EcranBilan({ objectif, consomme, sport, onSport }) {
 
           <View style={styles.carte} ref={cible("bilan-consomme")}>
             <Text style={styles.champLabel}>Consommé aujourd'hui</Text>
-            <Text style={styles.objectifDetail}>
-              {consomme} kcal ajoutées depuis l'onglet Photo. Analysez un plat
-              puis touchez « Ajouter au bilan » pour l'inclure ici.
-            </Text>
-            <Text style={[styles.disclaimer, { marginTop: 8 }]}>
-              La journée est archivée automatiquement à minuit. Pour repartir à
-              zéro manuellement, utilisez la roue crantée (Paramètres).
-            </Text>
+            <Text style={styles.objectifDetail}>{consomme} kcal</Text>
           </View>
         </>
       )}
@@ -1631,7 +1616,6 @@ function EcranJournal({ etat }) {
             ))}
           </View>
           <View style={styles.calAide}>
-            <Text style={styles.astuceCentre}>Pincez pour zoomer · touchez un jour pour l'ouvrir</Text>
             {focus !== aujourdhui || niveau !== "jour" ? (
               <Pressable onPress={() => setFocus(aujourdhui)} hitSlop={8}>
                 <Text style={[styles.astuceCentre, { color: COULEURS.accent, fontWeight: "700" }]}>Aujourd'hui</Text>
@@ -1881,8 +1865,8 @@ function EcranProgression({ etat }) {
         {poids.length < 2 ? (
           <Text style={styles.objectifDetail}>
             {poids.length === 0
-              ? "Aucun poids enregistré. Ajoutez-en un via la roue crantée (Paramètres)."
-              : `Un seul point (${poids[0].valeur} kg). Ajoutez-en d'autres pour voir la courbe.`}
+              ? "Aucun poids enregistré."
+              : `Un seul point (${poids[0].valeur} kg).`}
           </Text>
         ) : (
           <CourbePoids poids={poids} but={but} />
@@ -1894,8 +1878,7 @@ function EcranProgression({ etat }) {
         <Text style={styles.champLabel}>Calories des derniers jours</Text>
         {historique.length === 0 ? (
           <Text style={styles.objectifDetail}>
-            L'historique se remplit tout seul : chaque jour terminé est archivé
-            ici (consommé vs objectif).
+            Aucun jour terminé pour l'instant.
           </Text>
         ) : (
           <BarresCalories historique={historique} />
@@ -2033,7 +2016,6 @@ function CarteHeros({ jeu, perso, onGeste }) {
             <View ref={cible("perso")}>
               <AvatarPerso perso={perso} etape={etape} onGeste={onGeste} />
             </View>
-            <Text style={styles.astuceCentre}>glissez pour le faire tourner</Text>
             <Text style={[styles.herosTitreCentre, { color: theme.accentTexte }]}>{PERSOS[perso].etapes[etape]}</Text>
           </>
         ) : null}
@@ -2261,7 +2243,6 @@ function creerStyles() {
 
   carte: { backgroundColor: COULEURS.carte, borderRadius: 16, padding: 20, marginTop: 24 },
   plat: { fontSize: 22, fontWeight: "700", color: COULEURS.texte },
-  aide: { fontSize: 12, color: COULEURS.doux, marginTop: 4, marginBottom: 14 },
   boutonFermer: { paddingVertical: 12, marginTop: 8 },
   boutonFermerTexte: { color: COULEURS.doux, fontSize: 15, fontWeight: "600", textAlign: "center" },
 
@@ -2520,7 +2501,7 @@ function creerStyles() {
   calSegments: { flexDirection: "row", backgroundColor: COULEURS.piste, borderRadius: 10, padding: 3 },
   calSegment: { flex: 1, paddingVertical: 7, borderRadius: 8 },
   calSegmentTexte: { textAlign: "center", fontSize: 13, fontWeight: "600", color: COULEURS.doux },
-  calAide: { flexDirection: "row", justifyContent: "center", gap: 12, marginTop: 6, marginBottom: 10 },
+  calAide: { flexDirection: "row", justifyContent: "center", minHeight: 18, marginTop: 6, marginBottom: 10 },
   calLigne: { flexDirection: "row" },
   calJourSemaine: { flex: 1, textAlign: "center", fontSize: 11, fontWeight: "700", color: COULEURS.doux, marginBottom: 4 },
   calCase: { flex: 1, height: 64, alignItems: "center", paddingTop: 4, borderTopWidth: 1, borderTopColor: COULEURS.bord },
