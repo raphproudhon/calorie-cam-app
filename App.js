@@ -862,7 +862,9 @@ function ChoixFiche({ visible, aliment, onChoisir, onFermer }) {
       poser("...");
       promesse()
         .then((r) => { cache.current.set(k, r); if (!annule) poser(r); })
-        .catch(() => { if (!annule) poser([]); });
+        // L'erreur est montree (cle refusee, IA surchargee...) : sans elle,
+        // « pas de suggestion » ne dit pas pourquoi. Pas mise en cache.
+        .catch((e) => { if (!annule) poser({ erreur: e.message }); });
     };
     const t = setTimeout(() => {
       lancer("off", () => chercherProduits(q), setMarques);
@@ -896,6 +898,8 @@ function ChoixFiche({ visible, aliment, onChoisir, onFermer }) {
       <Text style={styles.choixSection}>{titre}</Text>
       {valeur === "..." ? (
         <ActivityIndicator style={{ marginVertical: 12 }} color={COULEURS.accent} />
+      ) : valeur.erreur ? (
+        <Text style={styles.vide}>Indisponible : {valeur.erreur}</Text>
       ) : valeur.length ? (
         valeur.map(option)
       ) : (

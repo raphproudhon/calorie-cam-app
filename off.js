@@ -9,7 +9,9 @@ const BASE = "https://world.openfoodfacts.org/api/v2/product/";
 
 function nombre(v) {
   const n = Number(v);
-  return Number.isFinite(n) ? n : null;
+  // Arrondi au dixieme : OFF renvoie parfois des valeurs recalculees brutes
+  // ("353.225806451613").
+  return Number.isFinite(n) ? Math.round(n * 10) / 10 : null;
 }
 
 /**
@@ -41,8 +43,9 @@ function ficheDepuisProduit(p, code) {
   let kcal = nombre(n["energy-kcal_100g"]);
   if (kcal == null) {
     const kj = nombre(n["energy-kj_100g"]) ?? nombre(n["energy_100g"]);
-    if (kj != null) kcal = Math.round(kj / 4.184);
+    if (kj != null) kcal = kj / 4.184;
   }
+  if (kcal != null) kcal = Math.round(kcal);
 
   return {
     code,
@@ -79,17 +82,17 @@ export async function chercherProduits(texte, limite = 8) {
   });
   if (!rep.ok) throw new Error(`Open Food Facts : erreur ${rep.status}`);
   const data = await rep.json();
-  const vus = new Set();
-  return (data.products || [])
-    .map((p) => ficheDepuisProduit(p, p.code))
-    .filter((f) => {
-      if (f.kcal == null || !f.code) return false;
-      const cle = f.nom.toLowerCase();
-      if (vus.has(cle)) return false; // meme produit en plusieurs formats
-      vus.add(cle);
-      return true;
-    })
-    .slice(0, limite);
+  // Un meme produit existe en plusieurs formats (x8, x10, mini...) avec les
+  // memes valeurs pour 100 g : on n'en garde qu'un, au nom le plus court.
+  const parValeurs = new Map();
+  for (const p of data.products || []) {
+    const f = ficheDepuisProduit(p, p.code);
+    if (f.kcal == null || !f.code) continue;
+    const cle = [f.kcal, f.prot, f.gluc, f.lip].join("|");
+    const deja = parValeurs.get(cle);
+    if (!deja || f.nom.length < deja.nom.length) parValeurs.set(cle, f);
+  }
+  return [...parValeurs.values()].slice(0, limite);
 }
 
 /** Un aliment (forme attendue par l'affichage) a partir d'une fiche produit. */
