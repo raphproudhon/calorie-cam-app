@@ -3,7 +3,8 @@
 # porte un numero ("perso-<numero>"), affiche en bas des Parametres de l'app.
 #
 # Pre-requis (une seule fois) : un compte expo.dev et son access token, range
-# dans les secrets du depot sous le nom EXPO_TOKEN.
+# dans les secrets du depot sous le nom EXPO_TOKEN (ou APP_NAME : c'est le nom
+# sous lequel il a ete enregistre).
 #
 # Rien de tout ca n'est versionne : expo-updates, le lien vers le projet EAS et
 # le runtimeVersion ne sont ajoutes que dans la copie de travail du workflow.
@@ -30,12 +31,12 @@ jobs:
   publier:
     runs-on: ubuntu-latest
     env:
-      EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+      EXPO_TOKEN: ${{ secrets.EXPO_TOKEN || secrets.APP_NAME }}
     steps:
       - name: Token Expo present ?
         run: |
           if [ -z "$EXPO_TOKEN" ]; then
-            echo "::error::Secret EXPO_TOKEN absent (Settings > Secrets and variables > Actions)."
+            echo "::error::Secret EXPO_TOKEN (ou APP_NAME) absent (Settings > Secrets and variables > Actions)."
             exit 1
           fi
 
