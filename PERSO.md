@@ -588,7 +588,7 @@ deux à trois ans : c'est la longévité voulue.
 - [x] Chat : 20 étapes (`assets/perso/chat/c1..c20.gif`, 8 directions chacune)
 - [x] App : choix du perso, 20 paliers, affichage net, pieds alignés, rotation au doigt
 - [ ] Tester sur le téléphone (Expo Go) : taille du perso à l'écran, fluidité de la rotation
-- [ ] Animations (idle + content / level up / fatigué / miam) pour les deux persos — fait : idle H1 à H9
+- [ ] Animations (idle + content / level up / fatigué / miam) pour les deux persos — fait : idle H1 à H10, H12, H14, H16 à H19. À refaire (PixelLab a changé les couleurs en cours de boucle) : H11 (faux qui vire au rose), H13 (effets verts qui disparaissent, faux beige), H15 (lames blanches puis jaunes), H20 (perso qui vire au violet). Les frames plus grandes que 128 (H15+ : 144 ou 152 px) sont recadrées au centre par `build-perso.js`, qui refuse si un pixel visible serait coupé.
 - [x] Écran de montée de niveau (`CelebrationNiveau` dans `App.js`, déclenché par `monteeNiveau` de `jeu.js` et `etat.niveauVu`) : rayons, « Niveau N », et à chaque nouvelle étape l'ancien perso tremble, flash blanc, le nouveau apparaît. Les animations « level up » s'y brancheront.
 - [ ] Afficher le perso ailleurs (Bilan…)
 - [ ] Éventuellement : raviver un peu la saturation (PixelLab rend des couleurs ternes)

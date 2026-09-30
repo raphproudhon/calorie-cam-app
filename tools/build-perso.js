@@ -100,11 +100,25 @@ async function framesDossier(dossier) {
 
 /** Une animation -> une planche PNG (grille de COLONNES colonnes, cases 512 x 512). */
 async function planche(source, destination, CANEVAS) {
-  const { images, largeur, hauteur, delais } = fs.statSync(source).isDirectory()
+  let { images, largeur, hauteur, delais } = fs.statSync(source).isDirectory()
     ? await framesDossier(source)
     : await framesPleines(source);
   if (largeur > CANEVAS || hauteur > CANEVAS) {
-    throw new Error(`${source} : ${largeur}x${hauteur}, plus grand que ${CANEVAS}`);
+    // PixelLab agrandit la toile des animations (152 px pour un etat de 128)
+    // en gardant le perso centre : on recadre au centre, a condition que la
+    // marge retiree soit entierement transparente.
+    const x0 = Math.round((largeur - CANEVAS) / 2);
+    const y0 = Math.round((hauteur - CANEVAS) / 2);
+    images.forEach((img, k) => {
+      img.scan(0, 0, largeur, hauteur, function (x, y, i) {
+        const dedans = x >= x0 && x < x0 + CANEVAS && y >= y0 && y < y0 + CANEVAS;
+        if (!dedans && this.bitmap.data[i + 3] > 0) {
+          throw new Error(`${source} : frame ${k}, pixel visible en (${x}, ${y}) hors du canevas ${CANEVAS}`);
+        }
+      });
+    });
+    images = images.map((img) => img.clone().crop(x0, y0, CANEVAS, CANEVAS));
+    largeur = hauteur = CANEVAS;
   }
   const dx = Math.round((CANEVAS - largeur) / 2);
   const dy = Math.round((CANEVAS - hauteur) / 2);
