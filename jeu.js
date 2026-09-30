@@ -230,6 +230,22 @@ export function monteeNiveau(niveauVu, niveau) {
   return { avant: niveauVu, apres: niveau, etapeAvant, etapeApres, evolution: etapeApres !== etapeAvant };
 }
 
+/**
+ * Humeur du perso dans le Bilan, d'apres le consomme du jour et la zone
+ * validee (zoneCible) :
+ *   "attente" : rien mange pour l'instant ;
+ *   "faim"    : sous la zone — normal en cours de journee, jamais felicite ;
+ *   "content" : dans la zone (journee validee) ;
+ *   "repu"    : au-dela de la zone.
+ * Garde-fou sante : manger peu ne rend JAMAIS le perso content.
+ */
+export function humeurBilan(consomme, zone) {
+  if (!(consomme > 0)) return "attente";
+  if (consomme < zone.min) return "faim";
+  if (consomme <= zone.max) return "content";
+  return "repu";
+}
+
 // --- Theme de l'app, propre a chaque perso -----------------------------------
 // Le fond melange l'accent a une base tres sombre : il reste lisible tout en
 // tirant legerement vers la couleur du theme.

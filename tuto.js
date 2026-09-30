@@ -109,6 +109,14 @@ export const ETAPES_TUTO = [
     geste: "appui",
   },
   {
+    cible: "bilan-perso",
+    onglet: "bilan",
+    defil: "bilan",
+    titre: "Votre héros suit votre journée",
+    texte:
+      "Il saute de joie quand la journée est validée, et vous dit s'il reste de la marge ou si vous avez dépassé.",
+  },
+  {
     cible: "bilan-reste",
     onglet: "bilan",
     defil: "bilan",

@@ -53,6 +53,7 @@ import {
   jeuParDefaut,
   etapePersonnage,
   monteeNiveau,
+  humeurBilan,
   NB_ETAPES,
   PERSOS,
   zoneCible,
@@ -279,6 +280,8 @@ export default function App() {
       </View>
       <View style={[styles.page, onglet !== "bilan" && styles.pageCachee]}>
         <EcranBilan
+          perso={etat.perso}
+          etape={etapePersonnage(niveauCourant)}
           objectif={etat.objectif}
           consomme={etat.jour.consomme || 0}
           sport={etat.jour.sport || ""}
@@ -1401,7 +1404,7 @@ function MenuParametres({ visible, etat, onFermer, onModifierObjectif, onAjouter
 //  ECRAN BILAN — calories restantes du jour (objectif + sport - consomme)
 // =========================================================================
 
-function EcranBilan({ objectif, consomme, sport, onSport }) {
+function EcranBilan({ perso, etape, objectif, consomme, sport, onSport }) {
   const cible = useCible();
   const defil = useDefilTuto("bilan");
   // Le "sport du jour" (saisi a la main, ou importe depuis Apple Sante) vit dans
@@ -1446,6 +1449,10 @@ function EcranBilan({ objectif, consomme, sport, onSport }) {
 
       {(
         <>
+          <View ref={cible("bilan-perso")}>
+            <PersoBilan perso={perso} etape={etape} humeur={humeurBilan(consomme, zone)} />
+          </View>
+
           <View style={styles.carte} ref={cible("bilan-reste")}>
             <Text style={styles.champLabel}>Il vous reste</Text>
             <Text
@@ -1548,6 +1555,76 @@ function EcranBilan({ objectif, consomme, sport, onSport }) {
         </>
       )}
     </ScrollView>
+  );
+}
+
+// Ce que dit le perso dans le Bilan, selon son humeur (humeurBilan, jeu.js).
+// Jamais de felicitations pour avoir peu mange : « faim » reste neutre.
+const PAROLES_BILAN = {
+  attente: "Pas encore de repas aujourd'hui. On s'y met\u00a0?",
+  faim: "J'ai encore un petit creux\u00a0!",
+  content: "Journée validée, bien joué\u00a0!",
+  repu: "Un peu trop aujourd'hui… Demain on repart\u00a0!",
+};
+
+// Cote de l'art utile a chaque etape (le reste du canevas 128 sert aux effets
+// des etapes suivantes, voir PERSO.md) : sert a cadrer le perso en petit.
+function coteArt(perso, etape) {
+  const [a, b] = perso === "chat" ? [3, 9] : [7, 14];
+  return etape < a ? 64 : etape < b ? 96 : 128;
+}
+
+/**
+ * Le perso en haut du Bilan, qui reagit a la journee : il saute de joie dans
+ * la zone validee, se balance, repu, au-dela. En attendant les animations
+ * « content » et « fatigue » de PixelLab, ces reactions sont faites en code.
+ */
+function PersoBilan({ perso, etape, humeur }) {
+  const saut = useRef(new Animated.Value(0)).current;
+  const balance = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    const natif = ANIM_NATIVE_CAL;
+    saut.setValue(0);
+    balance.setValue(0);
+    let anim = null;
+    if (humeur === "content") {
+      // Deux petits sauts, une pause, et on recommence.
+      const bond = Animated.sequence([
+        Animated.timing(saut, { toValue: -14, duration: 160, useNativeDriver: natif }),
+        Animated.timing(saut, { toValue: 0, duration: 200, useNativeDriver: natif }),
+      ]);
+      anim = Animated.loop(Animated.sequence([bond, Animated.delay(80), bond, Animated.delay(1800)]));
+    } else if (humeur === "repu") {
+      anim = Animated.loop(
+        Animated.sequence([
+          Animated.timing(balance, { toValue: 1, duration: 1100, useNativeDriver: natif }),
+          Animated.timing(balance, { toValue: -1, duration: 1100, useNativeDriver: natif }),
+        ])
+      );
+    }
+    anim?.start();
+    return () => anim?.stop();
+  }, [humeur]);
+
+  if (!perso) return null;
+  const taille = 120;
+  // Un peu de marge autour de l'art pour les effets de l'animation d'attente.
+  const zoom = 128 / (coteArt(perso, etape) + 16);
+  const inclinaison = balance.interpolate({ inputRange: [-1, 1], outputRange: ["-5deg", "5deg"] });
+
+  return (
+    <View style={styles.persoBilan}>
+      <Animated.View style={{ transform: [{ translateY: saut }, { rotate: inclinaison }] }}>
+        <AvatarPerso perso={perso} etape={etape} taille={taille} zoom={zoom} tournable={false} />
+      </Animated.View>
+      <View style={styles.bulle}>
+        <View style={styles.bullePointe} />
+        <Text style={[styles.bulleTexte, humeur === "content" && { color: COULEURS.vert }]}>
+          {PAROLES_BILAN[humeur]}
+        </Text>
+      </View>
+    </View>
   );
 }
 
@@ -2806,6 +2883,31 @@ function creerStyles() {
   herosXpBloc: { alignSelf: "stretch", alignItems: "center", paddingBottom: 4 },
   xpFondCentre: { width: "75%", marginTop: 10 },
   astuceCentre: { fontSize: 11, color: COULEURS.doux, textAlign: "center", marginTop: 6 },
+  persoBilan: { flexDirection: "row", alignItems: "center", marginBottom: 4 },
+  bulle: {
+    flex: 1,
+    backgroundColor: COULEURS.carte,
+    borderColor: COULEURS.bord,
+    borderWidth: 1,
+    borderRadius: 14,
+    padding: 12,
+    marginLeft: 10,
+  },
+  // Petit triangle a gauche de la bulle, tourne vers le perso
+  bullePointe: {
+    position: "absolute",
+    left: -7,
+    top: "50%",
+    marginTop: -6,
+    width: 12,
+    height: 12,
+    backgroundColor: COULEURS.carte,
+    borderLeftWidth: 1,
+    borderBottomWidth: 1,
+    borderColor: COULEURS.bord,
+    transform: [{ rotate: "45deg" }],
+  },
+  bulleTexte: { color: COULEURS.texte, fontSize: 15, fontWeight: "600" },
   celebEcran: { flex: 1, alignItems: "center", justifyContent: "center" },
   celebScene: { alignItems: "center", justifyContent: "center", paddingHorizontal: 20 },
   // Carre centre sur le perso, dont chaque rayon est un trait qui le traverse
