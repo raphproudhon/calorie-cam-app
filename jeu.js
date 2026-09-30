@@ -14,12 +14,45 @@ export const XP = {
   CIBLE: 30,        // + bonus si cette journee est restee dans la cible
   PESEE: 15,        // enregistrer son poids (1x/jour max)
   PALIER_KG: 40,    // chaque kg parcouru dans le sens de l'objectif
+  MACRO: 10,        // + bonus par macro (proteines, glucides, lipides) dans son quota
 };
 
 // Fourchette "cible atteinte" pour une journee, en fraction de l'objectif de
 // base. Borne basse >0 pour NE PAS recompenser la sous-alimentation.
 const CIBLE_MIN = 0.8;  // au moins 80 % de l'objectif de base mange
 const CIBLE_MAX = 1.1;  // au plus 110 % du budget (objectif + sport)
+
+// --- Quotas de macros ------------------------------------------------------
+
+// Une macro est « respectee » si la journee en contient entre 80 % et 120 % du
+// quota. Borne basse pour NE PAS recompenser la sous-alimentation (meme regle
+// que les calories), borne haute pour ne pas recompenser l'exces.
+const MACRO_MIN = 0.8;
+const MACRO_MAX = 1.2;
+
+/** Les trois macros suivies : cle dans jour.macros, cle du quota, libelle. */
+export const MACROS = [
+  { cle: "prot", quota: "proteines", nom: "Protéines" },
+  { cle: "gluc", quota: "glucides", nom: "Glucides" },
+  { cle: "lip", quota: "lipides", nom: "Lipides" },
+];
+
+/** Zone validee d'une macro, en g : { min, max } (quota en g). */
+export function zoneMacro(quota) {
+  return { min: Math.round((quota || 0) * MACRO_MIN), max: Math.round((quota || 0) * MACRO_MAX) };
+}
+
+/** Cles (prot, gluc, lip) des macros dont la quantite du jour est dans la zone. */
+export function macrosRespectees(macros, quotas) {
+  if (!macros || !quotas) return [];
+  return MACROS.filter(({ cle, quota }) => {
+    const q = quotas[quota];
+    if (!(q > 0)) return false;
+    const { min, max } = zoneMacro(q);
+    const v = macros[cle] || 0;
+    return v >= min && v <= max;
+  }).map((m) => m.cle);
+}
 
 // --- Niveaux ---------------------------------------------------------------
 
@@ -111,7 +144,7 @@ export function jourReussi(jour, objectif) {
 /**
  * Recompense une journee qui vient d'etre archivee (bascule de minuit).
  * Met a jour xp, serie, jours reussis et badges. Renvoie un NOUVEAU jeu.
- * @param jour {date, consomme, sport, objectif}
+ * @param jour {date, consomme, sport, objectif, macros?, quotas?}
  */
 export function recompenserJourArchive(jeu, jour) {
   const j = { ...jeu, badges: [...(jeu.badges || [])] };
@@ -132,6 +165,12 @@ export function recompenserJourArchive(jeu, jour) {
     j.xp += XP.CIBLE;
     j.joursReussis = (j.joursReussis || 0) + 1;
   }
+
+  // Bonus macros : un par macro restee dans son quota (jour.quotas = quotas
+  // en vigueur ce jour-la, fixes a l'archivage).
+  const respectees = macrosRespectees(jour.macros, jour.quotas).length;
+  j.xp += respectees * XP.MACRO;
+  j.macrosRespectees = (j.macrosRespectees || 0) + respectees;
 
   for (const id of badgesDebloques(j)) j.badges.push(id);
   return j;

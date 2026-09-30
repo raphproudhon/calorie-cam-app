@@ -124,6 +124,14 @@ export const ETAPES_TUTO = [
     texte: "Objectif + sport − ce que vous avez mangé : voilà ce qu'il vous reste à manger aujourd'hui. Pas besoin de tomber pile : la zone verte de la barre, c'est une journée validée.",
   },
   {
+    cible: "bilan-macros",
+    onglet: "bilan",
+    defil: "bilan",
+    titre: "Vos macros",
+    texte:
+      "Protéines, glucides, lipides : chaque macro restée entre 80 % et 120 % de son quota rapporte un bonus d'XP à minuit.",
+  },
+  {
     cible: "bilan-sport",
     onglet: "bilan",
     defil: "bilan",
@@ -169,6 +177,13 @@ export const ETAPES_TUTO = [
     delai: 600, // la Modal glisse encore : on attend qu'elle soit en place
     titre: "Votre objectif",
     texte: "Votre objectif calorique du jour. « Modifier » le recalcule à partir de votre profil (âge, poids, but…).",
+  },
+  {
+    cible: "params-quotas",
+    zone: "params",
+    defil: "params",
+    titre: "Vos quotas de macros",
+    texte: "Pré-remplis selon votre objectif. Modifiez-les si votre coach ou votre diététicien vous en a donné d'autres.",
   },
   {
     cible: "params-poids",

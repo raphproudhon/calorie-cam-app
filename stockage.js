@@ -10,9 +10,11 @@
 //     profil:    { sexe, age, poids, taille, activite, but, rythme } | null,
 //     objectif:  number | null,          // objectif calorique du jour (kcal)
 //     debut:     "AAAA-MM-JJ",         // premier lancement (debut du journal)
-//     jour:      { date, consomme, sport, repas },   // journee EN COURS
-//     historique:[ { date, consomme, sport, objectif, repas } ],  // jours passes
-//       repas : [ { heure: "HH:MM", plat, kcal } ] (ajouts « Ajouter au bilan »)
+//     jour:      { date, consomme, sport, repas, macros },   // journee EN COURS
+//       macros : { prot, gluc, lip } en g, cumul des repas du jour
+//     historique:[ { date, consomme, sport, objectif, repas, macros, quotas } ],  // jours passes
+//       repas : [ { heure: "HH:MM", plat, kcal, prot, gluc, lip } ] (ajouts « Ajouter au bilan »)
+//     quotas:    { proteines, glucides, lipides } | null, // g ; null = conseilles (besoins.js)
 //     poids:     [ { date, valeur } ],   // journal de poids
 //     perso:     "humain" | "chat" | null, // personnage choisi (definitif)
 //   }
@@ -21,6 +23,7 @@
 
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { jeuParDefaut, recompenserJourArchive } from "./jeu";
+import { quotasMacros } from "./besoins";
 import { plusAncienneDate } from "./journal";
 
 const CLE = "caloriecam.etat.v1";
@@ -74,6 +77,8 @@ export function appliquerRollover(etat) {
       sport: parseInt(etat.jour.sport || "0", 10) || 0,
       objectif: etat.objectif || 0,
       repas: etat.jour.repas || [],
+      macros: etat.jour.macros || null,
+      quotas: quotasMacros(etat),
     };
     etat.historique.push(archive);
     // Garde-fou memoire : on borne l'historique aux ~730 derniers jours.

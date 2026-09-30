@@ -64,7 +64,7 @@ si OFF ne trouve rien ou échoue — l'aliment générique le plus proche selon 
 restent Ciqual) et les fiches approchantes), **Progression** (niveau/XP/badges + courbe de poids + calories ; chaque montée de niveau est fêtée en plein écran — `CelebrationNiveau`, `monteeNiveau`, `etat.niveauVu` — avec l'évolution du perso quand une étape est franchie),
 **Bilan** (calories restantes du jour ; la barre montre la zone « journée
 validée » — 80 % de l'objectif à 110 % du budget, `zoneCible` dans `jeu.js`,
-même règle que `jourReussi` — pour ne pas viser pile le budget ; en haut, le perso réagit à la journée : `humeurBilan` dans `jeu.js`, `PersoBilan` dans `App.js` — jamais content d'une sous-alimentation), **Journal** (calendrier Année/Mois/Semaine/Jour de tous les jours depuis le
+même règle que `jourReussi` — pour ne pas viser pile le budget ; en haut, le perso réagit à la journée : `humeurBilan` dans `jeu.js`, `PersoBilan` dans `App.js` — jamais content d'une sous-alimentation ; carte « Macros du jour » : quotas de protéines/glucides/lipides — `etat.quotas` réglables dans les Paramètres, sinon `repartirMacros` via `quotasMacros` (`besoins.js`) — et +10 XP par macro entre 80 et 120 % de son quota, à l'archivage de minuit : `macrosRespectees` dans `jeu.js`), **Journal** (calendrier Année/Mois/Semaine/Jour de tous les jours depuis le
 premier lancement, pincer pour zoomer, détail des repas). Onboarding obligatoire au 1er lancement ;
 objectif réglable ensuite via la **roue crantée** (menu Paramètres, haut gauche).
 Tout est persisté localement (`stockage.js`).
@@ -88,7 +88,7 @@ passent dans le même affichage/bilan que les aliments d'une photo.
 | `jeu.js` | gamification : XP, niveaux, badges, étapes du perso (`PALIERS_PERSO`, `PERSOS`, `etapePersonnage`) + palette du thème par niveau |
 | `perso-sprites.js` | **généré** par `tools/build-perso.js` : table des sprites `SPRITES[perso][étape][direction]` |
 | `assets/perso/` | GIF PixelLab sources (`humain/h1..20.gif`, `chat/c1..20.gif`) + PNG générés dans `rot/` ; animations dans `anim/<nom>/` (GIF ou dossier `south/` de l'export ZIP PixelLab) |
-| `tuto.js` | tutoriel du 1er lancement en « projecteur » (écran assombri sauf l'élément montré), 24 étapes sur toute l'app (`ETAPES_TUTO`) ; les vues s'enregistrent via `ref={cible("id")}`, les pages qui défilent via `useDefilTuto` ; une 2ᵉ instance dans la Modal des Paramètres ; `etat.tutoVu`, « Revoir le tutoriel » dans les Paramètres. **Nouvel élément d'interface → lui ajouter une étape.** |
+| `tuto.js` | tutoriel du 1er lancement en « projecteur » (écran assombri sauf l'élément montré), 26 étapes sur toute l'app (`ETAPES_TUTO`) ; les vues s'enregistrent via `ref={cible("id")}`, les pages qui défilent via `useDefilTuto` ; une 2ᵉ instance dans la Modal des Paramètres ; `etat.tutoVu`, « Revoir le tutoriel » dans les Paramètres. **Nouvel élément d'interface → lui ajouter une étape.** |
 | `journal.js` | onglet **Journal**, calendrier façon Apple (Année / Mois / Semaine / Jour, on pince pour zoomer ; grilles et navigation : `grilleMois`, `semaineDe`, `decalerPeriode`…) : tous les jours depuis `etat.debut` (1er lancement), verdict par jour via `jourReussi` (jamais de félicitations pour une sous-alimentation), repas de chaque jour (`jour.repas`, archivés à minuit) |
 | `lien.js` | lien entrant `caloriecam://sport?kcal=N` (raccourci iOS qui lit Apple Santé quand l'app sideloadée n'a pas HealthKit) → remplace le sport du jour |
 | `version.js` | numéro de version affiché dans les Paramètres (`local` ; réécrit par le workflow Expo Go) |

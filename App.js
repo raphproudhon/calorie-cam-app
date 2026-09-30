@@ -39,7 +39,7 @@ import Svg, { Polyline, Circle, Line as SvgLine } from "react-native-svg";
 import { analyserPhoto, alimentsProches } from "./analyse";
 import { produitParCodeBarres, analyseDepuisProduit, alimentDepuisProduit, chercherProduits } from "./off";
 import { calculer, totaliser, rechercher, rechercherApprochant, correspondExacte, couverture, NB_ALIMENTS, SOURCE } from "./ciqual";
-import { ACTIVITES, RYTHMES, calculerObjectif, bilanJournalier } from "./besoins";
+import { ACTIVITES, RYTHMES, calculerObjectif, bilanJournalier, quotasMacros, repartirMacros } from "./besoins";
 import { estDisponible as santeDisponible, demanderAcces, depenseDuJour, NOM_SANTE, MESSAGE_SANTE_INDISPONIBLE } from "./health";
 import { chargerEtat, sauvegarderEtat, dateDuJour } from "./stockage";
 import { chargerCle, definirCle, modeleDe, fournisseursDisponibles, FOURNISSEURS } from "./cle";
@@ -54,6 +54,10 @@ import {
   etapePersonnage,
   monteeNiveau,
   humeurBilan,
+  MACROS,
+  zoneMacro,
+  macrosRespectees,
+  XP,
   NB_ETAPES,
   PERSOS,
   zoneCible,
@@ -179,8 +183,12 @@ export default function App() {
 
   // « Ajouter au bilan » : cumule les kcal du jour et garde le repas pour le
   // journal (heure, nom du plat, kcal).
-  const ajouterConsomme = (kcal, plat) => {
+  const ajouterConsomme = (kcal, plat, macros = {}) => {
     const k = Math.max(0, Math.round(kcal || 0));
+    // Macros du repas (g, arrondies au dixieme), cumulees dans jour.macros.
+    const m = Object.fromEntries(
+      ["prot", "gluc", "lip"].map((c) => [c, Math.round(Math.max(0, macros[c] || 0) * 10) / 10])
+    );
     const maintenant = new Date();
     const heure = `${String(maintenant.getHours()).padStart(2, "0")}:${String(maintenant.getMinutes()).padStart(2, "0")}`;
     setEtat((e) => ({
@@ -188,7 +196,10 @@ export default function App() {
       jour: {
         ...e.jour,
         consomme: (e.jour.consomme || 0) + k,
-        repas: [...(e.jour.repas || []), { heure, plat: plat || "Repas", kcal: k }],
+        macros: Object.fromEntries(
+          Object.keys(m).map((c) => [c, Math.round(((e.jour.macros?.[c] || 0) + m[c]) * 10) / 10])
+        ),
+        repas: [...(e.jour.repas || []), { heure, plat: plat || "Repas", kcal: k, ...m }],
       },
     }));
   };
@@ -284,6 +295,8 @@ export default function App() {
           etape={etapePersonnage(niveauCourant)}
           objectif={etat.objectif}
           consomme={etat.jour.consomme || 0}
+          macros={etat.jour.macros}
+          quotas={quotasMacros(etat)}
           sport={etat.jour.sport || ""}
           onSport={(v) => majJour({ sport: v })}
         />
@@ -297,8 +310,10 @@ export default function App() {
         etat={etat}
         onFermer={() => setParamsOuverts(false)}
         onModifierObjectif={(profil, objectif) =>
-          setEtat((e) => ({ ...e, profil, objectif }))
+          // Nouvel objectif : les quotas repartent de la repartition conseillee.
+          setEtat((e) => ({ ...e, profil, objectif, quotas: null }))
         }
+        onModifierQuotas={(quotas) => setEtat((e) => ({ ...e, quotas }))}
         onAjouterPoids={(valeur) =>
           setEtat((e) => {
             const entree = { date: dateDuJour(), valeur };
@@ -310,7 +325,7 @@ export default function App() {
             };
           })
         }
-        onResetJour={() => majJour({ consomme: 0, sport: "", repas: [] })}
+        onResetJour={() => majJour({ consomme: 0, sport: "", repas: [], macros: null })}
         onDevXp={(m) => setEtat((e) => ({ ...e, jeu: ajouterXp(e.jeu, m) }))}
         onResetHeros={() => setEtat((e) => ({ ...e, jeu: jeuParDefaut() }))}
         onDevPerso={() => setEtat((e) => ({ ...e, perso: e.perso === "chat" ? "humain" : "chat" }))}
@@ -685,7 +700,7 @@ function EcranPhoto({ onAjouterConsomme }) {
               style={[styles.bouton, !ajoute && { backgroundColor: accent }, ajoute && styles.boutonSecondaire, { marginTop: 16 }]}
               onPress={() => {
                 if (ajoute) return;
-                onAjouterConsomme?.(totaux.kcal, analyse.plat);
+                onAjouterConsomme?.(totaux.kcal, analyse.plat, totaux);
                 setAjoute(true);
               }}
               disabled={ajoute}
@@ -1211,7 +1226,7 @@ function CarteIA() {
   );
 }
 
-function MenuParametres({ visible, etat, onFermer, onModifierObjectif, onAjouterPoids, onResetJour, onDevXp, onResetHeros, onDevPerso, onRevoirTuto, tuto }) {
+function MenuParametres({ visible, etat, onFermer, onModifierObjectif, onModifierQuotas, onAjouterPoids, onResetJour, onDevXp, onResetHeros, onDevPerso, onRevoirTuto, tuto }) {
   const accent = useAccent();
   const cible = useCible();
   const defil = useDefilTuto("params");
@@ -1284,6 +1299,11 @@ function MenuParametres({ visible, etat, onFermer, onModifierObjectif, onAjouter
               >
                 <Text style={styles.boutonTexte}>Modifier mon objectif</Text>
               </TouchableOpacity>
+            </View>
+
+            {/* Quotas de macros */}
+            <View ref={cible("params-quotas")}>
+              <CarteQuotas etat={etat} onModifier={onModifierQuotas} />
             </View>
 
             {/* Saisie du poids */}
@@ -1404,7 +1424,7 @@ function MenuParametres({ visible, etat, onFermer, onModifierObjectif, onAjouter
 //  ECRAN BILAN — calories restantes du jour (objectif + sport - consomme)
 // =========================================================================
 
-function EcranBilan({ perso, etape, objectif, consomme, sport, onSport }) {
+function EcranBilan({ perso, etape, objectif, consomme, macros, quotas, sport, onSport }) {
   const cible = useCible();
   const defil = useDefilTuto("bilan");
   // Le "sport du jour" (saisi a la main, ou importe depuis Apple Sante) vit dans
@@ -1515,6 +1535,46 @@ function EcranBilan({ perso, etape, objectif, consomme, sport, onSport }) {
             ))}
           </View>
 
+          {quotas ? (
+            <View style={styles.carte} ref={cible("bilan-macros")}>
+              <Text style={styles.champLabel}>Macros du jour</Text>
+              {MACROS.map(({ cle, quota, nom }) => {
+                const q = quotas[quota] || 0;
+                const v = Math.round(macros?.[cle] || 0);
+                const z = zoneMacro(q);
+                const dansZone = v >= z.min && v <= z.max;
+                const auDela = v > z.max;
+                const fin = Math.max(z.max, 1);
+                const pctM = (x) => `${Math.min(100, Math.round((x / fin) * 100))}%`;
+                return (
+                  <View key={cle} style={styles.macroLigne}>
+                    <View style={styles.macroEntete}>
+                      <Text style={styles.macroNom}>{nom}</Text>
+                      <Text style={[styles.macroValeur, dansZone && { color: COULEURS.vert }, auDela && { color: COULEURS.rouge }]}>
+                        {dansZone ? "✓ " : ""}{v} / {q} g
+                      </Text>
+                    </View>
+                    <View style={[styles.barreFond, styles.barreFine]}>
+                      <View style={[styles.barreZone, { left: pctM(z.min), right: 0 }]} />
+                      <View
+                        style={[
+                          styles.barreRemplie,
+                          { width: pctM(v) },
+                          dansZone && { backgroundColor: COULEURS.vert },
+                          auDela && { backgroundColor: COULEURS.rouge },
+                        ]}
+                      />
+                    </View>
+                  </View>
+                );
+              })}
+              <Text style={styles.bilanStatut}>
+                +{XP.MACRO} XP à minuit pour chaque macro dans sa zone ({macrosRespectees(macros, quotas).length}/3
+                pour l'instant). Quotas réglables dans les Paramètres.
+              </Text>
+            </View>
+          ) : null}
+
           <View style={styles.carte} ref={cible("bilan-sport")}>
             <Text style={styles.champLabel}>Sport du jour</Text>
             <View style={styles.champNombreBoite}>
@@ -1624,6 +1684,67 @@ function PersoBilan({ perso, etape, humeur }) {
           {PAROLES_BILAN[humeur]}
         </Text>
       </View>
+    </View>
+  );
+}
+
+/**
+ * Parametres : quotas de macros (g/jour). Pre-remplis avec les quotas en
+ * vigueur (renseignes, sinon conseilles pour l'objectif) ; « Valeurs
+ * conseillees » efface les quotas renseignes.
+ */
+function CarteQuotas({ etat, onModifier }) {
+  const accent = useAccent();
+  const actuels = quotasMacros(etat) || { proteines: 0, glucides: 0, lipides: 0 };
+  const [saisie, setSaisie] = useState(null); // null = pas en cours de modification
+  const valeurs = saisie || Object.fromEntries(Object.entries(actuels).map(([k, v]) => [k, String(v)]));
+  const conseilles = etat.profil && etat.objectif ? repartirMacros(etat.objectif, etat.profil.but, etat.profil.poids) : null;
+
+  function enregistrer() {
+    const q = Object.fromEntries(MACROS.map(({ quota }) => [quota, parseInt(valeurs[quota], 10) || 0]));
+    if (MACROS.some(({ quota }) => !(q[quota] > 0 && q[quota] < 1000))) return;
+    onModifier(q);
+    setSaisie(null);
+  }
+
+  return (
+    <View style={styles.carte}>
+      <Text style={styles.champLabel}>Quotas de macros (g par jour)</Text>
+      {MACROS.map(({ quota, nom }) => (
+        <View key={quota} style={[styles.champNombreBoite, { marginTop: 8 }]}>
+          <Text style={[styles.champNombreUnite, styles.quotaNom]}>{nom}</Text>
+          <TextInput
+            style={styles.champNombreSaisie}
+            value={valeurs[quota]}
+            onChangeText={(t) => setSaisie({ ...valeurs, [quota]: t.replace(/[^0-9]/g, "") })}
+            keyboardType="number-pad"
+            maxLength={3}
+          />
+          <Text style={styles.champNombreUnite}>g</Text>
+        </View>
+      ))}
+      <Text style={styles.disclaimer}>
+        {etat.quotas ? "Quotas personnalisés." : "Répartition conseillée pour votre objectif."} Une macro
+        est validée entre 80 % et 120 % de son quota : +{XP.MACRO} XP chacune.
+      </Text>
+      {saisie ? (
+        <TouchableOpacity style={[styles.bouton, { marginTop: 10, backgroundColor: accent }]} onPress={enregistrer}>
+          <Text style={styles.boutonTexte}>Enregistrer mes quotas</Text>
+        </TouchableOpacity>
+      ) : null}
+      {etat.quotas && conseilles ? (
+        <TouchableOpacity
+          style={[styles.bouton, styles.boutonSecondaire, { marginTop: 10 }]}
+          onPress={() => {
+            onModifier(null);
+            setSaisie(null);
+          }}
+        >
+          <Text style={styles.boutonTexte}>
+            Revenir aux valeurs conseillées ({conseilles.proteines} / {conseilles.glucides} / {conseilles.lipides} g)
+          </Text>
+        </TouchableOpacity>
+      ) : null}
     </View>
   );
 }
@@ -2883,6 +3004,12 @@ function creerStyles() {
   herosXpBloc: { alignSelf: "stretch", alignItems: "center", paddingBottom: 4 },
   xpFondCentre: { width: "75%", marginTop: 10 },
   astuceCentre: { fontSize: 11, color: COULEURS.doux, textAlign: "center", marginTop: 6 },
+  macroLigne: { marginTop: 10 },
+  macroEntete: { flexDirection: "row", justifyContent: "space-between", marginBottom: 4 },
+  macroNom: { color: COULEURS.texte, fontSize: 14, fontWeight: "600" },
+  macroValeur: { color: COULEURS.doux, fontSize: 14, fontWeight: "700" },
+  barreFine: { height: 8, marginTop: 0 },
+  quotaNom: { width: 90, marginRight: 8, color: COULEURS.texte },
   persoBilan: { flexDirection: "row", alignItems: "center", marginBottom: 4 },
   bulle: {
     flex: 1,

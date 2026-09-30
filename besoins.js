@@ -181,7 +181,7 @@ export function calculerObjectif(profil, but, cleActivite, cleRythme) {
  * Les proteines sont ancrees au poids corporel (recommandations sportives
  * usuelles), le reste partage entre lipides et glucides.
  */
-function repartirMacros(kcal, but, poids) {
+export function repartirMacros(kcal, but, poids) {
   // g de proteines par kg de poids : un peu plus en perte (preserver le muscle)
   // et en prise (construire le muscle) qu'au simple maintien.
   const gProtParKg = but === "maintien" ? 1.6 : 2.0;
@@ -199,6 +199,17 @@ function repartirMacros(kcal, but, poids) {
   const glucides = Math.round(kcalGlucides / 4);
 
   return { proteines, glucides, lipides };
+}
+
+/**
+ * Quotas de macros du jour (g) : ceux que l'utilisateur a renseignes dans les
+ * Parametres (etat.quotas), sinon la repartition conseillee pour son objectif.
+ * null tant qu'il n'y a pas de profil.
+ */
+export function quotasMacros(etat) {
+  if (etat?.quotas) return etat.quotas;
+  if (!etat?.profil || !etat.objectif) return null;
+  return repartirMacros(etat.objectif, etat.profil.but, etat.profil.poids);
 }
 
 // --- Bilan du jour : calories restantes ------------------------------------
