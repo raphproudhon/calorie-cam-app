@@ -77,7 +77,7 @@ export const ETAPES_TUTO = [
     defil: "progression",
     titre: "Niveau et XP",
     texte:
-      "Vous gagnez de l'XP en suivant vos repas et votre poids. Chaque palier fait évoluer votre héros ; la série compte vos jours suivis d'affilée.",
+      "Vous gagnez de l'XP en suivant vos repas et votre poids. Chaque niveau gagné est fêté, et à certains paliers votre héros évolue ; la série compte vos jours suivis d'affilée.",
   },
   {
     cible: "badges",

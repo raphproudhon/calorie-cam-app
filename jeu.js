@@ -216,6 +216,20 @@ export function etapePersonnage(niveau) {
   return e;
 }
 
+/**
+ * Montee de niveau a feter : compare le dernier niveau montre a l'utilisateur
+ * (etat.niveauVu) au niveau actuel. Renvoie null s'il n'y a rien a feter
+ * (niveau inchange ou en baisse, ou niveauVu inconnu), sinon
+ * { avant, apres, etapeAvant, etapeApres, evolution } — evolution = le perso
+ * change d'apparence (un palier de PALIERS_PERSO a ete franchi).
+ */
+export function monteeNiveau(niveauVu, niveau) {
+  if (niveauVu == null || !(niveau > niveauVu)) return null;
+  const etapeAvant = etapePersonnage(niveauVu);
+  const etapeApres = etapePersonnage(niveau);
+  return { avant: niveauVu, apres: niveau, etapeAvant, etapeApres, evolution: etapeApres !== etapeAvant };
+}
+
 // --- Theme de l'app, propre a chaque perso -----------------------------------
 // Le fond melange l'accent a une base tres sombre : il reste lisible tout en
 // tirant legerement vers la couleur du theme.

@@ -589,5 +589,6 @@ deux à trois ans : c'est la longévité voulue.
 - [x] App : choix du perso, 20 paliers, affichage net, pieds alignés, rotation au doigt
 - [ ] Tester sur le téléphone (Expo Go) : taille du perso à l'écran, fluidité de la rotation
 - [ ] Animations (idle + content / level up / fatigué / miam) pour les deux persos — fait : idle H1 à H9
-- [ ] Afficher le perso ailleurs (montée de niveau, Bilan…)
+- [x] Écran de montée de niveau (`CelebrationNiveau` dans `App.js`, déclenché par `monteeNiveau` de `jeu.js` et `etat.niveauVu`) : rayons, « Niveau N », et à chaque nouvelle étape l'ancien perso tremble, flash blanc, le nouveau apparaît. Les animations « level up » s'y brancheront.
+- [ ] Afficher le perso ailleurs (Bilan…)
 - [ ] Éventuellement : raviver un peu la saturation (PixelLab rend des couleurs ternes)

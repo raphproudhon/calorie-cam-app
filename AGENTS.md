@@ -61,7 +61,7 @@ si l'aliment exact n'y est pas, la recherche propose les produits de marque
 d'Open Food Facts (fiches aberrantes écartées : `sansAberrations`), puis — seulement
 si OFF ne trouve rien ou échoue — l'aliment générique le plus proche selon l'IA
 (`alimentsProches` dans `analyse.js` : l'IA ne donne que des mots, les valeurs
-restent Ciqual) et les fiches approchantes), **Progression** (niveau/XP/badges + courbe de poids + calories),
+restent Ciqual) et les fiches approchantes), **Progression** (niveau/XP/badges + courbe de poids + calories ; chaque montée de niveau est fêtée en plein écran — `CelebrationNiveau`, `monteeNiveau`, `etat.niveauVu` — avec l'évolution du perso quand une étape est franchie),
 **Bilan** (calories restantes du jour ; la barre montre la zone « journée
 validée » — 80 % de l'objectif à 110 % du budget, `zoneCible` dans `jeu.js`,
 même règle que `jourReussi` — pour ne pas viser pile le budget), **Journal** (calendrier Année/Mois/Semaine/Jour de tous les jours depuis le

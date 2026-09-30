@@ -52,6 +52,7 @@ import {
   ajouterXp,
   jeuParDefaut,
   etapePersonnage,
+  monteeNiveau,
   NB_ETAPES,
   PERSOS,
   zoneCible,
@@ -99,6 +100,17 @@ export default function App() {
   useEffect(() => {
     if (etat) sauvegarderEtat(etat);
   }, [etat]);
+
+  // Niveau deja fete (etat.niveauVu) : initialise sans fete au premier passage
+  // (installations d'avant cet ecran, nouveau profil) et suit une baisse (remise
+  // a zero du heros, bouton de test) sans rien afficher. Une hausse, elle,
+  // declenche l'ecran de montee de niveau, qui le met a jour en se fermant.
+  const xpCourante = etat?.jeu?.xp || 0;
+  useEffect(() => {
+    if (!etat?.perso) return;
+    const n = niveauDepuisXp(xpCourante).niveau;
+    if (etat.niveauVu == null || n < etat.niveauVu) setEtat((e) => ({ ...e, niveauVu: n }));
+  }, [etat?.perso, xpCourante, etat?.niveauVu]);
 
   // Lien caloriecam://sport?kcal=N (raccourci iOS qui lit Apple Sante, voir
   // lien.js) : remplace le sport du jour et affiche le Bilan. Branche une fois
@@ -308,6 +320,18 @@ export default function App() {
         tuto={!etat.tutoVu ? <Tutoriel zone="params" {...propsTuto} /> : null}
       />
 
+      {/* Montee de niveau : fetee une fois le tutoriel fini et les Parametres
+          fermes (les boutons de test d'XP y sont : la fete suit leur fermeture). */}
+      {etat.tutoVu && !paramsOuverts && monteeNiveau(etat.niveauVu, niveauCourant) ? (
+        <CelebrationNiveau
+          perso={etat.perso}
+          montee={monteeNiveau(etat.niveauVu, niveauCourant)}
+          accent={accent}
+          fond={fond}
+          onFermer={() => setEtat((e) => ({ ...e, niveauVu: niveauDepuisXp(e.jeu?.xp || 0).niveau }))}
+        />
+      ) : null}
+
       {/* Tutoriel du premier lancement (et « Revoir le tutoriel »). */}
       {!etat.tutoVu ? <Tutoriel zone="app" {...propsTuto} /> : null}
     </View>
@@ -342,6 +366,7 @@ const PALETTES = {
     appui: "rgba(255,255,255,0.12)",
     scene: "#161320",
     fantome: "#ffffff88",
+    eclair: "#FFFFFF",     // flash de l'evolution du perso (montee de niveau)
     barreEtat: "light-content",
   },
   clair: {
@@ -365,6 +390,7 @@ const PALETTES = {
     appui: "rgba(0,0,0,0.06)",
     scene: "#FFF1F5",
     fantome: "#00000055",
+    eclair: "#FFFFFF",
     barreEtat: "dark-content",
   },
 };
@@ -2210,6 +2236,115 @@ function ChoixPerso({ onChoisir }) {
   );
 }
 
+/**
+ * Ecran de montee de niveau, plein ecran par-dessus l'app. Rayons qui
+ * tournent derriere le perso, « Niveau N ! » qui rebondit. Si un palier du
+ * perso est franchi (montee.evolution), l'ancienne apparence tremble, un flash
+ * blanc couvre l'ecran et la nouvelle apparait a sa place, avec son nom.
+ * Les reactions « level up » de PixelLab viendront s'y brancher.
+ */
+function CelebrationNiveau({ perso, montee, accent, fond, onFermer }) {
+  const { width: largeurEcran } = useWindowDimensions();
+  const taille = Math.min(300, largeurEcran - 40);
+  const { apres, etapeAvant, etapeApres, evolution } = montee;
+
+  const rotation = useRef(new Animated.Value(0)).current;
+  const tremble = useRef(new Animated.Value(0)).current;
+  const flash = useRef(new Animated.Value(0)).current;
+  const ancien = useRef(new Animated.Value(evolution ? 1 : 0)).current;
+  const nouveau = useRef(new Animated.Value(evolution ? 0 : 1)).current;
+  const echellePerso = useRef(new Animated.Value(0.85)).current;
+  const echelleTexte = useRef(new Animated.Value(0)).current;
+  const bouton = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    const natif = ANIM_NATIVE_CAL;
+    const boucle = Animated.loop(
+      Animated.timing(rotation, { toValue: 1, duration: 14000, easing: (t) => t, useNativeDriver: natif })
+    );
+    boucle.start();
+    const apparition = Animated.parallel([
+      Animated.spring(echellePerso, { toValue: 1, friction: 4, useNativeDriver: natif }),
+      Animated.spring(echelleTexte, { toValue: 1, friction: 5, delay: 150, useNativeDriver: natif }),
+    ]);
+    const finale = Animated.timing(bouton, { toValue: 1, duration: 400, delay: 300, useNativeDriver: natif });
+    const secousse = (x) => Animated.timing(tremble, { toValue: x, duration: 60, useNativeDriver: natif });
+    const suite = evolution
+      ? Animated.sequence([
+          // L'ancienne apparence tremble de plus en plus...
+          Animated.sequence([4, -4, 6, -6, 8, -8, 10, -10, 0].map(secousse)),
+          // ... flash blanc, et c'est la nouvelle qui apparait dessous.
+          Animated.timing(flash, { toValue: 1, duration: 350, useNativeDriver: natif }),
+          Animated.parallel([
+            Animated.timing(ancien, { toValue: 0, duration: 0, useNativeDriver: natif }),
+            Animated.timing(nouveau, { toValue: 1, duration: 0, useNativeDriver: natif }),
+          ]),
+          Animated.parallel([Animated.timing(flash, { toValue: 0, duration: 800, useNativeDriver: natif }), apparition]),
+          finale,
+        ])
+      : Animated.sequence([apparition, finale]);
+    suite.start();
+    return () => {
+      boucle.stop();
+      suite.stop();
+    };
+  }, []);
+
+  const tour = rotation.interpolate({ inputRange: [0, 1], outputRange: ["0deg", "360deg"] });
+  const nomEtape = PERSOS[perso].etapes[etapeApres];
+
+  return (
+    <Modal visible transparent animationType="fade" onRequestClose={onFermer}>
+      <View style={[styles.celebEcran, { backgroundColor: fond }]}>
+        <View style={styles.celebScene}>
+          {/* Rayons, centres sur le perso */}
+          <Animated.View pointerEvents="none" style={[styles.celebRayons, { transform: [{ rotate: tour }] }]}>
+            {Array.from({ length: 12 }, (_, i) => (
+              <View
+                key={i}
+                style={[styles.celebRayon, { backgroundColor: accent, transform: [{ rotate: `${i * 15}deg` }] }]}
+              />
+            ))}
+          </Animated.View>
+
+          <Text style={styles.celebSurtitre}>
+            {evolution ? "Évolution !" : "Niveau supérieur !"}
+          </Text>
+
+          <View style={{ width: taille, height: taille }}>
+            {evolution ? (
+              <Animated.View style={[styles.celebCalque, { opacity: ancien, transform: [{ translateX: tremble }] }]}>
+                <AvatarPerso perso={perso} etape={etapeAvant} taille={taille} tournable={false} />
+              </Animated.View>
+            ) : null}
+            <Animated.View style={[styles.celebCalque, { opacity: nouveau, transform: [{ scale: echellePerso }] }]}>
+              <AvatarPerso perso={perso} etape={etapeApres} taille={taille} tournable={false} />
+            </Animated.View>
+          </View>
+
+          <Animated.Text style={[styles.celebNiveau, { transform: [{ scale: echelleTexte }] }]}>
+            Niveau {apres}
+          </Animated.Text>
+          {evolution ? (
+            <Animated.Text style={[styles.celebEtape, { opacity: echelleTexte }]}>
+              {nomEtape} · étape {etapeApres + 1}/{NB_ETAPES}
+            </Animated.Text>
+          ) : null}
+
+          <Animated.View style={[styles.celebBoutonZone, { opacity: bouton }]}>
+            <TouchableOpacity style={[styles.bouton, { backgroundColor: accent }]} onPress={onFermer}>
+              <Text style={styles.boutonTexte}>Continuer</Text>
+            </TouchableOpacity>
+          </Animated.View>
+        </View>
+
+        {/* Flash blanc de l'evolution, par-dessus tout */}
+        <Animated.View pointerEvents="none" style={[styles.celebFlash, { opacity: flash }]} />
+      </View>
+    </Modal>
+  );
+}
+
 /** Haut de Progression : le perso a meme l'ecran (niveau, XP, serie), puis la carte des badges. */
 function CarteHeros({ jeu, perso, onGeste }) {
   const cible = useCible();
@@ -2671,6 +2806,17 @@ function creerStyles() {
   herosXpBloc: { alignSelf: "stretch", alignItems: "center", paddingBottom: 4 },
   xpFondCentre: { width: "75%", marginTop: 10 },
   astuceCentre: { fontSize: 11, color: COULEURS.doux, textAlign: "center", marginTop: 6 },
+  celebEcran: { flex: 1, alignItems: "center", justifyContent: "center" },
+  celebScene: { alignItems: "center", justifyContent: "center", paddingHorizontal: 20 },
+  // Carre centre sur le perso, dont chaque rayon est un trait qui le traverse
+  celebRayons: { position: "absolute", width: 640, height: 640, alignItems: "center", justifyContent: "center", opacity: 0.18 },
+  celebRayon: { position: "absolute", width: 34, height: 640, borderRadius: 17 },
+  celebCalque: { position: "absolute", top: 0, left: 0, right: 0, bottom: 0, alignItems: "center", justifyContent: "center" },
+  celebSurtitre: { color: COULEURS.accent, fontSize: 18, fontWeight: "800", letterSpacing: 2, textTransform: "uppercase", marginBottom: 8 },
+  celebNiveau: { fontSize: 44, fontWeight: "900", color: COULEURS.texte, marginTop: 8 },
+  celebEtape: { fontSize: 16, fontWeight: "700", color: COULEURS.doux, marginTop: 4, textAlign: "center" },
+  celebBoutonZone: { alignSelf: "stretch", marginTop: 28, minWidth: 240 },
+  celebFlash: { position: "absolute", top: 0, left: 0, right: 0, bottom: 0, backgroundColor: COULEURS.eclair },
   herosTitreCentre: { fontSize: 16, fontWeight: "700", textAlign: "center", marginTop: 8 },
   choixPersoRangee: { flexDirection: "row", gap: 12, marginTop: 24 },
   choixPersoCarte: {
