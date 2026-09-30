@@ -63,6 +63,7 @@ import {
   zoneCible,
 } from "./jeu";
 import { SPRITES, ANIMS } from "./perso-sprites";
+import { indiceRepas, empreinteRepas, suspectsPersonnels, suspectsDuRepas, NIVEAUX as NIVEAUX_BALLON } from "./ballonnement";
 import { VERSION, TEST } from "./version";
 import { kcalDepuisLien } from "./lien";
 import { Tutoriel, FournisseurCibles, useCible, useDefilTuto } from "./tuto";
@@ -183,7 +184,8 @@ export default function App() {
 
   // « Ajouter au bilan » : cumule les kcal du jour et garde le repas pour le
   // journal (heure, nom du plat, kcal).
-  const ajouterConsomme = (kcal, plat, macros = {}) => {
+  // extra : { aliments, familles, ballon } pour l'indice de ballonnement.
+  const ajouterConsomme = (kcal, plat, macros = {}, extra = {}) => {
     const k = Math.max(0, Math.round(kcal || 0));
     // Macros du repas (g, arrondies au dixieme), cumulees dans jour.macros.
     const m = Object.fromEntries(
@@ -199,10 +201,28 @@ export default function App() {
         macros: Object.fromEntries(
           Object.keys(m).map((c) => [c, Math.round(((e.jour.macros?.[c] || 0) + m[c]) * 10) / 10])
         ),
-        repas: [...(e.jour.repas || []), { heure, plat: plat || "Repas", kcal: k, ...m }],
+        repas: [...(e.jour.repas || []), { heure, plat: plat || "Repas", kcal: k, ...m, ...extra }],
       },
     }));
   };
+
+  // Ballonnement ressenti : signalements (etat.ventre) et aliments suspects
+  // pour cet utilisateur, appris sur tout l'historique (ballonnement.js).
+  const signalements = etat.ventre || [];
+  const ventre = suspectsPersonnels([...(etat.historique || []), etat.jour], signalements);
+  const signalerBallonnement = () => {
+    const maintenant = new Date();
+    const heure = `${String(maintenant.getHours()).padStart(2, "0")}:${String(maintenant.getMinutes()).padStart(2, "0")}`;
+    // Borne : ~1 an de signalements.
+    setEtat((e) => ({ ...e, ventre: [...(e.ventre || []), { date: dateDuJour(), heure }].slice(-400) }));
+  };
+  const annulerSignalement = () =>
+    setEtat((e) => {
+      const v = [...(e.ventre || [])];
+      const i = v.map((s) => s.date).lastIndexOf(dateDuJour());
+      if (i >= 0) v.splice(i, 1);
+      return { ...e, ventre: v };
+    });
 
   // Accent + fond du theme : propres a chaque perso (voir themePerso). Pour le
   // Necromancien ils progressent avec le niveau. Le fond reste tres sombre
@@ -284,7 +304,7 @@ export default function App() {
         jusqu'a fermeture explicite.
       */}
       <View style={[styles.page, onglet !== "photo" && styles.pageCachee]}>
-        <EcranPhoto onAjouterConsomme={ajouterConsomme} />
+        <EcranPhoto onAjouterConsomme={ajouterConsomme} suspects={ventre.suspects} />
       </View>
       <View style={[styles.page, onglet !== "progression" && styles.pageCachee]}>
         <EcranProgression etat={etat} />
@@ -296,6 +316,10 @@ export default function App() {
           objectif={etat.objectif}
           consomme={etat.jour.consomme || 0}
           macros={etat.jour.macros}
+          ventre={ventre}
+          signalesAujourdhui={signalements.filter((s) => s.date === etat.jour.date)}
+          onSignaler={signalerBallonnement}
+          onAnnulerSignalement={annulerSignalement}
           quotas={quotasMacros(etat)}
           sport={etat.jour.sport || ""}
           onSport={(v) => majJour({ sport: v })}
@@ -438,7 +462,7 @@ const LIBELLE_CONFIANCE = {
   D: "donnée indicative",
 };
 
-function EcranPhoto({ onAjouterConsomme }) {
+function EcranPhoto({ onAjouterConsomme, suspects }) {
   const accent = useAccent();
   const cible = useCible();
   const [etape, setEtape] = useState(null); // texte affiche pendant le chargement
@@ -597,6 +621,16 @@ function EcranPhoto({ onAjouterConsomme }) {
 
   const totaux = useMemo(() => totaliser(portions.filter(Boolean)), [portions]);
 
+  // Ballonnement : indice general du repas (familles d'aliments, fibres, gras)
+  // et aliments deja suspects pour cet utilisateur.
+  const alimentsBallon = useMemo(
+    () => (analyse ? analyse.aliments.map((al) => ({ nom: al.fiche?.nom || al.nom, grammes: al.grammes })) : []),
+    [analyse]
+  );
+  const ballon = useMemo(() => indiceRepas(alimentsBallon, totaux), [alimentsBallon, totaux]);
+  const empreinte = useMemo(() => empreinteRepas(alimentsBallon), [alimentsBallon]);
+  const suspectsIci = suspectsDuRepas(empreinte, suspects);
+
   return (
     <View style={styles.ecran}>
       <ScrollView contentContainerStyle={styles.contenu}>
@@ -692,6 +726,29 @@ function EcranPhoto({ onAjouterConsomme }) {
               {totaux.sel} g
             </Text>
 
+            {/* Indice de ballonnement du repas */}
+            <View style={styles.ballonCarte}>
+              <Text style={styles.ballonTitre}>
+                {NIVEAUX_BALLON[ballon.niveau].emoji} Risque de ballonnement :{" "}
+                <Text style={{ color: ballon.niveau === "eleve" ? COULEURS.rouge : ballon.niveau === "moyen" ? COULEURS.avertTexte : COULEURS.vert }}>
+                  {NIVEAUX_BALLON[ballon.niveau].libelle.toLowerCase()}
+                </Text>
+              </Text>
+              {ballon.causes.map((c, i) => (
+                <Text key={i} style={styles.ballonCause}>
+                  • {c.nom} — {c.raison}
+                </Text>
+              ))}
+              {suspectsIci.map((s) => (
+                <Text key={s.cle} style={[styles.ballonCause, { color: COULEURS.rouge }]}>
+                  • Chez vous : ballonné {s.suivis} fois sur {s.repas} après {s.cle.startsWith("famille:") ? `un ${s.nom}` : s.nom.toLowerCase()}
+                </Text>
+              ))}
+              {!ballon.causes.length && !suspectsIci.length ? (
+                <Text style={styles.ballonCause}>Rien de connu pour ballonner dans ce repas.</Text>
+              ) : null}
+            </View>
+
             {analyse.remarques ? (
               <Text style={styles.remarques}>{analyse.remarques}</Text>
             ) : null}
@@ -700,7 +757,7 @@ function EcranPhoto({ onAjouterConsomme }) {
               style={[styles.bouton, !ajoute && { backgroundColor: accent }, ajoute && styles.boutonSecondaire, { marginTop: 16 }]}
               onPress={() => {
                 if (ajoute) return;
-                onAjouterConsomme?.(totaux.kcal, analyse.plat, totaux);
+                onAjouterConsomme?.(totaux.kcal, analyse.plat, totaux, { ...empreinte, ballon: ballon.niveau });
                 setAjoute(true);
               }}
               disabled={ajoute}
@@ -1424,7 +1481,7 @@ function MenuParametres({ visible, etat, onFermer, onModifierObjectif, onModifie
 //  ECRAN BILAN — calories restantes du jour (objectif + sport - consomme)
 // =========================================================================
 
-function EcranBilan({ perso, etape, objectif, consomme, macros, quotas, sport, onSport }) {
+function EcranBilan({ perso, etape, objectif, consomme, macros, quotas, sport, onSport, ventre, signalesAujourdhui = [], onSignaler, onAnnulerSignalement }) {
   const cible = useCible();
   const defil = useDefilTuto("bilan");
   // Le "sport du jour" (saisi a la main, ou importe depuis Apple Sante) vit dans
@@ -1574,6 +1631,42 @@ function EcranBilan({ perso, etape, objectif, consomme, macros, quotas, sport, o
               </Text>
             </View>
           ) : null}
+
+          <View style={styles.carte} ref={cible("bilan-ventre")}>
+            <Text style={styles.champLabel}>Mon ventre</Text>
+            <TouchableOpacity style={[styles.bouton, styles.boutonSecondaire]} onPress={onSignaler}>
+              <Text style={styles.boutonTexte}>🎈 Je me sens ballonné</Text>
+            </TouchableOpacity>
+            {signalesAujourdhui.length ? (
+              <View style={styles.ventreLigne}>
+                <Text style={styles.objectifDetail}>
+                  Signalé aujourd'hui à {signalesAujourdhui.map((s) => s.heure).join(", ")}
+                </Text>
+                <Pressable onPress={onAnnulerSignalement} hitSlop={8}>
+                  <Text style={styles.lienAnnuler}>Annuler</Text>
+                </Pressable>
+              </View>
+            ) : null}
+
+            {ventre?.suspects.length ? (
+              <>
+                <Text style={[styles.champLabel, { marginTop: 14 }]}>Ce qui semble vous ballonner</Text>
+                {ventre.suspects.slice(0, 5).map((s) => (
+                  <Text key={s.cle} style={styles.ballonCause}>
+                    • {s.cle.startsWith("famille:") ? `${s.nom.charAt(0).toUpperCase()}${s.nom.slice(1)} (en général)` : s.nom} : {s.suivis} fois sur {s.repas}
+                  </Text>
+                ))}
+              </>
+            ) : (
+              <Text style={styles.disclaimer}>
+                Signalez-le quand vous vous sentez ballonné : l'app repère les aliments consommés dans les 6 h
+                avant, et vous dira au fil des semaines lesquels reviennent le plus souvent.
+              </Text>
+            )}
+            <Text style={styles.disclaimer}>
+              Indicatif, pas un avis médical. Si les ballonnements sont fréquents ou douloureux, parlez-en à un médecin.
+            </Text>
+          </View>
 
           <View style={styles.carte} ref={cible("bilan-sport")}>
             <Text style={styles.champLabel}>Sport du jour</Text>
@@ -2039,7 +2132,12 @@ function EcranJournal({ etat }) {
               <VueSemaine focus={focus} parDate={parDate} aujourdhui={aujourdhui} accent={accent}
                 onJour={(d) => changerNiveau("jour", d)} />
             ) : (
-              <VueJour date={focus} e={parDate.get(focus)} accent={accent} />
+              <VueJour
+                date={focus}
+                e={parDate.get(focus)}
+                accent={accent}
+                signalements={(etat.ventre || []).filter((s) => s.date === focus)}
+              />
             )}
           </Animated.View>
         </View>
@@ -2162,7 +2260,7 @@ function VueSemaine({ focus, parDate, aujourdhui, accent, onJour }) {
 }
 
 /** Vue Jour : le bilan de la journee et ses repas sur une frise horaire. */
-function VueJour({ date, e, accent }) {
+function VueJour({ date, e, accent, signalements = [] }) {
   if (!e || e.type === "vide") {
     return (
       <View style={styles.journalJour}>
@@ -2201,7 +2299,10 @@ function VueJour({ date, e, accent }) {
             <Text style={styles.calRepasHeure}>{r.heure}</Text>
             <View style={[styles.calRepasBloc, { borderLeftColor: accent }]}>
               <Text style={styles.journalRepasLigne}>{r.plat}</Text>
-              <Text style={styles.journalDetail}>{r.kcal} kcal</Text>
+              <Text style={styles.journalDetail}>
+                {r.kcal} kcal
+                {r.ballon ? ` · ${NIVEAUX_BALLON[r.ballon].emoji} ballonnement ${NIVEAUX_BALLON[r.ballon].libelle.toLowerCase()}` : ""}
+              </Text>
             </View>
           </View>
         ))
@@ -2210,6 +2311,11 @@ function VueJour({ date, e, accent }) {
           {e.consomme > 0 ? "Détail des repas non disponible pour ce jour." : "Aucun repas ajouté pour l'instant."}
         </Text>
       )}
+      {signalements.length ? (
+        <Text style={[styles.journalDetail, { marginTop: 10 }]}>
+          🎈 Ballonné à {signalements.map((s) => s.heure).join(", ")}
+        </Text>
+      ) : null}
     </View>
   );
 }
@@ -3005,6 +3111,11 @@ function creerStyles() {
   xpFondCentre: { width: "75%", marginTop: 10 },
   astuceCentre: { fontSize: 11, color: COULEURS.doux, textAlign: "center", marginTop: 6 },
   macroLigne: { marginTop: 10 },
+  ballonCarte: { marginTop: 14, padding: 12, borderRadius: 12, backgroundColor: COULEURS.piste },
+  ballonTitre: { color: COULEURS.texte, fontSize: 15, fontWeight: "700" },
+  ballonCause: { color: COULEURS.doux, fontSize: 13, marginTop: 4 },
+  lienAnnuler: { color: COULEURS.accent, fontSize: 14, fontWeight: "700" },
+  ventreLigne: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginTop: 4 },
   macroEntete: { flexDirection: "row", justifyContent: "space-between", marginBottom: 4 },
   macroNom: { color: COULEURS.texte, fontSize: 14, fontWeight: "600" },
   macroValeur: { color: COULEURS.doux, fontSize: 14, fontWeight: "700" },

@@ -132,6 +132,14 @@ export const ETAPES_TUTO = [
       "Protéines, glucides, lipides : chaque macro restée entre 80 % et 120 % de son quota rapporte un bonus d'XP à minuit.",
   },
   {
+    cible: "bilan-ventre",
+    onglet: "bilan",
+    defil: "bilan",
+    titre: "Votre ventre",
+    texte:
+      "Chaque repas analysé affiche un risque de ballonnement. Touchez « Je me sens ballonné » quand c'est le cas : l'app apprend quels aliments vous ballonnent, vous.",
+  },
+  {
     cible: "bilan-sport",
     onglet: "bilan",
     defil: "bilan",

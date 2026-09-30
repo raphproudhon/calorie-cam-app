@@ -15,6 +15,8 @@
 //     historique:[ { date, consomme, sport, objectif, repas, macros, quotas } ],  // jours passes
 //       repas : [ { heure: "HH:MM", plat, kcal, prot, gluc, lip } ] (ajouts « Ajouter au bilan »)
 //     quotas:    { proteines, glucides, lipides } | null, // g ; null = conseilles (besoins.js)
+//     ventre:    [ { date, heure } ],  // « je me sens ballonne » (ballonnement.js)
+//       repas ajoutent { aliments: [{cle, nom}], familles: [id], ballon: niveau }
 //     poids:     [ { date, valeur } ],   // journal de poids
 //     perso:     "humain" | "chat" | null, // personnage choisi (definitif)
 //   }
